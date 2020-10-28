@@ -68,13 +68,24 @@ def fit(data, start=None, stop=None, p0=P0):
     t_0 = t_0_guess + t_0_norm * T_d_guess
     return t_0, T_d, r2
 
-def plot_fit(x, y, t0, td, label, fig, func=exp2, x_predict=None,shift=5, **plot_kwargs):
-    if shift is None:
-        shift = 5
-    go.Line(x=x, y=func(x, t0, td), name=label, **plot_kwargs)
+# def plot_fit(x, y, t0, td, label, fig, func=exp2, x_predict=None,shift=5, **plot_kwargs):
+#     if shift is None:
+#         shift = 5
+#     go.Line(x=x, y=func(x, t0, td), name=label, **plot_kwargs)
+#     x_base = np.arange(x[0] - np.timedelta64(shift, 'D'), x[-1] + np.timedelta64(shift, 'D'), np.timedelta64(1, 'D'))
+#     ax.plot(x_base, func(x_base, t0, td), linestyle=':', **plot_kwargs)
+#     return ax
+
+
+def plot_fit(data, fig, start=None, stop=None, label=None, shift=5, **kwargs):
+    t0, td, r2 = fit(data, start, stop)
+    if label is not None:
+        label = 'Fit {label} (T_d = {0:.2f})'.format(td / np.timedelta64(1, "D"), label=label)
+    x = data[start:stop].index
     x_base = np.arange(x[0] - np.timedelta64(shift, 'D'), x[-1] + np.timedelta64(shift, 'D'), np.timedelta64(1, 'D'))
-    ax.plot(x_base, func(x_base, t0, td), linestyle=':', **plot_kwargs)
-    return ax
+    trace = go.Line(x=x_base, y=exp2(x_base, t0, td), name=label, visible="legendonly", **kwargs)
+    fig.add_trace(trace, 1, 1)
+    return fig
 
 
 def prediction(x, t0, td, r2, label, ax, days_after=1, func=exp2, **plot_kwargs):
@@ -182,7 +193,8 @@ def get_fmt(rule):
     else:
         return '{:.0f}'
 
-def plot_selection(data, country, rule):
+
+def plot_selection(data, country, rule, start_positivi, start_ti, start_ricoveri):
 
     PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
     PALETTE_ALPHA = itertools.cycle(get_matplotlib_cmap('tab10', bins=8, alpha=.3))
@@ -192,19 +204,46 @@ def plot_selection(data, country, rule):
     fig = make_subplots(1, 1)
     fmt = get_fmt(rule)
 
+    line = dict(color=next(PALETTE))
     plot_data = normalisation(data.nuovi_positivi, data.popolazione, rule)
-    fig.add_trace(go.Line(x=plot_data.index, y=plot_data.rolling(7).mean().values, name='Nuovi Positivi', legendgroup='pos', marker=dict(color=next(PALETTE))), 1, 1)
+    fig.add_trace(go.Line(
+        x=plot_data.index, y=plot_data.rolling(7).mean().values,
+        name='Nuovi Positivi',
+        legendgroup='pos',
+        line=line,
+        mode='lines'
+    ), 1, 1)
+
+    line['dash'] = 'dot'
+    plot_fit(plot_data.rolling(7).mean(), fig, label='Nuovi Positivi', start=start_positivi, mode='lines', line=line, shift=5)
+
     fig.add_trace(go.Scatter(x=plot_data.index, y=plot_data.values, mode='markers', legendgroup='pos', showlegend=False, marker=dict(color=next(PALETTE_ALPHA))), 1, 1)
     fig.add_annotation(x=plot_data.index[-1], y=np.log10(plot_data.values[-1]), text=fmt.format(plot_data.values[-1]))
-    
+
+    line = dict(color=next(PALETTE))
     plot_data = normalisation(data.ricoverati_con_sintomi, data.popolazione, rule)
-    fig.add_trace(go.Line(x=plot_data.index, y=plot_data.rolling(7).mean().values, name='Ricoveri', legendgroup='ric', marker=dict(color=next(PALETTE))), 1, 1)
-    # fig.add_trace(go.Scatter(x=plot_data.index, y=plot_data.values, mode='markers', legendgroup='pos', showlegend=False, marker=dict(color=next(PALETTE_ALPHA))), 1, 1)
+    fig.add_trace(go.Line(
+        x=plot_data.index,
+        y=plot_data.rolling(7).mean().values,
+        name='Ricoveri',
+        legendgroup='ric',
+        line=line,
+    ), 1, 1)
+    line['dash'] = 'dot'
+    plot_fit(plot_data.rolling(7).mean(), fig, label='Ricoveri', start=start_ricoveri, mode='lines', line=line, shift=5)
     next(PALETTE_ALPHA)
 
-    plot_data = data.terapia_intensiva / data.popolazione * UNITA
+    line = dict(color=next(PALETTE))
     plot_data = normalisation(data.terapia_intensiva, data.popolazione, rule)
-    fig.add_trace(go.Line(x=plot_data.index, y=plot_data.rolling(7).mean().values, name='Terapie Intensive', legendgroup='ti', marker=dict(color=next(PALETTE))), 1, 1)
+    fig.add_trace(go.Line(
+        x=plot_data.index,
+        y=plot_data.rolling(7).mean().values,
+        name='Terapie Intensive',
+        legendgroup='ti',
+        line=line,
+    ), 1, 1)
+    line['dash'] = 'dot'
+    plot_fit(plot_data.rolling(7).mean(), fig, label='Terapie Intensive', start=start_ti, mode='lines', line=line, shift=5)
     fig.add_annotation(x=plot_data.index[-1], y=np.log10(plot_data.values[-1]), text=fmt.format(plot_data.values[-1]))
     next(PALETTE_ALPHA)
 
@@ -298,6 +337,7 @@ st.title('COVID-19: Situazione in Italia')
 data = import_data()
 population = import_population()
 
+
 def explore_regions():
     st.header('Dati regione')
     col1, col2 = st.beta_columns(2)
@@ -317,7 +357,14 @@ def explore_regions():
         tpr = data[country].nuovi_positivi[-5:] / data[country].tamponi.diff()[-5:] * 100
         tpr.name = 'TPR (%)'
         st.write(tpr)
-    st.plotly_chart(plot_selection(data, country, rule), use_container_width=True)
+    col1, col2, col3 = st.beta_columns(3)
+    with col1:
+        start_positivi = st.date_input('Data inizio fit Nuovi positivi', datetime.date(2020, 10, 15), min_value=datetime.date(2020, 8, 1), max_value=datetime.date.today())
+    with col2:
+        start_ti = st.date_input('Data inizio fit Terapie intensive', datetime.date(2020, 10, 15), min_value=datetime.date(2020, 8, 1), max_value=datetime.date.today())
+    with col3:
+        start_ricoveri = st.date_input('Data inizio fit Ricoveri', datetime.date(2020, 10, 15), min_value=datetime.date(2020, 8, 1), max_value=datetime.date.today())
+    st.plotly_chart(plot_selection(data, country, rule, start_positivi, start_ti, start_ricoveri), use_container_width=True)
     st.plotly_chart(test_positivity_rate(data, country), use_container_width=True)
 
 
