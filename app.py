@@ -162,20 +162,29 @@ class FileReference:
         self.filename_ita = os.path.join(base_path, 'COVID-19/dati-andamento-nazionale/dpc-covid19-ita-andamento-nazionale.csv')
 
 
+class RepoReference:
+    def __init__(self):
+        path = 'COVID-19'
+        import git
+        repo = git.Repo(path)
+        o = repo.remotes.origin
+        o.pull()
+        self.hexsha = repo.head.commit.hexsha
+
+
 def hash_file_reference(file_reference):
     filename_regioni = file_reference.filename_regioni
     filename_ita = file_reference.filename_ita
     return (filename_regioni, filename_ita, os.path.getmtime(filename_regioni), os.path.getmtime(filename_ita))
 
 
-@st.cache(hash_funcs={FileReference: hash_file_reference})
+def hash_repo_reference(repo_reference):
+    return (repo_reference.hexsha)
+
+
+@st.cache(hash_funcs={FileReference: hash_file_reference, RepoReference: hash_repo_reference})
 def import_data(base_path='/app'):
     popolazione = import_population()
-    # data_raw = []
-    # for path in glob(os.path.join(base_path, 'COVID-19/dati-regioni/dpc-covid19-ita-regioni-*.csv')):
-    #     data_raw.append(pd.read_csv(path, parse_dates=['data']).set_index('data'))
-    # #    data_raw.append(pd.read_csv(path))
-    # data = pd.concat(data_raw)
     if not os._exists('COVID-19'):
         import git
         git.Git("./").clone("https://github.com/pcm-dpc/COVID-19.git")
