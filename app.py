@@ -171,11 +171,11 @@ def hash_file_reference(file_reference):
 @st.cache(hash_funcs={FileReference: hash_file_reference})
 def import_data(base_path='/app'):
     popolazione = import_population()
-    data_raw = []
-    for path in glob(os.path.join(base_path, 'COVID-19/dati-regioni/dpc-covid19-ita-regioni-*.csv')):
-        data_raw.append(pd.read_csv(path, parse_dates=['data']).set_index('data'))
-    #    data_raw.append(pd.read_csv(path))
-    data = pd.concat(data_raw)
+    # data_raw = []
+    # for path in glob(os.path.join(base_path, 'COVID-19/dati-regioni/dpc-covid19-ita-regioni-*.csv')):
+    #     data_raw.append(pd.read_csv(path, parse_dates=['data']).set_index('data'))
+    # #    data_raw.append(pd.read_csv(path))
+    # data = pd.concat(data_raw)
     data_aggregate = pd.read_csv(os.path.join(base_path, 'COVID-19/dati-regioni/dpc-covid19-ita-regioni.csv'), index_col='data', parse_dates=['data'])
 
     regioni = {}
