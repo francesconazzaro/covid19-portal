@@ -5,7 +5,6 @@ import streamlit as st
 
 from matplotlib import cm
 import matplotlib.pyplot as plt
-import matplotlib.ticker as mtick
 plt.rcParams['figure.figsize'] = (14, 8)
 plt.rcParams['font.size'] = 16
 
@@ -14,10 +13,9 @@ import pandas as pd
 import itertools
 import os
 import scipy.optimize
+import scipy.stats
 import numpy as np
 from glob import glob
-import seaborn as sns
-from ipywidgets import interact, interactive, fixed, interact_manual
 
 
 UNITA = 100000
@@ -29,6 +27,26 @@ def exp2(t, t_0, T_d):
 
 def linear(t, t_0, T_d):
     return (t - t_0) / T_d
+
+
+ITALY_EVENTS = [
+    # {'x': '2020-02-19', 'label': 'First alarm'},
+    {'x': '2020-02-24', 'label': 'Chiusura scuole al Nord'},
+    {'x': '2020-03-01', 'label': 'Contenimento parziale Nord'},
+    {'x': '2020-03-05', 'label': 'Chiusura scuole Italia'},
+    {'x': '2020-03-08', 'label': 'Lockdown Nord'},
+    {'x': '2020-03-10', 'label': 'Lockdown Italia'},
+    {'x': '2020-10-13', 'label': 'Mascherine obbligatorie'},
+    {'x': '2020-10-24', 'label': 'Lockdown morbido'},
+]
+def add_events(fig, events=ITALY_EVENTS, start=None, stop=None, offset=0, **kwargs):
+    PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
+    x_list = []
+    label_list = []
+    for event in events[start:stop]:
+        label = '{x} {label}'.format(offset=offset, **event)
+        fig.add_trace(go.Scatter(x=[event['x'], event['x']], y=[0, 10**10], mode='lines', legendgroup='events', line=dict(color=next(PALETTE), width=2), name=label))
+
 
 P0 = (np.datetime64("2020-02-12", "s"), np.timedelta64(48 * 60 * 60, "s"))
 def linear_fit(data, start=None, stop=None, p0=P0):
@@ -67,15 +85,6 @@ def fit(data, start=None, stop=None, p0=P0):
     T_d = T_d_norm * T_d_guess
     t_0 = t_0_guess + t_0_norm * T_d_guess
     return t_0, T_d, r2
-
-# def plot_fit(x, y, t0, td, label, fig, func=exp2, x_predict=None,shift=5, **plot_kwargs):
-#     if shift is None:
-#         shift = 5
-#     go.Line(x=x, y=func(x, t0, td), name=label, **plot_kwargs)
-#     x_base = np.arange(x[0] - np.timedelta64(shift, 'D'), x[-1] + np.timedelta64(shift, 'D'), np.timedelta64(1, 'D'))
-#     ax.plot(x_base, func(x_base, t0, td), linestyle=':', **plot_kwargs)
-#     return ax
-
 
 def plot_fit(data, fig, start=None, stop=None, label=None, shift=5, **kwargs):
     t0, td, r2 = fit(data, start, stop)
@@ -146,6 +155,20 @@ def import_population():
     return popolazione
 
 
+class FileReference:
+    def __init__(self):
+        base_path = '/Users/francesconazzaro/devel/'
+        self.filename_regioni = os.path.join(base_path, 'COVID-19/dati-regioni/')
+        self.filename_ita = os.path.join(base_path, 'COVID-19/dati-andamento-nazionale/dpc-covid19-ita-andamento-nazionale.csv')
+
+
+def hash_file_reference(file_reference):
+    filename_regioni = file_reference.filename_regioni
+    filename_ita = file_reference.filename_ita
+    return (filename_regioni, filename_ita, os.path.getmtime(filename_regioni), os.path.getmtime(filename_ita))
+
+
+@st.cache(hash_funcs={FileReference: hash_file_reference})
 def import_data(base_path='/Users/francesconazzaro/devel/'):
     popolazione = import_population()
     data_raw = []
@@ -158,7 +181,7 @@ def import_data(base_path='/Users/francesconazzaro/devel/'):
     regioni = {}
     ita = pd.read_csv(os.path.join(base_path, 'COVID-19/dati-andamento-nazionale/dpc-covid19-ita-andamento-nazionale.csv'), index_col='data', parse_dates=['data'])
     ita['popolazione'] = popolazione.sum()
-    regioni['Italy'] = ita
+    regioni['Italia'] = ita
     for regione in np.unique(data_aggregate.denominazione_regione):
         try:
             popolazione_index = [index for index in popolazione.index if regione[:4].lower() in index.lower()][0]
@@ -178,7 +201,7 @@ def import_data(base_path='/Users/francesconazzaro/devel/'):
 
 
 def normalisation(data, population, rule):
-    if rule == 'per 100,000 abitanti':
+    if rule == 'per 100.000 abitanti':
         new_data = data / population * UNITA
         new_data.name = data.name
         return new_data
@@ -188,13 +211,13 @@ def normalisation(data, population, rule):
         return new_data
 
 def get_fmt(rule):
-    if rule == 'per 100,000 abitanti':
+    if rule == 'per 100.000 abitanti':
         return '{:.2f}'
     else:
         return '{:.0f}'
 
 
-def plot_selection(data, country, rule, start_positivi, start_ti, start_ricoveri):
+def plot_selection(data, country, rule, start_positivi, start_ti, start_ricoveri, stop_positivi, stop_ti, stop_ricoveri):
 
     PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
     PALETTE_ALPHA = itertools.cycle(get_matplotlib_cmap('tab10', bins=8, alpha=.3))
@@ -211,11 +234,11 @@ def plot_selection(data, country, rule, start_positivi, start_ti, start_ricoveri
         name='Nuovi Positivi',
         legendgroup='pos',
         line=line,
-        mode='lines'
+        mode='lines+markers'
     ), 1, 1)
 
     line['dash'] = 'dot'
-    plot_fit(plot_data.rolling(7).mean(), fig, label='Nuovi Positivi', start=start_positivi, mode='lines', line=line, shift=5)
+    plot_fit(plot_data.rolling(7).mean(), fig, label='Nuovi Positivi', start=start_positivi, stop=stop_positivi, mode='lines', line=line, shift=5)
 
     fig.add_trace(go.Scatter(x=plot_data.index, y=plot_data.values, mode='markers', legendgroup='pos', showlegend=False, marker=dict(color=next(PALETTE_ALPHA))), 1, 1)
     fig.add_annotation(x=plot_data.index[-1], y=np.log10(plot_data.values[-1]), text=fmt.format(plot_data.values[-1]))
@@ -228,10 +251,11 @@ def plot_selection(data, country, rule, start_positivi, start_ti, start_ricoveri
         name='Ricoveri',
         legendgroup='ric',
         line=line,
+        mode='lines+markers'
     ), 1, 1)
     line['dash'] = 'dot'
-    plot_fit(plot_data.rolling(7).mean(), fig, label='Ricoveri', start=start_ricoveri, mode='lines', line=line, shift=5)
-    next(PALETTE_ALPHA)
+    plot_fit(plot_data.rolling(7).mean(), fig, label='Ricoveri', start=start_ricoveri, stop=stop_ricoveri, mode='lines', line=line, shift=5)
+    fig.add_trace(go.Scatter(x=plot_data.index, y=plot_data.values, mode='markers', legendgroup='ric', showlegend=False, marker=dict(color=next(PALETTE_ALPHA))), 1, 1)
 
     line = dict(color=next(PALETTE))
     plot_data = normalisation(data.terapia_intensiva, data.popolazione, rule)
@@ -241,18 +265,19 @@ def plot_selection(data, country, rule, start_positivi, start_ti, start_ricoveri
         name='Terapie Intensive',
         legendgroup='ti',
         line=line,
+        mode='lines+markers'
     ), 1, 1)
     line['dash'] = 'dot'
-    plot_fit(plot_data.rolling(7).mean(), fig, label='Terapie Intensive', start=start_ti, mode='lines', line=line, shift=5)
+    plot_fit(plot_data.rolling(7).mean(), fig, label='Terapie Intensive', start=start_ti, stop=stop_ti, mode='lines', line=line, shift=5)
+    fig.add_trace(go.Scatter(x=plot_data.index, y=plot_data.values, mode='markers', legendgroup='ti', showlegend=False, marker=dict(color=next(PALETTE_ALPHA))), 1, 1)
     fig.add_annotation(x=plot_data.index[-1], y=np.log10(plot_data.values[-1]), text=fmt.format(plot_data.values[-1]))
-    next(PALETTE_ALPHA)
 
-    plot_data = data.deceduti.diff() / data.popolazione * UNITA
     plot_data = normalisation(data.deceduti.diff(), data.popolazione, rule)
     # fig.add_trace(go.Line(x=plot_data.index, y=plot_data.rolling(7).mean().values, name='Deceduti', legendgroup='dec', marker=dict(color=next(PALETTE))), 1, 1)
     fig.add_trace(go.Scatter(x=plot_data.index, y=plot_data.values, name='Deceduti', mode='markers', legendgroup='dec', showlegend=True, marker=dict(color=next(PALETTE))), 1, 1)
     fig.add_annotation(x=plot_data.index[-1], y=np.log10(plot_data.values[-1]), text=fmt.format(plot_data.values[-1]))
 
+    add_events(fig)
 
     plot_data = normalisation(data.nuovi_positivi, data.popolazione, rule)
     fig.update_xaxes(row=1, col=1, showgrid=True, gridwidth=1, gridcolor='LightPink')
@@ -260,8 +285,9 @@ def plot_selection(data, country, rule, start_positivi, start_ti, start_ricoveri
     fig.update_layout(
         plot_bgcolor="white",
         margin=dict(t=30,l=10,b=10,r=10),
+        yaxis_title=f'Dati {rule}',
         # width=1300,
-        # height=500,
+        height=500,
         autosize=True,
     )
     return fig
@@ -270,9 +296,9 @@ def test_positivity_rate(data, country):
     data = data[country]
     PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
     PALETTE_ALPHA = itertools.cycle(get_matplotlib_cmap('tab10', bins=8, alpha=.3))
-    fig = make_subplots(1, 1)
+    fig = make_subplots(1, 1, subplot_titles=['Percentuale di tamponi positivi'])
     plot_data = data.nuovi_positivi / data.tamponi.diff() * 100
-    fig.add_trace(go.Line(x=plot_data.index, y=plot_data.rolling(7).mean().values, name='Test positivity rate', legendgroup='postam', marker=dict(color=next(PALETTE))), 1, 1)
+    fig.add_trace(go.Line(x=plot_data.index, y=plot_data.rolling(7).mean().values, name='Percentuale tamponi positivi', showlegend=False, legendgroup='postam', marker=dict(color=next(PALETTE))), 1, 1)
     fig.add_trace(go.Scatter(x=plot_data.index, y=plot_data.values, mode='markers', legendgroup='postam', showlegend=False, marker=dict(color=next(PALETTE_ALPHA))), 1, 1)
     fig.add_annotation(x=plot_data.index[-1], y=plot_data.values[-1], text='{:.2f}'.format(plot_data.values[-1]))
     fig.add_annotation(x=plot_data.index[-1], y=plot_data.rolling(7).mean().values[-1], text='{:.2f}'.format(plot_data.rolling(7).mean().values[-1]))
@@ -290,7 +316,7 @@ def test_positivity_rate(data, country):
 
 def summary(data, what):
     titles = [title for title in data if title not in ['P.A. Bolzano', 'P.A. Trento']]
-    fig = make_subplots(3, 7, shared_xaxes=True, shared_yaxes=True, subplot_titles=titles)
+    fig = make_subplots(3, 7, shared_xaxes=True, shared_yaxes=True, subplot_titles=titles, vertical_spacing=.08)
     minus = 0
     PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
     maxs = []
@@ -309,43 +335,58 @@ def summary(data, what):
             plot_data = region.nuovi_positivi.rolling(7).mean() / region.popolazione * UNITA
             title = "Nuovi positivi per 100.000 abitanti"
             yscale = 'log'
-        elif what == 'Test Positivity Rate':
+        elif what == 'Percentuale tamponi positivi':
             plot_data = region.nuovi_positivi.rolling(7).mean() / region.tamponi.diff().rolling(7).mean() * 100
-            title = "Percentuale positivi su totale persone testate."
+            title = "Percentuale tamponi positivi."
             yscale = 'linear'
         maxs.append(plot_data.values[-90:].max())
         fig.add_trace(go.Line(x=plot_data.index[-90:], y=plot_data.values[-90:], showlegend=False, name=title, marker=dict(color=next(PALETTE))), row, col)
-    st.header(title)
+    st.subheader(title)
     fig.update_xaxes(showgrid=True, gridwidth=1, tickangle=45, gridcolor='LightGrey')
     fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[0, max(maxs) + 1])
     fig.update_layout(
         plot_bgcolor="white",
         margin=dict(t=50,l=10,b=10,r=10),
         # width=1300,
-        height=700,
+        height=500,
         autosize=True,
     )
     PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
     for i in fig['layout']['annotations']:
-        i['font'] = dict(size=10,color=next(PALETTE))
+        i['font'] = dict(size=15, color=next(PALETTE))
     return fig
         
 
 
 st.beta_set_page_config(layout='wide')
-st.title('COVID-19: Situazione in Italia')
 data = import_data()
+st.title('COVID-19: Situazione in Italia aggiornata al {}'.format(data['Italia'].index[-1].date()))
 population = import_population()
 
 
 def explore_regions():
     st.header('Dati regione')
-    col1, col2 = st.beta_columns(2)
+    col1, col2, col3, col4 = st.beta_columns(4)
     with col1:
         country = st.selectbox('Seleziona una regione', list(data.keys()))
     with col2:
-        rule = st.radio('', ['per 100,000 abitanti', 'Totale'])
-    st.subheader(country)
+        rule = st.radio('', ['per 100.000 abitanti', 'Totali'])
+    col1, col2, col3 = st.beta_columns(3)
+    with col1:
+        start_positivi = st.date_input('Data inizio fit Nuovi positivi', datetime.date(2020, 10, 15), min_value=datetime.date(2020, 3, 1), max_value=datetime.date.today())
+    with col2:
+        start_ti = st.date_input('Data inizio fit Terapie intensive', datetime.date(2020, 10, 15), min_value=datetime.date(2020, 3, 1), max_value=datetime.date.today())
+    with col3:
+        start_ricoveri = st.date_input('Data inizio fit Ricoveri', datetime.date(2020, 10, 15), min_value=datetime.date(2020, 3, 1), max_value=datetime.date.today())
+    with col1:
+        stop_positivi = st.date_input('Data fine fit Nuovi positivi', data[country].index[-1], min_value=datetime.date(2020, 3, 2), max_value=datetime.date.today())
+    with col2:
+        stop_ti = st.date_input('Data fine fit Terapie intensive', data[country].index[-1], min_value=datetime.date(2020, 3, 2), max_value=datetime.date.today())
+    with col3:
+        stop_ricoveri = st.date_input('Data fine fit Ricoveri', data[country].index[-1], min_value=datetime.date(2020, 3, 2), max_value=datetime.date.today())
+    st.plotly_chart(plot_selection(data, country, rule, start_positivi, start_ti, start_ricoveri, stop_positivi, stop_ti, stop_ricoveri), use_container_width=True)
+    st.plotly_chart(test_positivity_rate(data, country), use_container_width=True)
+    st.subheader(f'Andamento degli ultimi 5 giorni: {country} ({rule})')
     col1, col2, col3, col4 = st.beta_columns(4)
     with col1:
         st.write(normalisation(data[country].nuovi_positivi, data[country].popolazione, rule)[-5:])
@@ -357,21 +398,15 @@ def explore_regions():
         tpr = data[country].nuovi_positivi[-5:] / data[country].tamponi.diff()[-5:] * 100
         tpr.name = 'TPR (%)'
         st.write(tpr)
-    col1, col2, col3 = st.beta_columns(3)
-    with col1:
-        start_positivi = st.date_input('Data inizio fit Nuovi positivi', datetime.date(2020, 10, 15), min_value=datetime.date(2020, 8, 1), max_value=datetime.date.today())
-    with col2:
-        start_ti = st.date_input('Data inizio fit Terapie intensive', datetime.date(2020, 10, 15), min_value=datetime.date(2020, 8, 1), max_value=datetime.date.today())
-    with col3:
-        start_ricoveri = st.date_input('Data inizio fit Ricoveri', datetime.date(2020, 10, 15), min_value=datetime.date(2020, 8, 1), max_value=datetime.date.today())
-    st.plotly_chart(plot_selection(data, country, rule, start_positivi, start_ti, start_ricoveri), use_container_width=True)
-    st.plotly_chart(test_positivity_rate(data, country), use_container_width=True)
 
 
-rule = st.radio('Variabile', ['Nuovi Positivi', 'Terapie Intensive', 'Test Positivity Rate'])
-st.plotly_chart(summary(data, rule), use_container_width=True)
 explore_regions()
+st.header('Confronto tra regioni')
+col1, col2, col3, col4, col5 = st.beta_columns(5)
+with col1:
+    rule = st.selectbox('Variabile', ['Nuovi Positivi', 'Terapie Intensive', 'Percentuale tamponi positivi'])
+st.plotly_chart(summary(data, rule), use_container_width=True)
 
-expander = st.beta_expander("This page is developed by Francesco Nazzaro")
+expander = st.beta_expander("This app is developed by Francesco Nazzaro")
 expander.write("Contact me on [Twitter](https://twitter.com/effenazzaro)")
 
