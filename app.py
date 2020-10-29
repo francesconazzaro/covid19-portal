@@ -185,7 +185,7 @@ def hash_repo_reference(repo_reference):
 @st.cache(hash_funcs={FileReference: hash_file_reference, RepoReference: hash_repo_reference})
 def import_data(base_path='/app'):
     popolazione = import_population()
-    if not os._exists('COVID-19'):
+    if not os.exists('COVID-19'):
         import git
         git.Git("./").clone("https://github.com/pcm-dpc/COVID-19.git")
     data_aggregate = pd.read_csv(os.path.join(base_path, 'COVID-19/dati-regioni/dpc-covid19-ita-regioni.csv'), index_col='data', parse_dates=['data'])
