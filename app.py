@@ -157,7 +157,7 @@ def import_population():
 
 class FileReference:
     def __init__(self):
-        base_path = '/Users/francesconazzaro/devel/'
+        base_path = '/app'
         self.filename_regioni = os.path.join(base_path, 'COVID-19/dati-regioni/')
         self.filename_ita = os.path.join(base_path, 'COVID-19/dati-andamento-nazionale/dpc-covid19-ita-andamento-nazionale.csv')
 
@@ -169,7 +169,7 @@ def hash_file_reference(file_reference):
 
 
 @st.cache(hash_funcs={FileReference: hash_file_reference})
-def import_data(base_path='/Users/francesconazzaro/devel/'):
+def import_data(base_path='/app'):
     popolazione = import_population()
     data_raw = []
     for path in glob(os.path.join(base_path, 'COVID-19/dati-regioni/dpc-covid19-ita-regioni-*.csv')):
