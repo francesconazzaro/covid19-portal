@@ -272,9 +272,18 @@ def plot_selection(data, country, rule, start_positivi, start_ti, start_ricoveri
     fig.add_trace(go.Scatter(x=plot_data.index, y=plot_data.values, mode='markers', legendgroup='ti', showlegend=False, marker=dict(color=next(PALETTE_ALPHA))), 1, 1)
     fig.add_annotation(x=plot_data.index[-1], y=np.log10(plot_data.values[-1]), text=fmt.format(plot_data.values[-1]))
 
+    line = dict(color=next(PALETTE))
     plot_data = normalisation(data.deceduti.diff(), data.popolazione, rule)
+    fig.add_trace(go.Line(
+        x=plot_data.index,
+        y=plot_data.rolling(7).mean().values,
+        name='Deceduti',
+        legendgroup='dec',
+        line=line,
+        mode='lines+markers'
+    ), 1, 1)
     # fig.add_trace(go.Line(x=plot_data.index, y=plot_data.rolling(7).mean().values, name='Deceduti', legendgroup='dec', marker=dict(color=next(PALETTE))), 1, 1)
-    fig.add_trace(go.Scatter(x=plot_data.index, y=plot_data.values, name='Deceduti', mode='markers', legendgroup='dec', showlegend=True, marker=dict(color=next(PALETTE))), 1, 1)
+    fig.add_trace(go.Scatter(x=plot_data.index, y=plot_data.values, name='Deceduti', mode='markers', legendgroup='dec', showlegend=False, marker=dict(color=next(PALETTE_ALPHA))), 1, 1)
     fig.add_annotation(x=plot_data.index[-1], y=np.log10(plot_data.values[-1]), text=fmt.format(plot_data.values[-1]))
 
     add_events(fig)
@@ -298,8 +307,23 @@ def test_positivity_rate(data, country):
     PALETTE_ALPHA = itertools.cycle(get_matplotlib_cmap('tab10', bins=8, alpha=.3))
     fig = make_subplots(1, 1, subplot_titles=['Percentuale di tamponi positivi'])
     plot_data = data.nuovi_positivi / data.tamponi.diff() * 100
-    fig.add_trace(go.Line(x=plot_data.index, y=plot_data.rolling(7).mean().values, name='Percentuale tamponi positivi', showlegend=False, legendgroup='postam', marker=dict(color=next(PALETTE))), 1, 1)
-    fig.add_trace(go.Scatter(x=plot_data.index, y=plot_data.values, mode='markers', legendgroup='postam', showlegend=False, marker=dict(color=next(PALETTE_ALPHA))), 1, 1)
+    fig.add_trace(go.Line(
+        x=plot_data.index,
+        y=plot_data.rolling(7).mean().values,
+        name='Percentuale tamponi positivi',
+        mode='lines+markers',
+        showlegend=False,
+        legendgroup='postam',
+        marker=dict(color=next(PALETTE))
+    ), 1, 1)
+    fig.add_trace(go.Scatter(
+        x=plot_data.index,
+        y=plot_data.values,
+        mode='markers',
+        legendgroup='postam',
+        showlegend=False,
+        marker=dict(color=next(PALETTE_ALPHA))
+    ), 1, 1)
     fig.add_annotation(x=plot_data.index[-1], y=plot_data.values[-1], text='{:.2f}'.format(plot_data.values[-1]))
     fig.add_annotation(x=plot_data.index[-1], y=plot_data.rolling(7).mean().values[-1], text='{:.2f}'.format(plot_data.rolling(7).mean().values[-1]))
     # fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey', range=['2020-09-01', np.datetime64(datetime.datetime.now() + datetime.timedelta(days=1))])
