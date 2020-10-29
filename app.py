@@ -176,6 +176,9 @@ def import_data(base_path='/app'):
     #     data_raw.append(pd.read_csv(path, parse_dates=['data']).set_index('data'))
     # #    data_raw.append(pd.read_csv(path))
     # data = pd.concat(data_raw)
+    if not os._exists('COVID-19'):
+        import git
+        git.Git("./").clone("https://github.com/pcm-dpc/COVID-19.git")
     data_aggregate = pd.read_csv(os.path.join(base_path, 'COVID-19/dati-regioni/dpc-covid19-ita-regioni.csv'), index_col='data', parse_dates=['data'])
 
     regioni = {}
