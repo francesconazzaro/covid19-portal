@@ -302,14 +302,14 @@ def plot_selection(data, country, rule, start_positivi, start_ti, start_ricoveri
 
 def summary(data, what, st):
     titles = [title for title in data if title not in ['P.A. Bolzano', 'P.A. Trento']]
-    fig = make_subplots(3, 7, shared_xaxes=True, shared_yaxes=True, subplot_titles=titles,
+    fig = make_subplots(4, 5, shared_xaxes=True, shared_yaxes=True, subplot_titles=titles,
                         vertical_spacing=.08)
     minus = 0
     PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
     maxs = []
     for i, name in enumerate(data):
-        col = (i - minus) % 7 + 1
-        row = (i - minus) // 7 + 1
+        col = (i - minus) % 5 + 1
+        row = (i - minus) // 5 + 1
         region = data[name]
         if name in ['P.A. Bolzano', 'P.A. Trento']:
             minus += 1
@@ -337,7 +337,7 @@ def summary(data, what, st):
         plot_bgcolor="white",
         margin=dict(t=50, l=10, b=10, r=10),
         # width=1300,
-        height=500,
+        height=700,
         autosize=True,
     )
     PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
