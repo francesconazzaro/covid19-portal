@@ -1,4 +1,5 @@
 import plotly.graph_objects as go
+import yaml
 from plotly.subplots import make_subplots
 
 import streamlit as st
@@ -28,6 +29,9 @@ def exp2(t, t_0, T_d):
 def linear(t, t_0, T_d):
     return (t - t_0) / T_d
 
+cwd = os.path.abspath(__file__)
+config = yaml.safe_load(os.path.join(cwd, 'config.yaml'))
+BASE_PATH = config.get('base_path', '/app')
 
 ITALY_EVENTS = [
     # {'x': '2020-02-19', 'label': 'First alarm'},
@@ -157,7 +161,7 @@ def import_population():
 
 class FileReference:
     def __init__(self):
-        base_path = '/app'
+        base_path = BASE_PATH
         self.filename_regioni = os.path.join(base_path, 'COVID-19/dati-regioni/')
         self.filename_ita = os.path.join(base_path, 'COVID-19/dati-andamento-nazionale/dpc-covid19-ita-andamento-nazionale.csv')
 
@@ -183,7 +187,7 @@ def hash_repo_reference(repo_reference):
 
 
 @st.cache(hash_funcs={FileReference: hash_file_reference, RepoReference: hash_repo_reference})
-def import_data(base_path='/app'):
+def import_data(base_path=BASE_PATH):
     popolazione = import_population()
     if not os.path.exists('COVID-19'):
         import git
