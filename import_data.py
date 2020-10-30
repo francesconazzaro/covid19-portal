@@ -19,39 +19,31 @@ def population():
     return popolazione
 
 
-class FileReference:
-    def __init__(self):
-        base_path = BASE_PATH
-        self.filename_regioni = os.path.join(base_path, 'COVID-19/dati-regioni/')
-        self.filename_ita = os.path.join(base_path, 'COVID-19/dati-andamento-nazionale/dpc-covid19-ita-andamento-nazionale.csv')
-
-
 class RepoReference:
-    def __init__(self):
-        path = 'COVID-19'
+    def __init__(self, base_path=BASE_PATH):
+        path = os.path.join(BASE_PATH, 'COVID-19')
+        if not os.path.exists(path):
+            git.Git(BASE_PATH).clone("https://github.com/pcm-dpc/COVID-19.git")
         repo = git.Repo(path)
         o = repo.remotes.origin
         o.pull()
+        print(repo.head.commit.hexsha)
+        self.path = path
         self.hexsha = repo.head.commit.hexsha
-
-
-def hash_file_reference(file_reference):
-    filename_regioni = file_reference.filename_regioni
-    filename_ita = file_reference.filename_ita
-    return (filename_regioni, filename_ita, os.path.getmtime(filename_regioni), os.path.getmtime(filename_ita))
+        self.regions_path = os.path.join(base_path, 'COVID-19/dati-regioni/dpc-covid19-ita-regioni.csv')
+        self.italy_path = os.path.join(base_path, 'COVID-19/dati-andamento-nazionale/dpc-covid19-ita-andamento-nazionale.csv')
 
 
 def hash_repo_reference(repo_reference):
-    return (repo_reference.hexsha)
+    print(repo_reference.hexsha)
+    return repo_reference.hexsha
 
 
-#@st.cache(suppress_st_warning=True, hash_funcs={FileReference: hash_file_reference, RepoReference: hash_repo_reference})
-def covid19(base_path=BASE_PATH):
+@st.cache(hash_funcs={RepoReference: hash_repo_reference})
+def covid19(repo_reference):
     popolazione = population()
-    if not os.path.exists('COVID-19'):
-        git.Git("./").clone("https://github.com/pcm-dpc/COVID-19.git")
-    data_aggregate = pd.read_csv(os.path.join(base_path, 'COVID-19/dati-regioni/dpc-covid19-ita-regioni.csv'), index_col='data', parse_dates=['data'])
-    ita = pd.read_csv(os.path.join(base_path, 'COVID-19/dati-andamento-nazionale/dpc-covid19-ita-andamento-nazionale.csv'), index_col='data', parse_dates=['data'])
+    data_aggregate = pd.read_csv(repo_reference.regions_path, index_col='data', parse_dates=['data'])
+    ita = pd.read_csv(repo_reference.italy_path, index_col='data', parse_dates=['data'])
 
     regioni = {}
     ita['popolazione'] = popolazione.sum()
