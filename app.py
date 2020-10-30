@@ -57,4 +57,5 @@ st.plotly_chart(plot.summary(DATA, rule, st), use_container_width=True)
 
 expander = st.beta_expander("This app is developed by Francesco Nazzaro")
 expander.write("Contact me on [Twitter](https://twitter.com/effenazzaro)")
+expander.write("The source code is on [GitHub](https://github.com/francesconazzaro/covid19-portal)")
 
