@@ -270,6 +270,7 @@ def plot_selection(data, country, rule, start_positivi, start_ti, start_ricoveri
         fmt=fmt,
     )
 
+
     plot_data = normalisation(data.deceduti, data.popolazione, rule).diff()
     maxs.append(plot_data.max())
     mins.append((plot_data.rolling(7).mean()[20:] + .001).min())
