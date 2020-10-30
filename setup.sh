@@ -7,4 +7,3 @@ headless = true
 port = $PORT
 enableCORS = false
 " > ~/.streamlit/config.toml
-python install_ga.py
