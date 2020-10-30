@@ -6,7 +6,10 @@ import numpy as np
 import streamlit as st
 
 CWD = os.path.abspath(os.path.dirname(__file__))
-config = yaml.safe_load(open(os.path.join(CWD, 'config.yaml')))
+try:
+    config = yaml.safe_load(open(os.path.join(CWD, 'config.yaml')))
+except FileNotFoundError:
+    config = {}
 BASE_PATH = config.get('base_path', '/app')
 
 
@@ -42,7 +45,7 @@ def hash_repo_reference(repo_reference):
     return (repo_reference.hexsha)
 
 
-@st.cache(hash_funcs={FileReference: hash_file_reference, RepoReference: hash_repo_reference})
+@st.cache(suppress_st_warning=True, hash_funcs={FileReference: hash_file_reference, RepoReference: hash_repo_reference})
 def covid19(base_path=BASE_PATH):
     popolazione = population()
     if not os.path.exists('COVID-19'):
