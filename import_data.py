@@ -45,7 +45,7 @@ def hash_repo_reference(repo_reference):
     return (repo_reference.hexsha)
 
 
-@st.cache(suppress_st_warning=True, hash_funcs={FileReference: hash_file_reference, RepoReference: hash_repo_reference})
+#@st.cache(suppress_st_warning=True, hash_funcs={FileReference: hash_file_reference, RepoReference: hash_repo_reference})
 def covid19(base_path=BASE_PATH):
     popolazione = population()
     if not os.path.exists('COVID-19'):
