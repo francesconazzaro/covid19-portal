@@ -34,8 +34,6 @@ ITALY_EVENTS = [
 
 def add_events(fig, events=ITALY_EVENTS, start=None, stop=None, offset=0, **kwargs):
     PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
-    x_list = []
-    label_list = []
     for event in events[start:stop]:
         label = '{x} {label}'.format(offset=offset, **event)
         fig.add_trace(go.Scatter(x=[event['x'], event['x']], y=[0, 10 ** 10], mode='lines',
@@ -52,7 +50,6 @@ def linear_fit(data, start=None, stop=None, p0=P0):
     x_norm = linear(data_fit.index.values, t_0_guess, T_d_guess)
     y_fit = data_fit.values
 
-    t_fit = data_fit.index.values
     x_fit = x_norm[np.isfinite(y_fit)]
 
     m, y, r2, _, _ = scipy.stats.linregress(x_fit, y_fit)
@@ -114,7 +111,6 @@ def get_matplotlib_cmap(cmap_name, bins, alpha=1):
         bins = 10
     cmap = cm.get_cmap(cmap_name)
     h = 1.0 / bins
-    contour_level_list = []
     contour_colour_list = []
 
     for k in range(bins):
@@ -151,14 +147,11 @@ def test_positivity_rate(data, country):
     ), 1, 1)
     fig.add_annotation(x=plot_data.index[-1], y=plot_data.values[-1], text='{:.2f}'.format(plot_data.values[-1]))
     fig.add_annotation(x=plot_data.index[-1], y=plot_data.rolling(7).mean().values[-1], text='{:.2f}'.format(plot_data.rolling(7).mean().values[-1]))
-    # fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey', range=['2020-09-01', np.datetime64(datetime.datetime.now() + datetime.timedelta(days=1))])
     fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey')
     fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[0, plot_data[-20:].max() + 1])
     fig.update_layout(
         plot_bgcolor="white",
         margin=dict(t=30,l=10,b=10,r=10),
-        # width=1300,
-        # height=500,
         autosize=True,
     )
     return fig
@@ -198,7 +191,7 @@ def plot_selection(data, country, rule, start_positivi, start_ti, start_ricoveri
         name='Nuovi Positivi',
         legendgroup='pos',
         line=line,
-        mode='lines+markers'
+        mode='lines'
     ), 1, 1)
 
     line['dash'] = 'dot'
@@ -215,7 +208,7 @@ def plot_selection(data, country, rule, start_positivi, start_ti, start_ricoveri
         name='Ricoveri',
         legendgroup='ric',
         line=line,
-        mode='lines+markers'
+        mode='lines'
     ), 1, 1)
     line['dash'] = 'dot'
     plot_fit(plot_data.rolling(7).mean(), fig, label='Ricoveri', start=start_ricoveri, stop=stop_ricoveri, mode='lines', line=line, shift=5)
@@ -229,7 +222,7 @@ def plot_selection(data, country, rule, start_positivi, start_ti, start_ricoveri
         name='Terapie Intensive',
         legendgroup='ti',
         line=line,
-        mode='lines+markers'
+        mode='lines'
     ), 1, 1)
     line['dash'] = 'dot'
     plot_fit(plot_data.rolling(7).mean(), fig, label='Terapie Intensive', start=start_ti, stop=stop_ti, mode='lines', line=line, shift=5)
@@ -244,7 +237,7 @@ def plot_selection(data, country, rule, start_positivi, start_ti, start_ricoveri
         name='Deceduti',
         legendgroup='dec',
         line=line,
-        mode='lines+markers'
+        mode='lines'
     ), 1, 1)
     # fig.add_trace(go.Line(x=plot_data.index, y=plot_data.rolling(7).mean().values, name='Deceduti', legendgroup='dec', marker=dict(color=next(PALETTE))), 1, 1)
     fig.add_trace(go.Scatter(x=plot_data.index, y=plot_data.values, name='Deceduti', mode='markers', legendgroup='dec', showlegend=False, marker=dict(color=next(PALETTE_ALPHA))), 1, 1)
