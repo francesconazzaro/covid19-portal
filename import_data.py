@@ -34,14 +34,10 @@ class RepoReference:
         self.italy_path = os.path.join(base_path, 'COVID-19/dati-andamento-nazionale/dpc-covid19-ita-andamento-nazionale.csv')
 
 
-def hash_repo_reference(repo_reference):
-    print(repo_reference.hexsha)
-    return repo_reference.hexsha
-
-
-@st.cache(hash_funcs={RepoReference: hash_repo_reference})
+@st.cache()
 def covid19(repo_reference):
     popolazione = population()
+    print('CACHE MISS')
     data_aggregate = pd.read_csv(repo_reference.regions_path, index_col='data', parse_dates=['data'])
     ita = pd.read_csv(repo_reference.italy_path, index_col='data', parse_dates=['data'])
 
