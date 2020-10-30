@@ -5,6 +5,9 @@ import datetime
 
 import plot
 import import_data
+import plugins
+
+plugins.google_analytics()
 
 
 st.set_page_config(layout='wide')
