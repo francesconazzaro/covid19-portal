@@ -286,8 +286,6 @@ def plot_selection(data, country, rule, start_positivi, start_ti, start_ricoveri
 
     maximum = np.nanmax(np.log10(maxs)) + .5
     minimum = np.nanmin(np.log10(mins))
-    print(maxs, mins)
-    print(maximum, minimum)
     fig.update_xaxes(row=1, col=1, showgrid=True, gridwidth=1, gridcolor='LightPink')
     fig.update_yaxes(row=1, col=1, type="log", showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[minimum, maximum], showexponent='all', exponentformat='power')
     fig.update_layout(
