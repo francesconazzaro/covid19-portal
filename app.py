@@ -18,8 +18,8 @@ def explore_regions():
     with col1:
         country = st.selectbox('Seleziona una regione', list(DATA.keys()))
     with col2:
-        rule = st.radio('', ['per 100.000 abitanti', 'Totali'])
-    col1, col2, col3 = st.beta_columns(3)
+        rule = st.radio('', list(plot.RULE_MAP.keys()))
+    col1, col2, col3, *_ = st.beta_columns(6)
     with col1:
         start_positivi = st.date_input('Data inizio fit Nuovi positivi', datetime.date(2020, 10, 15), min_value=datetime.date(2020, 3, 1), max_value=datetime.date.today())
     with col2:

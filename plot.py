@@ -20,6 +20,11 @@ def linear(t, t_0, T_d):
     return (t - t_0) / T_d
 
 
+RULE_MAP = {
+    'Dati per 100.000 abitanti': 'percentage',
+    'Totali': 'total',
+}
+
 ITALY_EVENTS = [
     # {'x': '2020-02-19', 'label': 'First alarm'},
     {'x': '2020-02-24', 'label': 'Chiusura scuole al Nord'},
@@ -158,7 +163,7 @@ def test_positivity_rate(data, country):
 
 
 def normalisation(data, population, rule):
-    if rule == 'per 100.000 abitanti':
+    if RULE_MAP[rule] == 'percentage':
         new_data = data / population * UNITA
         new_data.name = data.name
         return new_data
@@ -168,10 +173,46 @@ def normalisation(data, population, rule):
         return new_data
 
 def get_fmt(rule):
-    if rule == 'per 100.000 abitanti':
+    if RULE_MAP[rule] == 'percentage':
         return '{:.2f}'
     else:
         return '{:.0f}'
+
+
+def plot_average(plot_data, palette, fig, name, palette_alpha, fmt, start=None, stop=None):
+    line = dict(color=next(palette))
+    fig.add_trace(go.Line(
+        x=plot_data.index, y=plot_data.rolling(7).mean().values,
+        name=name,
+        legendgroup=name,
+        line=line,
+        mode='lines'
+    ), 1, 1)
+    line['dash'] = 'dot'
+    if start and stop:
+        plot_fit(
+            plot_data.rolling(7).mean(),
+            fig,
+            label=name,
+            start=start,
+            stop=stop,
+            mode='lines',
+            line=line,
+            shift=5
+        )
+    fig.add_trace(go.Scatter(
+        x=plot_data.index,
+        y=plot_data.values,
+        mode='markers',
+        legendgroup=name,
+        showlegend=False,
+        marker=dict(color=next(palette_alpha))
+    ), 1, 1)
+    fig.add_annotation(
+        x=plot_data.index[-1],
+        y=np.log10(plot_data.values[-1]),
+        text=fmt.format(plot_data.values[-1])
+    )
 
 
 def plot_selection(data, country, rule, start_positivi, start_ti, start_ricoveri, stop_positivi, stop_ti, stop_ricoveri):
@@ -181,77 +222,78 @@ def plot_selection(data, country, rule, start_positivi, start_ti, start_ricoveri
 
     data = data[country]
 
-    fig = make_subplots(1, 1)
+    maxs = []
+    mins = []
+
+    fig = make_subplots(1, 1, subplot_titles=[country])
     fmt = get_fmt(rule)
 
-    line = dict(color=next(PALETTE))
     plot_data = normalisation(data.nuovi_positivi, data.popolazione, rule)
-    fig.add_trace(go.Line(
-        x=plot_data.index, y=plot_data.rolling(7).mean().values,
+    maxs.append(plot_data.max())
+    mins.append((plot_data.rolling(7).mean()[20:] + .001).min())
+    plot_average(
+        plot_data,
+        fig=fig,
         name='Nuovi Positivi',
-        legendgroup='pos',
-        line=line,
-        mode='lines'
-    ), 1, 1)
+        start=start_positivi,
+        stop=stop_positivi,
+        palette=PALETTE,
+        palette_alpha=PALETTE_ALPHA,
+        fmt=fmt,
+    )
 
-    line['dash'] = 'dot'
-    plot_fit(plot_data.rolling(7).mean(), fig, label='Nuovi Positivi', start=start_positivi, stop=stop_positivi, mode='lines', line=line, shift=5)
-
-    fig.add_trace(go.Scatter(x=plot_data.index, y=plot_data.values, mode='markers', legendgroup='pos', showlegend=False, marker=dict(color=next(PALETTE_ALPHA))), 1, 1)
-    fig.add_annotation(x=plot_data.index[-1], y=np.log10(plot_data.values[-1]), text=fmt.format(plot_data.values[-1]))
-
-    line = dict(color=next(PALETTE))
     plot_data = normalisation(data.ricoverati_con_sintomi, data.popolazione, rule)
-    fig.add_trace(go.Line(
-        x=plot_data.index,
-        y=plot_data.rolling(7).mean().values,
+    maxs.append(plot_data.max())
+    mins.append((plot_data.rolling(7).mean()[20:] + .001).min())
+    plot_average(
+        plot_data,
+        fig=fig,
         name='Ricoveri',
-        legendgroup='ric',
-        line=line,
-        mode='lines'
-    ), 1, 1)
-    line['dash'] = 'dot'
-    plot_fit(plot_data.rolling(7).mean(), fig, label='Ricoveri', start=start_ricoveri, stop=stop_ricoveri, mode='lines', line=line, shift=5)
-    fig.add_trace(go.Scatter(x=plot_data.index, y=plot_data.values, mode='markers', legendgroup='ric', showlegend=False, marker=dict(color=next(PALETTE_ALPHA))), 1, 1)
+        start=start_ricoveri,
+        stop=stop_ricoveri,
+        palette=PALETTE,
+        palette_alpha=PALETTE_ALPHA,
+        fmt=fmt,
+    )
 
-    line = dict(color=next(PALETTE))
     plot_data = normalisation(data.terapia_intensiva, data.popolazione, rule)
-    fig.add_trace(go.Line(
-        x=plot_data.index,
-        y=plot_data.rolling(7).mean().values,
+    maxs.append(plot_data.max())
+    mins.append((plot_data.rolling(7).mean()[20:] + .001).min())
+    plot_average(
+        plot_data,
+        fig=fig,
         name='Terapie Intensive',
-        legendgroup='ti',
-        line=line,
-        mode='lines'
-    ), 1, 1)
-    line['dash'] = 'dot'
-    plot_fit(plot_data.rolling(7).mean(), fig, label='Terapie Intensive', start=start_ti, stop=stop_ti, mode='lines', line=line, shift=5)
-    fig.add_trace(go.Scatter(x=plot_data.index, y=plot_data.values, mode='markers', legendgroup='ti', showlegend=False, marker=dict(color=next(PALETTE_ALPHA))), 1, 1)
-    fig.add_annotation(x=plot_data.index[-1], y=np.log10(plot_data.values[-1]), text=fmt.format(plot_data.values[-1]))
+        start=start_ti,
+        stop=stop_ti,
+        palette=PALETTE,
+        palette_alpha=PALETTE_ALPHA,
+        fmt=fmt,
+    )
 
-    line = dict(color=next(PALETTE))
-    plot_data = normalisation(data.deceduti.diff(), data.popolazione, rule)
-    fig.add_trace(go.Line(
-        x=plot_data.index,
-        y=plot_data.rolling(7).mean().values,
+    plot_data = normalisation(data.deceduti, data.popolazione, rule).diff()
+    maxs.append(plot_data.max())
+    mins.append((plot_data.rolling(7).mean()[20:] + .001).min())
+    plot_average(
+        plot_data,
+        fig=fig,
         name='Deceduti',
-        legendgroup='dec',
-        line=line,
-        mode='lines'
-    ), 1, 1)
-    # fig.add_trace(go.Line(x=plot_data.index, y=plot_data.rolling(7).mean().values, name='Deceduti', legendgroup='dec', marker=dict(color=next(PALETTE))), 1, 1)
-    fig.add_trace(go.Scatter(x=plot_data.index, y=plot_data.values, name='Deceduti', mode='markers', legendgroup='dec', showlegend=False, marker=dict(color=next(PALETTE_ALPHA))), 1, 1)
-    fig.add_annotation(x=plot_data.index[-1], y=np.log10(plot_data.values[-1]), text=fmt.format(plot_data.values[-1]))
+        palette=PALETTE,
+        palette_alpha=PALETTE_ALPHA,
+        fmt=fmt,
+    )
 
     add_events(fig)
 
-    plot_data = normalisation(data.nuovi_positivi, data.popolazione, rule)
+    maximum = np.nanmax(np.log10(maxs)) + .5
+    minimum = np.nanmin(np.log10(mins))
+    print(maxs, mins)
+    print(maximum, minimum)
     fig.update_xaxes(row=1, col=1, showgrid=True, gridwidth=1, gridcolor='LightPink')
-    fig.update_yaxes(row=1, col=1, type="log", showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[-3, np.log10(plot_data.max()) + .5], showexponent='all', exponentformat='power')
+    fig.update_yaxes(row=1, col=1, type="log", showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[minimum, maximum], showexponent='all', exponentformat='power')
     fig.update_layout(
         plot_bgcolor="white",
-        margin=dict(t=30,l=10,b=10,r=10),
-        yaxis_title=f'Dati {rule}',
+        margin=dict(t=30, l=10, b=10, r=10),
+        yaxis_title=f'{rule}',
         # width=1300,
         height=500,
         autosize=True,
