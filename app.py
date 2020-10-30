@@ -8,7 +8,8 @@ import import_data
 
 
 st.beta_set_page_config(layout='wide')
-DATA = import_data.covid19()
+repo_reference = import_data.RepoReference()
+DATA = import_data.covid19(repo_reference)
 st.title('COVID-19: Situazione in Italia aggiornata al {}'.format(DATA['Italia'].index[-1].date()))
 
 
