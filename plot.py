@@ -47,7 +47,7 @@ def add_events(fig, events=ITALY_EVENTS, start=None, stop=None, offset=0, **kwar
     for event in events[start:stop]:
         label = '{x} {label}'.format(offset=offset, **event)
         fig.add_trace(go.Scatter(x=[event['x'], event['x']], y=[0, 10 ** 10], mode='lines',
-                                 legendgroup='events', line=dict(color=next(PALETTE), width=2),
+                                 legendgroup='events', showlegend=False, line=dict(color=next(PALETTE), width=2),
                                  name=label))
 
 
@@ -180,6 +180,7 @@ def normalisation(data, population, rule):
         new_data.name = data.name
         return new_data
 
+
 def get_fmt(rule):
     if RULE_MAP[rule] == 'percentage':
         return '{:.2f}'
@@ -291,7 +292,7 @@ def plot_selection(data, country, rule, start_positivi, start_ti, start_ricoveri
         fmt=fmt,
     )
 
-    add_events(fig)
+    # add_events(fig)
 
     maximum = np.nanmax(np.log10(maxs)) + .5
     minimum = np.nanmin(np.log10(mins))
@@ -299,11 +300,20 @@ def plot_selection(data, country, rule, start_positivi, start_ti, start_ricoveri
     fig.update_yaxes(row=1, col=1, type="log", showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[minimum, maximum], showexponent='all', exponentformat='power')
     fig.update_layout(
         plot_bgcolor="white",
-        margin=dict(t=30, l=10, b=10, r=10),
+        margin=dict(t=70, l=10, b=10, r=10),
         yaxis_title=f'{rule}',
         # width=1300,
         height=500,
         autosize=True,
+        legend={
+            'orientation': "h",
+            'yanchor': "bottom",
+            # 'y': -.15, # bottom
+            # 'y': 1.04, # top
+            'y': .95,
+            'xanchor': "center",
+            'x': .5,
+        }
     )
     return fig
 
