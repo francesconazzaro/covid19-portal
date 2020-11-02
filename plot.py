@@ -25,6 +25,11 @@ RULE_MAP = {
     'Totali': 'total',
 }
 
+PERCENTAGE_RULE = {
+    'Percentuale di tamponi positivi' : 'tamponi',
+    'Percentuale di casi positivi': 'casi',
+}
+
 ITALY_EVENTS = [
     # {'x': '2020-02-19', 'label': 'First alarm'},
     {'x': '2020-02-24', 'label': 'Chiusura scuole al Nord'},
@@ -127,16 +132,19 @@ def get_matplotlib_cmap(cmap_name, bins, alpha=1):
     return contour_colour_list
 
 
-def test_positivity_rate(data, country):
+def test_positivity_rate(data, country, rule):
     data = data[country]
     PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
     PALETTE_ALPHA = itertools.cycle(get_matplotlib_cmap('tab10', bins=8, alpha=.3))
-    fig = make_subplots(1, 1, subplot_titles=['Percentuale di tamponi positivi'])
-    plot_data = data.nuovi_positivi / data.tamponi.diff() * 100
+    fig = make_subplots(1, 1, subplot_titles=[rule])
+    if PERCENTAGE_RULE[rule] == 'tamponi':
+        plot_data = data.nuovi_positivi / data.tamponi.diff() * 100
+    elif PERCENTAGE_RULE[rule] == 'casi':
+        plot_data = data.nuovi_positivi / data.casi_testati.diff() * 100
     fig.add_trace(go.Line(
         x=plot_data.index,
         y=plot_data.rolling(7).mean().values,
-        name='Percentuale tamponi positivi',
+        name=rule,
         mode='lines+markers',
         showlegend=False,
         legendgroup='postam',
@@ -156,7 +164,7 @@ def test_positivity_rate(data, country):
     fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[0, plot_data[-20:].max() + 1])
     fig.update_layout(
         plot_bgcolor="white",
-        margin=dict(t=30,l=10,b=10,r=10),
+        margin=dict(t=30, l=10, b=10, r=10),
         autosize=True,
     )
     return fig
