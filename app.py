@@ -46,16 +46,20 @@ def explore_regions():
     data_country.index = data_country.index.strftime(fmt)
     with col1:
         st.write('Nuovi Positivi')
-        st.dataframe(plot.normalisation(data_country.nuovi_positivi, data_country.popolazione, rule)[-5:])
+        df = plot.normalisation(data_country.nuovi_positivi, data_country.popolazione, rule)[-5:]
+        st.dataframe(df.to_frame().style.background_gradient(cmap='Reds'))
     with col2:
         st.write('Ricoveri')
-        st.dataframe(plot.normalisation(data_country.ricoverati_con_sintomi, data_country.popolazione, rule)[-5:])
+        df = plot.normalisation(data_country.ricoverati_con_sintomi, data_country.popolazione, rule)[-5:]
+        st.dataframe(df.to_frame().style.background_gradient(cmap='Reds'))
     with col3:
         st.write('Terapia Intensiva')
-        st.dataframe(plot.normalisation(data_country.terapia_intensiva, data_country.popolazione, rule)[-5:])
+        df = plot.normalisation(data_country.terapia_intensiva, data_country.popolazione, rule)[-5:]
+        st.dataframe(df.to_frame().style.background_gradient(cmap='Reds'))
     with col4:
         st.write('Deceduti')
-        st.dataframe(plot.normalisation(data_country.deceduti.diff(), data_country.popolazione, rule)[-5:])
+        df = plot.normalisation(data_country.deceduti.diff(), data_country.popolazione, rule)[-5:]
+        st.dataframe(df.to_frame().style.background_gradient(cmap='Reds'))
     with col5:
         if plot.PERCENTAGE_RULE[percentage_rule] == 'tamponi':
             st.write('Percentuale Tamponi Positivi')
@@ -65,8 +69,7 @@ def explore_regions():
             st.write('Percentuale Casi Positivi')
             tpr = data_country.nuovi_positivi[-5:] / data_country.casi_testati.diff()[-5:] * 100
             tpr.name = 'CPR (%)'
-        st.dataframe(tpr)
-
+        st.dataframe(tpr.to_frame().style.background_gradient(cmap='Reds'))
 
 explore_regions()
 st.header('Confronto tra regioni')
