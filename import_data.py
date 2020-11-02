@@ -26,8 +26,10 @@ class RepoReference:
             git.Git(BASE_PATH).clone("https://github.com/pcm-dpc/COVID-19.git")
         repo = git.Repo(path)
         o = repo.remotes.origin
-        o.pull()
-        print(repo.head.commit.hexsha)
+        try:
+            o.pull()
+        except:
+            pass
         self.path = path
         self.hexsha = repo.head.commit.hexsha
         self.regions_path = os.path.join(base_path, 'COVID-19/dati-regioni/dpc-covid19-ita-regioni.csv')
