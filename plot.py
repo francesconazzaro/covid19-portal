@@ -94,7 +94,7 @@ def fit(data, start=None, stop=None, p0=P0):
 def plot_fit(data, fig, start=None, stop=None, label=None, shift=5, **kwargs):
     t0, td, r2 = fit(data, start, stop)
     if label is not None:
-        label = 'Fit {label} (T_d = {0:.2f})'.format(td / np.timedelta64(1, "D"), label=label)
+        label = 'Fit {label}<br>(T_d = {0:.2f})'.format(td / np.timedelta64(1, "D"), label=label)
     x = data[start:stop].index
     x_base = np.arange(x[0] - np.timedelta64(shift, 'D'), x[-1] + np.timedelta64(shift, 'D'),
                        np.timedelta64(1, 'D'))
@@ -300,7 +300,7 @@ def plot_selection(data, country, rule, start_positivi, start_ti, start_ricoveri
     fig.update_yaxes(row=1, col=1, type="log", showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[minimum, maximum], showexponent='all', exponentformat='power')
     fig.update_layout(
         plot_bgcolor="white",
-        margin=dict(t=70, l=10, b=10, r=10),
+        margin=dict(t=70, l=0, b=0, r=0),
         yaxis_title=f'{rule}',
         # width=1300,
         height=500,
@@ -309,8 +309,7 @@ def plot_selection(data, country, rule, start_positivi, start_ti, start_ricoveri
             'orientation': "h",
             'yanchor': "bottom",
             # 'y': -.15, # bottom
-            # 'y': 1.04, # top
-            'y': .95,
+            'y': .9, # top
             'xanchor': "center",
             'x': .5,
         }
