@@ -15,6 +15,7 @@ repo_reference = import_data.RepoReference()
 DATA = import_data.covid19(repo_reference)
 st.title('COVID-19: Situazione in Italia aggiornata al {}'.format(DATA['Italia'].index[-1].date()))
 
+fmt = "%d-%m-%Y"
 
 def explore_regions():
     st.header('Dati regione')
@@ -23,34 +24,48 @@ def explore_regions():
         country = st.selectbox('Seleziona una regione', list(DATA.keys()))
     with col2:
         rule = st.radio('', list(plot.RULE_MAP.keys()))
-    col1, col2, col3, *_ = st.beta_columns(6)
+    col1, col2, col3, col4, col5, col6 = st.beta_columns(6)
     with col1:
         start_positivi = st.date_input('Data inizio fit Nuovi positivi', datetime.date(2020, 10, 15), min_value=datetime.date(2020, 3, 1), max_value=datetime.date.today())
     with col2:
-        start_ti = st.date_input('Data inizio fit Terapie intensive', datetime.date(2020, 10, 15), min_value=datetime.date(2020, 3, 1), max_value=datetime.date.today())
-    with col3:
-        start_ricoveri = st.date_input('Data inizio fit Ricoveri', datetime.date(2020, 10, 15), min_value=datetime.date(2020, 3, 1), max_value=datetime.date.today())
-    with col1:
         stop_positivi = st.date_input('Data fine fit Nuovi positivi', DATA[country].index[-1], min_value=datetime.date(2020, 3, 2), max_value=datetime.date.today())
-    with col2:
-        stop_ti = st.date_input('Data fine fit Terapie intensive', DATA[country].index[-1], min_value=datetime.date(2020, 3, 2), max_value=datetime.date.today())
     with col3:
+        start_ti = st.date_input('Data inizio fit Terapie intensive', datetime.date(2020, 10, 15), min_value=datetime.date(2020, 3, 1), max_value=datetime.date.today())
+    with col4:
+        stop_ti = st.date_input('Data fine fit Terapie intensive', DATA[country].index[-1], min_value=datetime.date(2020, 3, 2), max_value=datetime.date.today())
+    with col5:
+        start_ricoveri = st.date_input('Data inizio fit Ricoveri', datetime.date(2020, 10, 15), min_value=datetime.date(2020, 3, 1), max_value=datetime.date.today())
+    with col6:
         stop_ricoveri = st.date_input('Data fine fit Ricoveri', DATA[country].index[-1], min_value=datetime.date(2020, 3, 2), max_value=datetime.date.today())
     st.plotly_chart(plot.plot_selection(DATA, country, rule, start_positivi, start_ti, start_ricoveri, stop_positivi, stop_ti, stop_ricoveri), use_container_width=True)
     percentage_rule = st.radio('', list(plot.PERCENTAGE_RULE.keys()))
     st.plotly_chart(plot.test_positivity_rate(DATA, country, rule=percentage_rule), use_container_width=True)
     st.subheader(f'Andamento degli ultimi 5 giorni: {country} ({rule})')
-    col1, col2, col3, col4 = st.beta_columns(4)
+    col1, col2, col3, col4, col5 = st.beta_columns(5)
+    data_country = DATA[country].copy()
+    data_country.index = data_country.index.strftime(fmt)
     with col1:
-        st.write(plot.normalisation(DATA[country].nuovi_positivi, DATA[country].popolazione, rule)[-5:])
+        st.write('Nuovi Positivi')
+        st.dataframe(plot.normalisation(data_country.nuovi_positivi, data_country.popolazione, rule)[-5:])
     with col2:
-        st.write(plot.normalisation(DATA[country].terapia_intensiva, DATA[country].popolazione, rule)[-5:])
+        st.write('Ricoveri')
+        st.dataframe(plot.normalisation(data_country.ricoverati_con_sintomi, data_country.popolazione, rule)[-5:])
     with col3:
-        st.write(plot.normalisation(DATA[country].deceduti.diff(), DATA[country].popolazione, rule)[-5:])
+        st.write('Terapia Intensiva')
+        st.dataframe(plot.normalisation(data_country.terapia_intensiva, data_country.popolazione, rule)[-5:])
     with col4:
-        tpr = DATA[country].nuovi_positivi[-5:] / DATA[country].tamponi.diff()[-5:] * 100
-        tpr.name = 'TPR (%)'
-        st.write(tpr)
+        st.write('Deceduti')
+        st.dataframe(plot.normalisation(data_country.deceduti.diff(), data_country.popolazione, rule)[-5:])
+    with col5:
+        if plot.PERCENTAGE_RULE[percentage_rule] == 'tamponi':
+            st.write('Percentuale Tamponi Positivi')
+            tpr = data_country.nuovi_positivi[-5:] / data_country.tamponi.diff()[-5:] * 100
+            tpr.name = 'TPR (%)'
+        elif plot.PERCENTAGE_RULE[percentage_rule] == 'casi':
+            st.write('Percentuale Casi Positivi')
+            tpr = data_country.nuovi_positivi[-5:] / data_country.casi_testati.diff()[-5:] * 100
+            tpr.name = 'CPR (%)'
+        st.dataframe(tpr)
 
 
 explore_regions()
