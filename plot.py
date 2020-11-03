@@ -354,7 +354,7 @@ def summary(data, what, st):
         plot_bgcolor="white",
         margin=dict(t=50, l=10, b=10, r=10),
         # width=1300,
-        height=700,
+        height=500,
         autosize=True,
     )
     PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))

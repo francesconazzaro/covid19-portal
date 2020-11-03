@@ -12,7 +12,7 @@ plugins.google_analytics()
 
 st.set_page_config(layout='wide')
 repo_reference = import_data.RepoReference()
-DATA = import_data.covid19(repo_reference)
+DATA, DATA_TI = import_data.covid19(repo_reference)
 st.title('COVID-19: Situazione in Italia aggiornata al {}'.format(DATA['Italia'].index[-1].date()))
 
 fmt = "%d-%m-%Y"
@@ -22,20 +22,16 @@ def explore_regions():
     col1, col2, col3, col4 = st.beta_columns(4)
     with col1:
         country = st.selectbox('Seleziona una regione', list(DATA.keys()))
-    with col2:
         rule = st.radio('', list(plot.RULE_MAP.keys()))
-    col1, col2, col3, col4, col5, col6 = st.beta_columns(6)
-    with col1:
-        start_positivi = st.date_input('Data inizio fit Nuovi positivi', datetime.date(2020, 10, 15), min_value=datetime.date(2020, 3, 1), max_value=datetime.date.today())
+    # col1, col2, col3, col4, col5, col6 = st.beta_columns(6)
     with col2:
+        start_positivi = st.date_input('Data inizio fit Nuovi positivi', datetime.date(2020, 10, 15), min_value=datetime.date(2020, 3, 1), max_value=datetime.date.today())
         stop_positivi = st.date_input('Data fine fit Nuovi positivi', DATA[country].index[-1], min_value=datetime.date(2020, 3, 2), max_value=datetime.date.today())
     with col3:
         start_ti = st.date_input('Data inizio fit Terapie intensive', datetime.date(2020, 10, 15), min_value=datetime.date(2020, 3, 1), max_value=datetime.date.today())
-    with col4:
         stop_ti = st.date_input('Data fine fit Terapie intensive', DATA[country].index[-1], min_value=datetime.date(2020, 3, 2), max_value=datetime.date.today())
-    with col5:
+    with col4:
         start_ricoveri = st.date_input('Data inizio fit Ricoveri', datetime.date(2020, 10, 15), min_value=datetime.date(2020, 3, 1), max_value=datetime.date.today())
-    with col6:
         stop_ricoveri = st.date_input('Data fine fit Ricoveri', DATA[country].index[-1], min_value=datetime.date(2020, 3, 2), max_value=datetime.date.today())
     st.plotly_chart(plot.plot_selection(DATA, country, rule, start_positivi, start_ti, start_ricoveri, stop_positivi, stop_ti, stop_ricoveri), use_container_width=True)
     percentage_rule = st.radio('', list(plot.PERCENTAGE_RULE.keys()))
@@ -73,12 +69,17 @@ def explore_regions():
 
 explore_regions()
 st.header('Confronto tra regioni')
-col1, col2, col3, col4, col5 = st.beta_columns(5)
+col1, col2 = st.beta_columns([1, 2])
 with col1:
+    st.subheader('Percentuale di Terapie Intensive occupate regione per regione')
+    st.write('')
+    st.dataframe(DATA_TI.percentuale_occupazione.to_frame().style.background_gradient(cmap='Reds'), height=500)
+with col2:
     rule = st.selectbox('Variabile', ['Nuovi Positivi', 'Terapie Intensive', 'Percentuale tamponi positivi'])
-st.plotly_chart(plot.summary(DATA, rule, st), use_container_width=True)
+    st.plotly_chart(plot.summary(DATA, rule, st), use_container_width=True)
 
-expander = st.beta_expander("This app is developed by Francesco Nazzaro")
+expander = st.beta_expander("This app is developed by Francesco Nazzaro (click to check raw data)")
 expander.write("Contact me on [Twitter](https://twitter.com/effenazzaro)")
 expander.write("The source code is on [GitHub](https://github.com/francesconazzaro/covid19-portal)")
-
+expander.write("Raw data")
+expander.dataframe(DATA['Italia'])
