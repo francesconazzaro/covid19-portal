@@ -43,14 +43,17 @@ def explore_regions():
     with col1:
         st.write('Nuovi Positivi')
         df = plot.normalisation(data_country.nuovi_positivi, data_country.popolazione, rule)[-5:]
+        df.name = 'positivi'
         st.dataframe(df.to_frame().style.background_gradient(cmap='Reds'))
     with col2:
         st.write('Ricoveri')
         df = plot.normalisation(data_country.ricoverati_con_sintomi, data_country.popolazione, rule)[-5:]
+        df.name = 'ricoveri'
         st.dataframe(df.to_frame().style.background_gradient(cmap='Reds'))
     with col3:
         st.write('Terapia Intensiva')
         df = plot.normalisation(data_country.terapia_intensiva, data_country.popolazione, rule)[-5:]
+        df.name = 'TI'
         st.dataframe(df.to_frame().style.background_gradient(cmap='Reds'))
     with col4:
         st.write('Deceduti')
@@ -73,7 +76,7 @@ col1, col2 = st.beta_columns([1, 2])
 with col1:
     st.subheader('Percentuale di Terapie Intensive occupate regione per regione')
     st.write('')
-    st.dataframe(DATA_TI.percentuale_occupazione.to_frame().style.background_gradient(cmap='Reds'), height=500)
+    st.dataframe(DATA_TI.occupazione.to_frame().style.background_gradient(cmap='Reds'), height=500)
 with col2:
     rule = st.selectbox('Variabile', ['Nuovi Positivi', 'Terapie Intensive', 'Percentuale tamponi positivi'])
     st.plotly_chart(plot.summary(DATA, rule, st), use_container_width=True)
