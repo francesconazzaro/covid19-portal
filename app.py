@@ -77,9 +77,13 @@ with col1:
     st.subheader('Percentuale di Terapie Intensive occupate regione per regione')
     st.write('')
     st.dataframe(DATA_TI.occupazione.to_frame().style.background_gradient(cmap='Reds'), height=500)
+    st.write("Dati da https://www.ilsole24ore.com/art/coronavirus-terapie-intensive-aumento-quali-regioni-sono-pronte-la-seconda-ondata-ADNUkdv")
 with col2:
     rule = st.selectbox('Variabile', ['Nuovi Positivi', 'Terapie Intensive', 'Percentuale tamponi positivi'])
     st.plotly_chart(plot.summary(DATA, rule, st), use_container_width=True)
+
+# st.plotly_chart(plot.mortality(DATA))
+
 
 expander = st.beta_expander("This app is developed by Francesco Nazzaro (click to check raw data)")
 expander.write("Contact me on [Twitter](https://twitter.com/effenazzaro)")

@@ -279,7 +279,6 @@ def plot_selection(data, country, rule, start_positivi, start_ti, start_ricoveri
         fmt=fmt,
     )
 
-
     plot_data = normalisation(data.deceduti, data.popolazione, rule).diff()
     maxs.append(plot_data.max())
     mins.append((plot_data.rolling(7).mean()[20:] + .001).min())
@@ -360,4 +359,33 @@ def summary(data, what, st):
     PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
     for i in fig['layout']['annotations']:
         i['font'] = dict(size=15, color=next(PALETTE))
+    return fig
+
+
+def translate(data, days_delay=0):
+    dates = data.index + np.timedelta64(days_delay, 'D')
+    data_t = data.copy()
+    data_t.index = dates
+    return data_t
+
+
+def mortality(data, offset=-7):
+    italy = data['Italia']
+    fig = make_subplots(1, 1, subplot_titles=['Mortalità apparente'])
+    translated_cases = translate(italy.nuovi_positivi, days_delay=offset)
+    plot_data = italy.deceduti.diff() / translated_cases * 100
+    fig.add_trace(go.Line(
+        x=plot_data.index, y=plot_data.rolling(7).mean().values,
+        mode='lines'
+    ))
+    fig.update_xaxes(showgrid=True, gridwidth=1, tickangle=45, gridcolor='LightGrey')
+    fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey')
+    fig.update_layout(
+        plot_bgcolor="white",
+        margin=dict(t=50, l=10, b=10, r=10),
+        yaxis_title='Percentuale di deceduti su nuovi positivi di {} giorni prima'.format(abs(offset)),
+        # width=1300,
+        height=500,
+        autosize=True,
+    )
     return fig
