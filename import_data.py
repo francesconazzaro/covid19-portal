@@ -19,6 +19,11 @@ def population():
     return popolazione
 
 
+def intensive_care():
+    terapie_intensive = pd.read_csv(os.path.join(CWD, 'resources/posti_terapie_intensive.csv'), sep='\t', index_col='regioni')
+    return terapie_intensive
+
+
 class RepoReference:
     def __init__(self, base_path=BASE_PATH):
         path = os.path.join(BASE_PATH, 'COVID-19')
@@ -39,19 +44,26 @@ class RepoReference:
 @st.cache()
 def covid19(repo_reference):
     popolazione = population()
+    terapie_intensive = intensive_care()
     print('CACHE MISS')
     data_aggregate = pd.read_csv(repo_reference.regions_path, index_col='data', parse_dates=['data'])
     ita = pd.read_csv(repo_reference.italy_path, index_col='data', parse_dates=['data'])
 
     regioni = {}
     ita['popolazione'] = popolazione.sum()
+    ita['terapie_intensive_disponibili'] = terapie_intensive.posti_attuali.sum()
+    terapie_intensive['percentuale_occupazione'] = 0
     regioni['Italia'] = ita
     for regione in np.unique(data_aggregate.denominazione_regione):
         try:
-            popolazione_index = [index for index in popolazione.index if regione[:4].lower() in index.lower()][0]
+            popolazione_index = [index for index in popolazione.index if regione[:5].lower() in index.lower()][0]
+            terapie_intensive_index = [index for index in terapie_intensive.index if regione[:5].lower() in index.lower()][0]
         except:
             print('Unable to find', regione)
+            continue
         data_in = data_aggregate[data_aggregate.denominazione_regione == regione].sort_index()
         data_in['popolazione'] = popolazione[popolazione_index]
+        data_in['terapie_intensive_disponibili'] = terapie_intensive.posti_attuali[terapie_intensive_index]
+        terapie_intensive.percentuale_occupazione[terapie_intensive_index] = float(data_in.terapia_intensiva[-1]) / terapie_intensive.posti_attuali[terapie_intensive_index] * 100
         regioni[regione] = data_in
-    return regioni
+    return regioni, terapie_intensive
