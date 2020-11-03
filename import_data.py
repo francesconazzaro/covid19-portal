@@ -52,7 +52,7 @@ def covid19(repo_reference):
     regioni = {}
     ita['popolazione'] = popolazione.sum()
     ita['terapie_intensive_disponibili'] = terapie_intensive.posti_attuali.sum()
-    terapie_intensive['percentuale_occupazione'] = 0
+    terapie_intensive['occupazione'] = 0
     regioni['Italia'] = ita
     for regione in np.unique(data_aggregate.denominazione_regione):
         try:
@@ -64,6 +64,6 @@ def covid19(repo_reference):
         data_in = data_aggregate[data_aggregate.denominazione_regione == regione].sort_index()
         data_in['popolazione'] = popolazione[popolazione_index]
         data_in['terapie_intensive_disponibili'] = terapie_intensive.posti_attuali[terapie_intensive_index]
-        terapie_intensive.percentuale_occupazione[terapie_intensive_index] = float(data_in.terapia_intensiva[-1]) / terapie_intensive.posti_attuali[terapie_intensive_index] * 100
+        terapie_intensive.occupazione[terapie_intensive_index] = float(data_in.terapia_intensiva[-1]) / terapie_intensive.posti_attuali[terapie_intensive_index] * 100
         regioni[regione] = data_in
     return regioni, terapie_intensive
