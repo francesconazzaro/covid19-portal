@@ -228,7 +228,7 @@ def plot_average(plot_data, palette, fig, name, palette_alpha, fmt, start=None, 
     )
 
 
-def plot_selection(data, country, rule, start_positivi, start_ti, start_ricoveri, stop_positivi, stop_ti, stop_ricoveri, log=True):
+def plot_selection(data, country, rule, start_positivi, start_ti, start_ricoveri, stop_positivi, stop_ti, stop_ricoveri, start_deceduti, stop_deceduti, log=True):
 
     PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
     PALETTE_ALPHA = itertools.cycle(get_matplotlib_cmap('tab10', bins=8, alpha=.3))
@@ -293,6 +293,8 @@ def plot_selection(data, country, rule, start_positivi, start_ti, start_ricoveri
         plot_data,
         fig=fig,
         name='Deceduti',
+        start=start_deceduti,
+        stop=stop_deceduti,
         palette=PALETTE,
         palette_alpha=PALETTE_ALPHA,
         fmt=fmt,

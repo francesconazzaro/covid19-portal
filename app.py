@@ -19,7 +19,7 @@ fmt = "%d-%m-%Y"
 
 def explore_regions():
     st.header('Dati regione')
-    col1, col2, col3, col4 = st.beta_columns(4)
+    col1, col2, col3, col4, col5 = st.beta_columns(5)
     with col1:
         country = st.selectbox('Seleziona una regione', list(DATA.keys()))
         rule = st.radio('', list(plot.RULE_MAP.keys()))
@@ -34,7 +34,10 @@ def explore_regions():
     with col4:
         start_ricoveri = st.date_input('Data inizio fit Ricoveri', datetime.date(2020, 10, 15), min_value=datetime.date(2020, 3, 1), max_value=datetime.date.today())
         stop_ricoveri = st.date_input('Data fine fit Ricoveri', DATA[country].index[-1], min_value=datetime.date(2020, 3, 2), max_value=datetime.date.today())
-    st.plotly_chart(plot.plot_selection(DATA, country, rule, start_positivi, start_ti, start_ricoveri, stop_positivi, stop_ti, stop_ricoveri, log=log), use_container_width=True)
+    with col5:
+        start_deceduti = st.date_input('Data inizio fit Deceduti', datetime.date(2020, 10, 15), min_value=datetime.date(2020, 3, 1), max_value=datetime.date.today())
+        stop_deceduti = st.date_input('Data fine fit Deceduti', DATA[country].index[-1], min_value=datetime.date(2020, 3, 2), max_value=datetime.date.today())
+    st.plotly_chart(plot.plot_selection(DATA, country, rule, start_positivi, start_ti, start_ricoveri, stop_positivi, stop_ti, stop_ricoveri, start_deceduti, stop_deceduti, log=log), use_container_width=True)
     percentage_rule = st.radio('', list(plot.PERCENTAGE_RULE.keys()))
     st.plotly_chart(plot.test_positivity_rate(DATA, country, rule=percentage_rule), use_container_width=True)
     st.subheader(f'Andamento degli ultimi 5 giorni: {country} ({rule})')
