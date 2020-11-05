@@ -77,7 +77,7 @@ with col1:
     st.subheader('Percentuale di Terapie Intensive occupate regione per regione')
     st.write('')
     st.dataframe(DATA_TI.occupazione.to_frame().style.background_gradient(cmap='Reds'), height=500)
-    st.write("Dati da https://www.ilsole24ore.com/art/coronavirus-terapie-intensive-aumento-quali-regioni-sono-pronte-la-seconda-ondata-ADNUkdv")
+    st.write("Dati sul totale delle terapie intensive aggiornati al 2020-10-28")
 with col2:
     rule = st.selectbox('Variabile', ['Nuovi Positivi', 'Terapie Intensive', 'Percentuale tamponi positivi'])
     st.plotly_chart(plot.summary(DATA, rule, st), use_container_width=True)

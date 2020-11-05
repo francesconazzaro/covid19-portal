@@ -1,20 +1,20 @@
 regioni	posti_pre_covid	posti_in_più_programmati	posti_attuali	post_oggi_occupati	post_per_centomila_abitanti
-Abruzzo	123	66	133	11	10,0
-Basilicata	49	32	73	0	12,9
+Abruzzo	123	66	148	11	10,0
+Basilicata	49	32	64	0	12,9
 Calabria	146	134	152	1	10,5
-Campania	335	499	427	64	7,3
-Emilia Romagna	449	197	516	25	11,5
+Campania	335	499	505	64	7,3
+Emilia Romagna	449	197	563	25	11,5
 Friuli Venezia Giulia	120	55	175	5	14,4
-Lazio       	571	282	747	78	12,7
+Lazio       	571	282	847	78	12,7
 Liguria     	180	87	209	24	13,4
-Lombardia	861	585	983	50	9,8
-Marche      	115	105	127	5	8,3
-Molise      	30	14	34	0	11,1
-Piemonte 	327	299	367	22	8,4
-Puglia      	304	276	366	19	9,0
-Sardegna	134	101	175	23	10,6
-Sicilia     	418	301	538	42	10,7
-Toscana     	374	193	415	40	11,1
-Umbria      	70	58	70	9	7,9
+Lombardia	861	585	1036	50	9,8
+Marche      	115	105	143	5	8,3
+Molise      	30	14	30	0	11,1
+Piemonte 	327	299	575	22	8,4
+Puglia      	304	276	369	19	9,0
+Sardegna	134	101	180	23	10,6
+Sicilia     	418	301	588	42	10,7
+Toscana     	374	193	460	40	11,1
+Umbria      	70	58	97	9	7,9
 ValledAosta    	10	10	20	3	15,9
 Veneto      	494	211	825	29	16,8
