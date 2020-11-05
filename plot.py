@@ -188,7 +188,7 @@ def get_fmt(rule):
         return '{:.0f}'
 
 
-def plot_average(plot_data, palette, fig, name, palette_alpha, fmt, start=None, stop=None):
+def plot_average(plot_data, palette, fig, name, palette_alpha, fmt, start=None, stop=None, log=True):
     line = dict(color=next(palette))
     fig.add_trace(go.Line(
         x=plot_data.index, y=plot_data.rolling(7).mean().values,
@@ -217,14 +217,18 @@ def plot_average(plot_data, palette, fig, name, palette_alpha, fmt, start=None, 
         showlegend=False,
         marker=dict(color=next(palette_alpha))
     ), 1, 1)
+    if log is True:
+        y = np.log10(plot_data.values[-1])
+    else:
+        y = plot_data.values[-1]
     fig.add_annotation(
         x=plot_data.index[-1],
-        y=np.log10(plot_data.values[-1]),
+        y=y,
         text=fmt.format(plot_data.values[-1])
     )
 
 
-def plot_selection(data, country, rule, start_positivi, start_ti, start_ricoveri, stop_positivi, stop_ti, stop_ricoveri):
+def plot_selection(data, country, rule, start_positivi, start_ti, start_ricoveri, stop_positivi, stop_ti, stop_ricoveri, log=True):
 
     PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
     PALETTE_ALPHA = itertools.cycle(get_matplotlib_cmap('tab10', bins=8, alpha=.3))
@@ -249,6 +253,7 @@ def plot_selection(data, country, rule, start_positivi, start_ti, start_ricoveri
         palette=PALETTE,
         palette_alpha=PALETTE_ALPHA,
         fmt=fmt,
+        log=log,
     )
 
     plot_data = normalisation(data.ricoverati_con_sintomi, data.popolazione, rule)
@@ -263,6 +268,7 @@ def plot_selection(data, country, rule, start_positivi, start_ti, start_ricoveri
         palette=PALETTE,
         palette_alpha=PALETTE_ALPHA,
         fmt=fmt,
+        log=log,
     )
 
     plot_data = normalisation(data.terapia_intensiva, data.popolazione, rule)
@@ -277,6 +283,7 @@ def plot_selection(data, country, rule, start_positivi, start_ti, start_ricoveri
         palette=PALETTE,
         palette_alpha=PALETTE_ALPHA,
         fmt=fmt,
+        log=log,
     )
 
     plot_data = normalisation(data.deceduti, data.popolazione, rule).diff()
@@ -289,14 +296,21 @@ def plot_selection(data, country, rule, start_positivi, start_ti, start_ricoveri
         palette=PALETTE,
         palette_alpha=PALETTE_ALPHA,
         fmt=fmt,
+        log=log,
     )
 
     # add_events(fig)
 
-    maximum = np.nanmax(np.log10(maxs)) + .5
-    minimum = np.nanmin(np.log10(mins))
+    if log is True:
+        maximum = np.nanmax(np.log10(maxs)) + .5
+        minimum = np.nanmin(np.log10(mins))
+        yscale = 'log'
+    else:
+        maximum = np.nanmax(maxs)
+        minimum = np.nanmin(mins)
+        yscale = 'linear'
     fig.update_xaxes(row=1, col=1, showgrid=True, gridwidth=1, gridcolor='LightPink')
-    fig.update_yaxes(row=1, col=1, type="log", showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[minimum, maximum], showexponent='all', exponentformat='power')
+    fig.update_yaxes(row=1, col=1, type=yscale, showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[minimum, maximum], showexponent='all', exponentformat='power')
     fig.update_layout(
         plot_bgcolor="white",
         margin=dict(t=70, l=0, b=0, r=0),

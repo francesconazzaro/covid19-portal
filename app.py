@@ -23,6 +23,7 @@ def explore_regions():
     with col1:
         country = st.selectbox('Seleziona una regione', list(DATA.keys()))
         rule = st.radio('', list(plot.RULE_MAP.keys()))
+        log = st.checkbox('Scala logaritmica', True)
     # col1, col2, col3, col4, col5, col6 = st.beta_columns(6)
     with col2:
         start_positivi = st.date_input('Data inizio fit Nuovi positivi', datetime.date(2020, 10, 15), min_value=datetime.date(2020, 3, 1), max_value=datetime.date.today())
@@ -33,7 +34,7 @@ def explore_regions():
     with col4:
         start_ricoveri = st.date_input('Data inizio fit Ricoveri', datetime.date(2020, 10, 15), min_value=datetime.date(2020, 3, 1), max_value=datetime.date.today())
         stop_ricoveri = st.date_input('Data fine fit Ricoveri', DATA[country].index[-1], min_value=datetime.date(2020, 3, 2), max_value=datetime.date.today())
-    st.plotly_chart(plot.plot_selection(DATA, country, rule, start_positivi, start_ti, start_ricoveri, stop_positivi, stop_ti, stop_ricoveri), use_container_width=True)
+    st.plotly_chart(plot.plot_selection(DATA, country, rule, start_positivi, start_ti, start_ricoveri, stop_positivi, stop_ti, stop_ricoveri, log=log), use_container_width=True)
     percentage_rule = st.radio('', list(plot.PERCENTAGE_RULE.keys()))
     st.plotly_chart(plot.test_positivity_rate(DATA, country, rule=percentage_rule), use_container_width=True)
     st.subheader(f'Andamento degli ultimi 5 giorni: {country} ({rule})')
