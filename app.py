@@ -76,7 +76,7 @@ def explore_regions():
 
 explore_regions()
 st.header('Confronto tra regioni')
-col1, col2, col3 = st.beta_columns([1, 1, 3])
+col1, col2, col3 = st.beta_columns([2, 2, 3])
 with col1:
     st.subheader('Percentuale di posti letto in area medica occupati regione per regione')
     st.write('')
