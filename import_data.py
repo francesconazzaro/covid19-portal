@@ -24,6 +24,11 @@ def intensive_care():
     return terapie_intensive
 
 
+def beds():
+    posti_letto = pd.read_csv(os.path.join(CWD, 'resources/posti_letto.csv'), index_col='regioni')
+    return posti_letto
+
+
 class RepoReference:
     def __init__(self, base_path=BASE_PATH):
         path = os.path.join(BASE_PATH, 'COVID-19')
@@ -45,6 +50,7 @@ class RepoReference:
 def covid19(repo_reference):
     popolazione = population()
     terapie_intensive = intensive_care()
+    posti_letto = beds()
     print('CACHE MISS')
     data_aggregate = pd.read_csv(repo_reference.regions_path, index_col='data', parse_dates=['data'])
     ita = pd.read_csv(repo_reference.italy_path, index_col='data', parse_dates=['data'])
@@ -52,18 +58,23 @@ def covid19(repo_reference):
     regioni = {}
     ita['popolazione'] = popolazione.sum()
     ita['terapie_intensive_disponibili'] = terapie_intensive.posti_attuali.sum()
-    terapie_intensive['occupazione'] = 0
+    ita['posti_letto_disponibili'] = posti_letto.posti_attuali.sum()
+    terapie_intensive['data'] = 0
+    posti_letto['data'] = 0
     regioni['Italia'] = ita
     for regione in np.unique(data_aggregate.denominazione_regione):
         try:
             popolazione_index = [index for index in popolazione.index if regione[:5].lower() in index.lower()][0]
             terapie_intensive_index = [index for index in terapie_intensive.index if regione[:5].lower() in index.lower()][0]
+            posti_letto_index = [index for index in posti_letto.index if regione[:5].lower() in index.lower()][0]
         except:
             print('Unable to find', regione)
             continue
         data_in = data_aggregate[data_aggregate.denominazione_regione == regione].sort_index()
         data_in['popolazione'] = popolazione[popolazione_index]
         data_in['terapie_intensive_disponibili'] = terapie_intensive.posti_attuali[terapie_intensive_index]
-        terapie_intensive.occupazione[terapie_intensive_index] = float(data_in.terapia_intensiva[-1]) / terapie_intensive.posti_attuali[terapie_intensive_index] * 100
+        data_in['posti_letto_disponibili'] = posti_letto.posti_attuali[posti_letto_index]
+        terapie_intensive.data[terapie_intensive_index] = float(data_in.terapia_intensiva[-1]) / terapie_intensive.posti_attuali[terapie_intensive_index] * 100
+        posti_letto.data[posti_letto_index] = float(data_in.ricoverati_con_sintomi[-1]) / posti_letto.posti_attuali[posti_letto_index] * 100
         regioni[regione] = data_in
-    return regioni, terapie_intensive
+    return regioni, terapie_intensive, posti_letto

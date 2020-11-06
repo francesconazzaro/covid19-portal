@@ -12,7 +12,7 @@ plugins.google_analytics()
 
 st.set_page_config(layout='wide')
 repo_reference = import_data.RepoReference()
-DATA, DATA_TI = import_data.covid19(repo_reference)
+DATA, DATA_TI, DATA_RIC = import_data.covid19(repo_reference)
 st.title('COVID-19: Situazione in Italia aggiornata al {}'.format(DATA['Italia'].index[-1].date()))
 
 fmt = "%d-%m-%Y"
@@ -76,15 +76,19 @@ def explore_regions():
 
 explore_regions()
 st.header('Confronto tra regioni')
-col1, col2 = st.beta_columns([1, 2])
+col1, col2, col3 = st.beta_columns([1, 1, 3])
 with col1:
+    st.subheader('Percentuale di posti letto in area medica occupati regione per regione')
+    st.write('')
+    st.dataframe(DATA_RIC.data.to_frame().style.background_gradient(cmap='Reds'), height=500)
+with col2:
     st.subheader('Percentuale di Terapie Intensive occupate regione per regione')
     st.write('')
-    st.dataframe(DATA_TI.occupazione.to_frame().style.background_gradient(cmap='Reds'), height=500)
-    st.write("Dati sul totale delle terapie intensive aggiornati al 2020-10-28")
-with col2:
+    st.dataframe(DATA_TI.data.to_frame().style.background_gradient(cmap='Reds'), height=500)
+with col3:
     rule = st.selectbox('Variabile', ['Nuovi Positivi', 'Terapie Intensive', 'Percentuale tamponi positivi'])
     st.plotly_chart(plot.summary(DATA, rule, st), use_container_width=True)
+st.write("Dati sul totale delle terapie intensive e dei posti letto in area medica aggiornati al 2020-10-28")
 
 # st.plotly_chart(plot.mortality(DATA))
 
