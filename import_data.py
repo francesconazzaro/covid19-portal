@@ -5,8 +5,13 @@ import pandas as pd
 import numpy as np
 import streamlit as st
 
+import stats
+
 CWD = os.path.abspath(os.path.dirname(__file__))
-config = yaml.safe_load(open(os.path.join(CWD, 'config.yaml')))
+try:
+    config = yaml.safe_load(open(os.path.join(CWD, 'config.yaml')))
+except FileNotFoundError:
+    config = {}
 BASE_PATH = config.get('base_path', '/app')
 
 
@@ -16,49 +21,83 @@ def population():
     return popolazione
 
 
-class FileReference:
-    def __init__(self):
-        base_path = BASE_PATH
-        self.filename_regioni = os.path.join(base_path, 'COVID-19/dati-regioni/')
-        self.filename_ita = os.path.join(base_path, 'COVID-19/dati-andamento-nazionale/dpc-covid19-ita-andamento-nazionale.csv')
+def intensive_care():
+    terapie_intensive = pd.read_csv(os.path.join(CWD, 'resources/posti_terapie_intensive.csv'), sep='\t', index_col='regioni')
+    return terapie_intensive
+
+
+def beds():
+    posti_letto = pd.read_csv(os.path.join(CWD, 'resources/posti_letto.csv'), index_col='regioni')
+    return posti_letto
 
 
 class RepoReference:
-    def __init__(self):
-        path = 'COVID-19'
+    def __init__(self, base_path=BASE_PATH):
+        path = os.path.join(BASE_PATH, 'COVID-19')
+        if not os.path.exists(path):
+            git.Git(BASE_PATH).clone("https://github.com/pcm-dpc/COVID-19.git")
         repo = git.Repo(path)
         o = repo.remotes.origin
-        o.pull()
+        try:
+            o.pull()
+        except:
+            pass
+        self.path = path
         self.hexsha = repo.head.commit.hexsha
+        self.regions_path = os.path.join(base_path, 'COVID-19/dati-regioni/dpc-covid19-ita-regioni.csv')
+        self.italy_path = os.path.join(base_path, 'COVID-19/dati-andamento-nazionale/dpc-covid19-ita-andamento-nazionale.csv')
 
 
-def hash_file_reference(file_reference):
-    filename_regioni = file_reference.filename_regioni
-    filename_ita = file_reference.filename_ita
-    return (filename_regioni, filename_ita, os.path.getmtime(filename_regioni), os.path.getmtime(filename_ita))
+class Data:
+    def __init__(self, data, terapie_intensive, posti_letto):
+        self.data = data
+        self.terapie_intensive = terapie_intensive
+        self.posti_letto = posti_letto
+        self.start_stop = {}
+        self.fit_data = {}
+
+    def fit(self, region, column, rule, diff=False):
+        data_region = self.data[region]
+        popolazione = data_region.popolazione
+        data = getattr(data_region, column)
+        if diff is True:
+            data = data.diff()
+        t_0, t_d, r2 = stats.fit(stats.normalisation(data.rolling(7).mean(), popolazione, rule), **self.fit_data[column])
+        self.fit_data[column].update(dict(t_0=t_0, t_d=t_d, r2=r2))
+
+    def set_start_stop(self, column, start, stop):
+        self.fit_data[column] = dict(start=start, stop=stop)
 
 
-def hash_repo_reference(repo_reference):
-    return (repo_reference.hexsha)
-
-
-@st.cache(hash_funcs={FileReference: hash_file_reference, RepoReference: hash_repo_reference})
-def covid19(base_path=BASE_PATH):
+@st.cache(allow_output_mutation=True)
+def covid19(repo_reference):
     popolazione = population()
-    if not os.path.exists('COVID-19'):
-        git.Git("./").clone("https://github.com/pcm-dpc/COVID-19.git")
-    data_aggregate = pd.read_csv(os.path.join(base_path, 'COVID-19/dati-regioni/dpc-covid19-ita-regioni.csv'), index_col='data', parse_dates=['data'])
-    ita = pd.read_csv(os.path.join(base_path, 'COVID-19/dati-andamento-nazionale/dpc-covid19-ita-andamento-nazionale.csv'), index_col='data', parse_dates=['data'])
+    terapie_intensive = intensive_care()
+    posti_letto = beds()
+    print('CACHE MISS')
+    data_aggregate = pd.read_csv(repo_reference.regions_path, index_col='data', parse_dates=['data'])
+    ita = pd.read_csv(repo_reference.italy_path, index_col='data', parse_dates=['data'])
 
     regioni = {}
     ita['popolazione'] = popolazione.sum()
+    ita['terapie_intensive_disponibili'] = terapie_intensive.posti_attuali.sum()
+    ita['posti_letto_disponibili'] = posti_letto.posti_attuali.sum()
+    terapie_intensive['data'] = 0
+    posti_letto['data'] = 0
     regioni['Italia'] = ita
     for regione in np.unique(data_aggregate.denominazione_regione):
         try:
-            popolazione_index = [index for index in popolazione.index if regione[:4].lower() in index.lower()][0]
+            popolazione_index = [index for index in popolazione.index if regione[:5].lower() in index.lower()][0]
+            terapie_intensive_index = [index for index in terapie_intensive.index if regione[:5].lower() in index.lower()][0]
+            posti_letto_index = [index for index in posti_letto.index if regione[:5].lower() in index.lower()][0]
         except:
             print('Unable to find', regione)
+            continue
         data_in = data_aggregate[data_aggregate.denominazione_regione == regione].sort_index()
         data_in['popolazione'] = popolazione[popolazione_index]
+        data_in['terapie_intensive_disponibili'] = terapie_intensive.posti_attuali[terapie_intensive_index]
+        data_in['posti_letto_disponibili'] = posti_letto.posti_attuali[posti_letto_index]
+        terapie_intensive.data[terapie_intensive_index] = float(data_in.terapia_intensiva[-1]) / terapie_intensive.posti_attuali[terapie_intensive_index] * 100
+        posti_letto.data[posti_letto_index] = float(data_in.ricoverati_con_sintomi[-1]) / posti_letto.posti_attuali[posti_letto_index] * 100
         regioni[regione] = data_in
-    return regioni
+    return Data(regioni, terapie_intensive, posti_letto)
