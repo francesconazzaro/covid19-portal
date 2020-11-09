@@ -10,7 +10,7 @@ import plugins
 plugins.google_analytics()
 
 
-st.set_page_config(layout='wide')
+st.set_page_config(layout='wide', initial_sidebar_state='collapsed')
 repo_reference = import_data.RepoReference()
 DATA, DATA_TI, DATA_RIC = import_data.covid19(repo_reference)
 st.title('COVID-19: Situazione in Italia aggiornata al {}'.format(DATA['Italia'].index[-1].date()))
@@ -19,23 +19,23 @@ fmt = "%d-%m-%Y"
 
 def explore_regions():
     st.header('Dati regione')
-    col1, col2, col3, col4, col5 = st.beta_columns(5)
+    col1, col2, *_ = st.beta_columns(5)
     with col1:
         country = st.selectbox('Seleziona una regione', list(DATA.keys()))
-        rule = st.radio('', list(plot.RULE_MAP.keys()))
         log = st.checkbox('Scala logaritmica', True)
-    # col1, col2, col3, col4, col5, col6 = st.beta_columns(6)
     with col2:
-        start_positivi = st.date_input('Data inizio fit Nuovi positivi', datetime.date(2020, 10, 15), min_value=datetime.date(2020, 3, 1), max_value=datetime.date.today())
-        stop_positivi = st.date_input('Data fine fit Nuovi positivi', DATA[country].index[-1], min_value=datetime.date(2020, 3, 2), max_value=datetime.date.today())
-    with col3:
-        start_ti = st.date_input('Data inizio fit Terapie intensive', datetime.date(2020, 10, 15), min_value=datetime.date(2020, 3, 1), max_value=datetime.date.today())
-        stop_ti = st.date_input('Data fine fit Terapie intensive', DATA[country].index[-1], min_value=datetime.date(2020, 3, 2), max_value=datetime.date.today())
-    with col4:
+        rule = st.radio('', list(plot.RULE_MAP.keys()))
+    # col1, col2, col3, col4, col5, col6 = st.beta_columns(6)
+    col1, col2 = st.sidebar.beta_columns(2)
+    with col1:
+        start_positivi = st.date_input('Data inizio fit Positivi', datetime.date(2020, 10, 15), min_value=datetime.date(2020, 3, 1), max_value=datetime.date.today())
         start_ricoveri = st.date_input('Data inizio fit Ricoveri', datetime.date(2020, 10, 15), min_value=datetime.date(2020, 3, 1), max_value=datetime.date.today())
-        stop_ricoveri = st.date_input('Data fine fit Ricoveri', DATA[country].index[-1], min_value=datetime.date(2020, 3, 2), max_value=datetime.date.today())
-    with col5:
+        start_ti = st.date_input('Data inizio fit Terapie intensive', datetime.date(2020, 10, 15), min_value=datetime.date(2020, 3, 1), max_value=datetime.date.today())
         start_deceduti = st.date_input('Data inizio fit Deceduti', datetime.date(2020, 10, 15), min_value=datetime.date(2020, 3, 1), max_value=datetime.date.today())
+    with col2:
+        stop_positivi = st.date_input('Data fine fit Positivi', DATA[country].index[-1], min_value=datetime.date(2020, 3, 2), max_value=datetime.date.today())
+        stop_ricoveri = st.date_input('Data fine fit Ricoveri', DATA[country].index[-1], min_value=datetime.date(2020, 3, 2), max_value=datetime.date.today())
+        stop_ti = st.date_input('Data fine fit Terapie intensive', DATA[country].index[-1], min_value=datetime.date(2020, 3, 2), max_value=datetime.date.today())
         stop_deceduti = st.date_input('Data fine fit Deceduti', DATA[country].index[-1], min_value=datetime.date(2020, 3, 2), max_value=datetime.date.today())
     st.plotly_chart(plot.plot_selection(DATA, country, rule, start_positivi, start_ti, start_ricoveri, stop_positivi, stop_ti, stop_ricoveri, start_deceduti, stop_deceduti, log=log), use_container_width=True)
     percentage_rule = st.radio('', list(plot.PERCENTAGE_RULE.keys()))
