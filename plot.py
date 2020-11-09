@@ -405,3 +405,39 @@ def mortality(data, offset=-7):
         autosize=True,
     )
     return fig
+
+
+def comparison(data, offset=7):
+    deceduti = data.deceduti.diff().rolling(7).mean()
+    positivi_shift = translate(data.nuovi_positivi.rolling(7).mean(), offset) / 100 * 1.3
+    fig = make_subplots(1, 1, subplot_titles=["Confronto fra deceduti e l'1.3% dei nuovi casi spostati di 7 giorni"])
+    fig.add_trace(go.Line(
+        x=positivi_shift.index, y=positivi_shift.values,
+        mode='lines',
+        name='1.3% dei nuovi casi spostati di 7 giorni',
+        line={'dash': 'dot'},
+    ))
+    fig.add_trace(go.Line(
+        x=deceduti.index, y=deceduti.values,
+        mode='lines',
+        name='Deceduti'
+    ))
+    fig.update_xaxes(showgrid=True, gridwidth=1, tickangle=45, range=[positivi_shift.index[-120], positivi_shift.index[-1]], gridcolor='LightGrey')
+    fig.update_yaxes(showgrid=True, type='log', gridwidth=1, gridcolor='LightGrey')
+    fig.update_layout(
+        plot_bgcolor="white",
+        margin=dict(t=50, l=10, b=10, r=10),
+        yaxis_title='',
+        # width=1300,
+        height=500,
+        autosize=True,
+        legend={
+            'orientation': "h",
+            'yanchor': "bottom",
+            # 'y': -.15, # bottom
+            'y': .9,  # top
+            'xanchor': "center",
+            'x': .5,
+        }
+    )
+    return fig
