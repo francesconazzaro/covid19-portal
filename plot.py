@@ -410,7 +410,7 @@ def mortality(data, offset=-7):
 def comparison(data, offset=7):
     deceduti = data.deceduti.diff().rolling(7).mean()
     positivi_shift = translate(data.nuovi_positivi.rolling(7).mean(), offset) / 100 * 1.3
-    fig = make_subplots(1, 1, subplot_titles=["Confronto fra deceduti e l'1.3% dei nuovi casi spostati di 7 giorni"])
+    fig = make_subplots(1, 1, subplot_titles=["Confronto fra deceduti e l'1.3% dei nuovi casi ritardati di 7 giorni"])
     fig.add_trace(go.Line(
         x=positivi_shift.index, y=positivi_shift.values,
         mode='lines',
