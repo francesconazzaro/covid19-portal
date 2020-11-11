@@ -359,6 +359,11 @@ def summary(data, what, st):
                 7).mean() * 100
             title = "Percentuale tamponi positivi."
             yscale = 'linear'
+        elif what == 'Deceduti':
+            plot_data = region.deceduti.diff().rolling(7).mean() / region.tamponi.diff().rolling(
+                7).mean() * 100
+            title = "Deceduti giornalieri per 100.000 abitanti."
+            yscale = 'log'
         maxs.append(plot_data.values[-90:].max())
         fig.add_trace(go.Line(x=plot_data.index[-90:], y=plot_data.values[-90:], showlegend=False,
                               name=title, marker=dict(color=next(PALETTE))), row, col)
