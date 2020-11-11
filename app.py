@@ -86,7 +86,7 @@ with col2:
     st.write('')
     st.dataframe(DATA_TI.data.to_frame().style.background_gradient(cmap='Reds'), height=500)
 with col3:
-    rule = st.selectbox('Variabile', ['Nuovi Positivi', 'Terapie Intensive', 'Percentuale tamponi positivi'])
+    rule = st.selectbox('Variabile', ['Nuovi Positivi', 'Terapie Intensive', 'Percentuale tamponi positivi', 'Deceduti'])
     st.plotly_chart(plot.summary(DATA, rule, st), use_container_width=True)
 st.write("Dati sul totale delle terapie intensive e dei posti letto in area medica aggiornati al 2020-10-28")
 
