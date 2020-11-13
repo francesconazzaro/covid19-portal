@@ -334,7 +334,7 @@ def plot_selection(data, country, rule, start_positivi, start_ti, start_ricoveri
 
 def summary(data, what, st):
     titles = [title for title in data if title not in ['P.A. Bolzano', 'P.A. Trento']]
-    fig = make_subplots(4, 5, shared_xaxes=True, shared_yaxes=True, subplot_titles=titles,
+    fig = make_subplots(4, 5, shared_xaxes='all', shared_yaxes='all', subplot_titles=titles,
                         vertical_spacing=.08)
     minus = 0
     PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
