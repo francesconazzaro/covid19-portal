@@ -148,7 +148,8 @@ def test_positivity_rate(data, country, rule):
         mode='lines+markers',
         showlegend=False,
         legendgroup='postam',
-        marker=dict(color=next(PALETTE))
+        marker=dict(color=next(PALETTE)),
+        fill='tozeroy',
     ), 1, 1)
     fig.add_trace(go.Scatter(
         x=plot_data.index,
@@ -156,7 +157,7 @@ def test_positivity_rate(data, country, rule):
         mode='markers',
         legendgroup='postam',
         showlegend=False,
-        marker=dict(color=next(PALETTE_ALPHA))
+        marker=dict(color=next(PALETTE_ALPHA)),
     ), 1, 1)
     fig.add_annotation(x=plot_data.index[-1], y=plot_data.values[-1], text='{:.2f}'.format(plot_data.values[-1]))
     fig.add_annotation(x=plot_data.index[-1], y=plot_data.rolling(7).mean().values[-1], text='{:.2f}'.format(plot_data.rolling(7).mean().values[-1]))
@@ -195,7 +196,7 @@ def plot_average(plot_data, palette, fig, name, palette_alpha, fmt, start=None, 
         name=name,
         legendgroup=name,
         line=line,
-        mode='lines'
+        mode='lines',
     ), 1, 1)
     line['dash'] = 'dot'
     if start and stop:
@@ -365,12 +366,12 @@ def summary(data, what, st):
             title = "Deceduti giornalieri per 100.000 abitanti."
             yscale = 'log'
         maxs.append(plot_data.values[-90:].max())
-        fig.add_trace(go.Line(x=plot_data.index[-90:], y=plot_data.values[-90:], showlegend=False,
-                              name=title, marker=dict(color=next(PALETTE))), row, col)
-    st.subheader(title)
+        fig.add_trace(go.Scatter(x=plot_data.index[-90:], y=plot_data.values[-90:], showlegend=False,
+                                 name=title, marker=dict(color=next(PALETTE)), fill='tozeroy'), row, col)
     fig.update_xaxes(showgrid=True, gridwidth=1, tickangle=45, gridcolor='LightGrey')
-    fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[0, max(maxs) + 1])
+    fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[0, max(maxs)])
     fig.update_layout(
+        title=title,
         plot_bgcolor="white",
         margin=dict(t=50, l=10, b=10, r=10),
         # width=1300,
@@ -421,6 +422,7 @@ def comparison(data, offset=7):
         mode='lines',
         name='1.3% dei nuovi casi spostati di 7 giorni',
         line={'dash': 'dot'},
+        fill='tozeroy',
     ))
     fig.add_trace(go.Line(
         x=deceduti.index, y=deceduti.values,
