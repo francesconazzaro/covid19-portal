@@ -52,19 +52,19 @@ class Mobility:
         self.data = data
 
     def get_sub_region_1(self):
-        return ['Total'] + list(np.unique(self.data.sub_region_1.fillna('')))[1:]
+        return ['Totale'] + list(np.unique(self.data.sub_region_1.fillna('')))[1:]
 
     def get_sub_region_2(self, sub_region_1):
         data_sel = self.data[self.data.sub_region_1 == sub_region_1]
-        return ['Total'] + list(np.unique(data_sel.sub_region_2.fillna('')))[1:]
+        return ['Totale'] + list(np.unique(data_sel.sub_region_2.fillna('')))[1:]
 
     def get_variables(self):
         return [col for col in self.data.columns if 'from_baseline' in col]
 
     def select(self, sub_region_1, sub_region_2):
-        if sub_region_2 is not 'Total':
+        if sub_region_2 is not 'Totale':
             return self.data[self.data.sub_region_2 == sub_region_2]
-        elif sub_region_1 is not 'Total':
+        elif sub_region_1 is not 'Totale':
             iso_3166_2_code = self.data[self.data.sub_region_1 == sub_region_1].iso_3166_2_code[0]
             return self.data[self.data.iso_3166_2_code == iso_3166_2_code]
         else:

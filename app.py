@@ -20,7 +20,7 @@ fmt = "%d-%m-%Y"
 
 def mobility_expander():
     expander_mobility = st.beta_expander('Dati sulla mobilità')
-    col1, col2, col3, col4 = expander_mobility.beta_columns(4)
+    col1, col2, col3, col4 = expander_mobility.beta_columns([1, 4, 4, 8])
     with col1:
         country = col1.selectbox('Country', ['IT'] + sorted(import_data.get_list_of_regions()))
     mobility_country = import_data.get_mobility_country(country)
@@ -28,9 +28,8 @@ def mobility_expander():
         sub_region_1 = col2.selectbox('sub_region_1', mobility_country.get_sub_region_1())
     with col3:
         sub_region_2 = col3.selectbox('sub_region_2', mobility_country.get_sub_region_2(sub_region_1))
-    col1, col2 = expander_mobility.beta_columns(2)
-    with col1:
-        variable = col1.selectbox('Variable', mobility_country.get_variables())
+    with col4:
+        variable = col4.selectbox('Variabile', mobility_country.get_variables())
     mobility_plot_data = mobility_country.select(sub_region_1, sub_region_2)
     expander_mobility.plotly_chart(plot.mobility_data(mobility_plot_data, variable), use_container_width=True)
 
