@@ -1,4 +1,7 @@
 import git
+import requests
+import zipfile
+import glob
 import yaml
 import os
 import pandas as pd
@@ -27,6 +30,52 @@ def intensive_care():
 def beds():
     posti_letto = pd.read_csv(os.path.join(CWD, 'resources/posti_letto.csv'), index_col='regioni')
     return posti_letto
+
+
+def get_list_of_regions():
+    mobility_data_path = os.path.join(BASE_PATH, 'mobility')
+    if not os.path.exists(mobility_data_path):
+        response = requests.get('https://www.gstatic.com/covid19/mobility/Region_Mobility_Report_CSVs.zip')
+        mobility_zip_path = os.path.join(BASE_PATH, 'mobility_data.zip')
+        with open(mobility_zip_path, 'wb') as f:
+            f.write(response.content)
+        with zipfile.ZipFile(mobility_zip_path, 'r') as zip_ref:
+            zip_ref.extractall(mobility_data_path)
+    list_of_regions = []
+    for path in glob.glob(os.path.join(mobility_data_path, '2020*.csv')):
+        list_of_regions.append(os.path.basename(path)[5:7])
+    return list_of_regions
+
+
+class Mobility:
+    def __init__(self, data):
+        self.data = data
+
+    def get_sub_region_1(self):
+        return ['Total'] + list(np.unique(self.data.sub_region_1.fillna('')))[1:]
+
+    def get_sub_region_2(self, sub_region_1):
+        data_sel = self.data[self.data.sub_region_1 == sub_region_1]
+        return ['Total'] + list(np.unique(data_sel.sub_region_2.fillna('')))[1:]
+
+    def get_variables(self):
+        return [col for col in self.data.columns if 'from_baseline' in col]
+
+    def select(self, sub_region_1, sub_region_2):
+        if sub_region_2 is not 'Total':
+            return self.data[self.data.sub_region_2 == sub_region_2]
+        elif sub_region_1 is not 'Total':
+            iso_3166_2_code = self.data[self.data.sub_region_1 == sub_region_1].iso_3166_2_code[0]
+            return self.data[self.data.iso_3166_2_code == iso_3166_2_code]
+        else:
+            return self.data[self.data.iso_3166_2_code.fillna('') == '']
+
+
+def get_mobility_country(country):
+    mobility_data_path = os.path.join(BASE_PATH, 'mobility')
+    mobility_country_path = os.path.join(mobility_data_path, f'2020_{country}_Region_Mobility_Report.csv')
+    mobility_country = pd.read_csv(mobility_country_path, index_col='date')
+    return Mobility(mobility_country)
 
 
 class RepoReference:

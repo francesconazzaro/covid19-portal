@@ -448,3 +448,28 @@ def comparison(data, offset=7):
         }
     )
     return fig
+
+
+def mobility_data(mobility_plot_data, variable):
+    fig = make_subplots(1, subplot_titles=[variable])
+    ax = go.Scatter(x=mobility_plot_data.index,
+                    y=getattr(mobility_plot_data, variable), fill='tozeroy',
+                    name='')
+    fig.add_trace(ax)
+    fig.update_layout(
+        plot_bgcolor="white",
+        margin=dict(t=50, l=10, b=10, r=10),
+        yaxis_title='',
+        # width=1300,
+        height=500,
+        autosize=True,
+        legend={
+            'orientation': "h",
+            'yanchor': "bottom",
+            # 'y': -.15, # bottom
+            'y': .9,  # top
+            'xanchor': "center",
+            'x': .5,
+        }
+    )
+    return fig
