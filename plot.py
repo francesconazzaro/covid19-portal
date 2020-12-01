@@ -21,8 +21,8 @@ def linear(t, t_0, T_d):
 
 
 RULE_MAP = {
-    'Dati per 100.000 abitanti': 'percentage',
     'Totali': 'total',
+    'Dati per 100.000 abitanti': 'percentage',
 }
 
 PERCENTAGE_RULE = {
