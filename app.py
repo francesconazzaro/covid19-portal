@@ -107,6 +107,8 @@ what = st.radio('', ['Dati contagio', 'Dati somministrazione vaccini'])
 
 if what == 'Dati somministrazione vaccini':
     st.header('Dati sulle vaccinazioni aggiornati al {}'.format(vaccines[vaccines.area == 'Italia'].index[-1]))
+    st.subheader('Dosi somministrate fino ad ora in Italia')
+    st.title(vaccines[vaccines.area == 'Italia'].cumsum().iloc[-1].sesso_maschile + vaccines[vaccines.area == 'Italia'].cumsum().iloc[-1].sesso_femminile)
     st.write('Per visualizzare una sola regione fare doppio click sul nome della regione')
     col1, _ = st.beta_columns([1, 3])
     # with col1:
