@@ -16,6 +16,31 @@ except FileNotFoundError:
 BASE_PATH = config.get('base_path', '/app')
 
 
+REGIONS_MAP = {
+    'ABR': 'Abruzzo',
+    'BAS': 'Basilicata',
+    'CAL': 'Calabria',
+    'CAM': 'Campania',
+    'EMR': 'Emilia-Romagna',
+    'FVG': 'Friuli Venezia Giulia',
+    'LAZ': 'Lazio',
+    'LIG': 'Liguria',
+    'LOM': 'Lombardia',
+    'MAR': 'Marche',
+    'MOL': 'Molise',
+    'PAB': 'P.A. Bolzano',
+    'PAT': 'P.A. Trento',
+    'PIE': 'Piemonte',
+    'PUG': 'Puglia',
+    'SAR': 'Sardegna',
+    'SIC': 'Sicilia',
+    'TOS': 'Toscana',
+    'UMB': 'Umbria',
+    'VDA': "Valle d'Aosta",
+    'VEN': 'Veneto',
+}
+
+
 def population():
     popolazione_regioni = pd.read_csv(os.path.join(CWD, 'resources/popolazione_regioni_italiane.csv'), index_col='regione')
     popolazione = popolazione_regioni.TotaleMaschi + popolazione_regioni.TotaleFemmine
@@ -30,6 +55,22 @@ def intensive_care():
 def beds():
     posti_letto = pd.read_csv(os.path.join(CWD, 'resources/posti_letto.csv'), index_col='regioni')
     return posti_letto
+
+
+def vaccines(repo_reference, covid_data):
+    vaccine_data = pd.read_csv(os.path.join(BASE_PATH, 'covid19-opendata-vaccini/dati/somministrazioni-vaccini-latest.csv'), index_col='data_somministrazione')
+    data = pd.DataFrame()
+    for region_name in REGIONS_MAP.keys():
+        print(region_name)
+        region = vaccine_data[vaccine_data.area == region_name].groupby('data_somministrazione').sum()
+        region['area'] = REGIONS_MAP[region_name]
+        region['popolazione'] = covid_data[REGIONS_MAP[region_name]].popolazione[0]
+        data = data.append(region)
+    ita = data.groupby('data_somministrazione').sum()
+    ita['area'] = 'Italia'
+    ita['popolazione'] = covid_data['Italia'].popolazione[0]
+    data = data.append(ita)
+    return data
 
 
 def get_list_of_regions():
@@ -79,10 +120,10 @@ def get_mobility_country(country):
 
 
 class RepoReference:
-    def __init__(self, base_path=BASE_PATH):
-        path = os.path.join(BASE_PATH, 'COVID-19')
+    def __init__(self, base_path=BASE_PATH, repo_path='COVID-19', repo_url="https://github.com/pcm-dpc/COVID-19.git"):
+        path = os.path.join(BASE_PATH, repo_path)
         if not os.path.exists(path):
-            git.Git(BASE_PATH).clone("https://github.com/pcm-dpc/COVID-19.git")
+            git.Git(BASE_PATH).clone(repo_url)
         repo = git.Repo(path)
         o = repo.remotes.origin
         try:
@@ -117,13 +158,23 @@ def covid19(repo_reference):
             terapie_intensive_index = [index for index in terapie_intensive.index if regione[:5].lower() in index.lower()][0]
             posti_letto_index = [index for index in posti_letto.index if regione[:5].lower() in index.lower()][0]
         except:
+            popolazione_index = [index for index in popolazione.index if regione[-5:].lower() in index.lower()][0]
+            terapie_intensive_index = [index for index in terapie_intensive.index if regione[-5:].lower() in index.lower()][0]
+            posti_letto_index = [index for index in posti_letto.index if regione[-5:].lower() in index.lower()][0]
             print('Unable to find', regione)
-            continue
+            # continue
         data_in = data_aggregate[data_aggregate.denominazione_regione == regione].sort_index()
         data_in['popolazione'] = popolazione[popolazione_index]
         data_in['terapie_intensive_disponibili'] = terapie_intensive.posti_attuali[terapie_intensive_index]
         data_in['posti_letto_disponibili'] = posti_letto.posti_attuali[posti_letto_index]
-        terapie_intensive.data[terapie_intensive_index] = float(data_in.terapia_intensiva[-1]) / terapie_intensive.posti_attuali[terapie_intensive_index] * 100
-        posti_letto.data[posti_letto_index] = float(data_in.ricoverati_con_sintomi[-1]) / posti_letto.posti_attuali[posti_letto_index] * 100
+        try:
+            terapie_intensive.data[terapie_intensive_index] = float(data_in.terapia_intensiva[-1]) / terapie_intensive.posti_attuali[terapie_intensive_index] * 100
+        except:
+            terapie_intensive.data[terapie_intensive_index] = 'nodata'
+        try:
+            posti_letto.data[posti_letto_index] = float(data_in.ricoverati_con_sintomi[-1]) / posti_letto.posti_attuali[posti_letto_index] * 100
+        except Exception as e:
+            print(e)
+            posti_letto.data[posti_letto_index] = 'nodata'
         regioni[regione] = data_in
     return regioni, terapie_intensive, posti_letto

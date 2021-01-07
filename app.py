@@ -13,7 +13,6 @@ plugins.google_analytics()
 st.set_page_config(layout='wide', initial_sidebar_state='collapsed')
 repo_reference = import_data.RepoReference()
 DATA, DATA_TI, DATA_RIC = import_data.covid19(repo_reference)
-st.title('COVID-19: Situazione in Italia aggiornata al {}'.format(DATA['Italia'].index[-1].date()))
 
 fmt = "%d-%m-%Y"
 
@@ -35,7 +34,7 @@ def mobility_expander():
 
 
 def explore_regions():
-    st.header('Dati regione')
+    st.header('Dati sul contagio aggiornati al {}'.format(DATA['Italia'].index[-1].date()))
     col1, col2, *_ = st.beta_columns(5)
     with col1:
         country = st.selectbox('Seleziona una regione', list(DATA.keys()))
@@ -96,28 +95,52 @@ def explore_regions():
     #         tpr.name = 'CPR (%)'
     #     col5.dataframe(tpr.to_frame().style.background_gradient(cmap='Reds'))
 
-explore_regions()
-st.header('Confronto tra regioni')
-col1, col2, col3 = st.beta_columns([2, 2, 3])
-with col1:
-    st.subheader('Percentuale di posti letto in area medica occupati regione per regione')
-    st.write('')
-    st.dataframe(DATA_RIC.data.to_frame().style.background_gradient(cmap='Reds'), height=500)
-with col2:
-    st.subheader('Percentuale di Terapie Intensive occupate regione per regione')
-    st.write('')
-    st.dataframe(DATA_TI.data.to_frame().style.background_gradient(cmap='Reds'), height=500)
-with col3:
-    rule = st.selectbox('Variabile', ['Nuovi Positivi', 'Terapie Intensive', 'Percentuale tamponi positivi', 'Deceduti'])
-    st.plotly_chart(plot.summary(DATA, rule, st), use_container_width=True)
-st.write("Dati sul totale delle terapie intensive e dei posti letto in area medica aggiornati al 2020-10-28")
 
-# st.plotly_chart(plot.mortality(DATA))
+st.title('COVID-19: Situazione in Italia')
+vaccine_repo = import_data.RepoReference(
+    repo_path='covid19-opendata-vaccini',
+    repo_url='https://github.com/italia/covid19-opendata-vaccini.git'
+)
+vaccines = import_data.vaccines(vaccine_repo, DATA)
+
+what = st.radio('', ['Dati contagio', 'Dati somministrazione vaccini'])
+
+if what == 'Dati somministrazione vaccini':
+    st.header('Dati sulle vaccinazioni aggiornati al {}'.format(vaccines[vaccines.area == 'Italia'].index[-1]))
+    st.write('Per visualizzare una sola regione fare doppio click sul nome della regione')
+    col1, _ = st.beta_columns([1, 3])
+    # with col1:
+    #     area = col1.selectbox("Seleziona un'area", ['Italia'] + list(import_data.REGIONS_MAP.values()))
+    st.plotly_chart(plot.plot_vaccines(vaccines), use_container_width=True)
+    expander = st.beta_expander("This app is developed by Francesco Nazzaro (click to check raw data)")
+    expander.write("Contact me on [Twitter](https://twitter.com/effenazzaro)")
+    expander.write("The source code is on [GitHub](https://github.com/francesconazzaro/covid19-portal)")
+    expander.write("Raw data")
+    expander.dataframe(vaccines)
+
+elif what == 'Dati contagio':
+    explore_regions()
+    st.header('Confronto tra regioni')
+    col1, col2, col3 = st.beta_columns([2, 2, 3])
+    with col1:
+        st.subheader('Percentuale di posti letto in area medica occupati regione per regione')
+        st.write('')
+        st.dataframe(DATA_RIC.data.to_frame().style.background_gradient(cmap='Reds'), height=500)
+    with col2:
+        st.subheader('Percentuale di Terapie Intensive occupate regione per regione')
+        st.write('')
+        st.dataframe(DATA_TI.data.to_frame().style.background_gradient(cmap='Reds'), height=500)
+    with col3:
+        rule = st.selectbox('Variabile', ['Nuovi Positivi', 'Terapie Intensive', 'Percentuale tamponi positivi', 'Deceduti'])
+        st.plotly_chart(plot.summary(DATA, rule, st), use_container_width=True)
+    st.write("Dati sul totale delle terapie intensive e dei posti letto in area medica aggiornati al 2020-10-28")
+
+    # st.plotly_chart(plot.mortality(DATA))
 
 
-expander = st.beta_expander("This app is developed by Francesco Nazzaro (click to check raw data)")
-expander.write("Contact me on [Twitter](https://twitter.com/effenazzaro)")
-expander.write("The source code is on [GitHub](https://github.com/francesconazzaro/covid19-portal)")
-expander.write("Raw data")
-expander.dataframe(DATA['Italia'])
-expander.plotly_chart(plot.comparison(DATA['Italia']), use_container_width=True)
+    expander = st.beta_expander("This app is developed by Francesco Nazzaro (click to check raw data)")
+    expander.write("Contact me on [Twitter](https://twitter.com/effenazzaro)")
+    expander.write("The source code is on [GitHub](https://github.com/francesconazzaro/covid19-portal)")
+    expander.write("Raw data")
+    expander.dataframe(DATA['Italia'])
+    expander.plotly_chart(plot.comparison(DATA['Italia']), use_container_width=True)
