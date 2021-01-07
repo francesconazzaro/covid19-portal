@@ -473,3 +473,35 @@ def mobility_data(mobility_plot_data, variable):
         }
     )
     return fig
+
+
+def plot_vaccines(vaccines):
+    fig = make_subplots(1, subplot_titles=['Percentuale di popolazione vaccinata.'])
+    for area in np.unique(vaccines.area):
+        data_plot = vaccines[vaccines.area == area]
+        ax = go.Scatter(
+            x=data_plot.index,
+            y=(data_plot.sesso_maschile + data_plot.sesso_femminile).cumsum() / data_plot.popolazione * 100,
+            # fill='tozeroy',
+            name=area,
+        )
+        fig.add_trace(ax)
+    fig.update_layout(
+        plot_bgcolor="white",
+        margin=dict(t=50, l=10, b=10, r=10),
+        yaxis_title='',
+        # width=1300,
+        height=700,
+        autosize=True,
+        # legend={
+        #     'orientation': "v",
+        #     'yanchor': "right",
+        #     # 'y': -.15, # bottom
+        #     # 'y': -.2,  # top
+        #     'xanchor': "center",
+        #     # 'x': .5,
+        # }
+    )
+    fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey')
+    fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey')
+    return fig
