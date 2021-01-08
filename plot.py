@@ -26,7 +26,7 @@ RULE_MAP = {
 }
 
 PERCENTAGE_RULE = {
-    'Percentuale di tamponi positivi' : 'tamponi',
+    'Percentuale di tamponi positivi': 'tamponi',
     'Percentuale di casi positivi': 'casi',
 }
 
@@ -137,13 +137,17 @@ def test_positivity_rate(data, country, rule):
     PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
     PALETTE_ALPHA = itertools.cycle(get_matplotlib_cmap('tab10', bins=8, alpha=.3))
     fig = make_subplots(1, 1, subplot_titles=[rule])
+    # plot_data = region.nuovi_positivi.rolling(7).mean() / region.tamponi.diff().rolling(
+    #     7).mean() * 100
     if PERCENTAGE_RULE[rule] == 'tamponi':
-        plot_data = data.nuovi_positivi / data.tamponi.diff() * 100
+        plot_data = data.nuovi_positivi.rolling(7).mean() / data.tamponi.diff().rolling(7).mean() * 100
+        plot_data_points = data.nuovi_positivi / data.tamponi.diff() * 100
     elif PERCENTAGE_RULE[rule] == 'casi':
-        plot_data = data.nuovi_positivi / data.casi_testati.diff() * 100
+        plot_data = data.nuovi_positivi.rolling(7).mean() / data.casi_testati.diff().rolling(7).mean() * 100
+        plot_data_points = data.nuovi_positivi / data.casi_testati.diff() * 100
     fig.add_trace(go.Line(
         x=plot_data.index,
-        y=plot_data.rolling(7).mean().values,
+        y=plot_data.values,
         name=rule,
         mode='lines+markers',
         showlegend=False,
@@ -152,8 +156,8 @@ def test_positivity_rate(data, country, rule):
         fill='tozeroy',
     ), 1, 1)
     fig.add_trace(go.Scatter(
-        x=plot_data.index,
-        y=plot_data.values,
+        x=plot_data_points.index,
+        y=plot_data_points.values,
         mode='markers',
         legendgroup='postam',
         showlegend=False,
@@ -199,17 +203,17 @@ def plot_average(plot_data, palette, fig, name, palette_alpha, fmt, start=None, 
         mode='lines',
     ), 1, 1)
     line['dash'] = 'dot'
-    if start and stop:
-        plot_fit(
-            plot_data.rolling(7).mean(),
-            fig,
-            label=name,
-            start=start,
-            stop=stop,
-            mode='lines',
-            line=line,
-            shift=5
-        )
+    # if start and stop:
+    #     plot_fit(
+    #         plot_data.rolling(7).mean(),
+    #         fig,
+    #         label=name,
+    #         start=start,
+    #         stop=stop,
+    #         mode='lines',
+    #         line=line,
+    #         shift=5
+    #     )
     fig.add_trace(go.Scatter(
         x=plot_data.index,
         y=plot_data.values,
@@ -218,15 +222,15 @@ def plot_average(plot_data, palette, fig, name, palette_alpha, fmt, start=None, 
         showlegend=False,
         marker=dict(color=next(palette_alpha))
     ), 1, 1)
-    if log is True:
-        y = np.log10(plot_data.values[-1])
-    else:
-        y = plot_data.values[-1]
-    fig.add_annotation(
-        x=plot_data.index[-1],
-        y=y,
-        text=fmt.format(plot_data.values[-1])
-    )
+    # if log is True:
+    #     y = np.log10(plot_data.values[-1])
+    # else:
+    #     y = plot_data.values[-1]
+    # fig.add_annotation(
+    #     x=plot_data.index[-1],
+    #     y=y,
+        # text=fmt.format(plot_data.values[-1])
+    # )
 
 
 def plot_selection(data, country, rule, start_positivi, start_ti, start_ricoveri, stop_positivi, stop_ti, stop_ricoveri, start_deceduti, stop_deceduti, log=True):
@@ -477,15 +481,49 @@ def mobility_data(mobility_plot_data, variable):
 
 def plot_vaccines(vaccines):
     fig = make_subplots(1, subplot_titles=['Percentuale di popolazione vaccinata.'])
+    maxs = []
     for area in np.unique(vaccines.area):
         data_plot = vaccines[vaccines.area == area]
+        total = (data_plot.sesso_maschile + data_plot.sesso_femminile).cumsum() / data_plot.popolazione * 100
         ax = go.Scatter(
             x=data_plot.index,
-            y=(data_plot.sesso_maschile + data_plot.sesso_femminile).cumsum() / data_plot.popolazione * 100,
+            y=total,
             # fill='tozeroy',
             name=area,
         )
         fig.add_trace(ax)
+        maxs.append(total.max())
+    fig.update_layout(
+        plot_bgcolor="white",
+        margin=dict(t=50, l=10, b=10, r=10),
+        yaxis_title='',
+        # width=1300,
+        height=700,
+        autosize=True,
+        # legend={
+        #     'orientation': "v",
+        #     'yanchor': "right",
+        #     # 'y': -.15, # bottom
+        #     # 'y': -.2,  # top
+        #     'xanchor': "center",
+        #     # 'x': .5,
+        # }
+    )
+    fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey')
+    fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[0, max(maxs) + .05])
+    return fig
+
+
+def plot_deliveries(deliveries, area):
+    fig = make_subplots(1, subplot_titles=[f'Dosi di vaccino consegnate per 100 mila abitanti: {area}'])
+    plot_data = deliveries[deliveries.area == area]
+    ax = go.Scatter(
+        x=plot_data.index,
+        y=plot_data.numero_dosi.cumsum() / plot_data.popolazione * UNITA,
+        fill='tozeroy',
+        name=area,
+    )
+    fig.add_trace(ax)
     fig.update_layout(
         plot_bgcolor="white",
         margin=dict(t=50, l=10, b=10, r=10),

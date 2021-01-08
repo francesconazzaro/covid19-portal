@@ -59,18 +59,27 @@ def beds():
 
 def vaccines(repo_reference, covid_data):
     vaccine_data = pd.read_csv(os.path.join(BASE_PATH, 'covid19-opendata-vaccini/dati/somministrazioni-vaccini-latest.csv'), index_col='data_somministrazione')
+    consegne = pd.read_csv(os.path.join(BASE_PATH, 'covid19-opendata-vaccini/dati/consegne-vaccini-latest.csv'), index_col='data_consegna')
     data = pd.DataFrame()
+    consegne_out = pd.DataFrame()
     for region_name in REGIONS_MAP.keys():
-        print(region_name)
         region = vaccine_data[vaccine_data.area == region_name].groupby('data_somministrazione').sum()
+        region_consegne = consegne[consegne.area == region_name]
+        region_consegne['area'] = REGIONS_MAP[region_name]
         region['area'] = REGIONS_MAP[region_name]
         region['popolazione'] = covid_data[REGIONS_MAP[region_name]].popolazione[0]
+        region_consegne['popolazione'] = covid_data[REGIONS_MAP[region_name]].popolazione[0]
+        consegne_out = consegne_out.append(region_consegne)
         data = data.append(region)
+    ita_consegne = consegne.groupby('data_consegna').sum()
+    ita_consegne['area'] = 'Italia'
     ita = data.groupby('data_somministrazione').sum()
     ita['area'] = 'Italia'
     ita['popolazione'] = covid_data['Italia'].popolazione[0]
+    ita_consegne['popolazione'] = covid_data['Italia'].popolazione[0]
+    consegne_out = consegne_out.append(ita_consegne)
     data = data.append(ita)
-    return data
+    return data, consegne_out
 
 
 def get_list_of_regions():
