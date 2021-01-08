@@ -173,6 +173,7 @@ def test_positivity_rate(data, country, rule):
         plot_bgcolor="white",
         margin=dict(t=30, l=10, b=10, r=10),
         autosize=True,
+        height=500,
     )
     return fig
 
@@ -481,7 +482,7 @@ def mobility_data(mobility_plot_data, variable):
     return fig
 
 
-def plot_vaccines(vaccines, area=None, unita=100, subplot_title='Percentuale di popolazione vaccinata.', fill=None, height=700):
+def plot_vaccines(vaccines, area=None, unita=100, subplot_title='Percentuale di popolazione vaccinata.', fill=None, height=500):
     fig = make_subplots(1, subplot_titles=[subplot_title])
     maxs = []
     if area is None:
