@@ -57,29 +57,35 @@ def beds():
     return posti_letto
 
 
-def vaccines(repo_reference, covid_data):
-    vaccine_data = pd.read_csv(os.path.join(BASE_PATH, 'covid19-opendata-vaccini/dati/somministrazioni-vaccini-latest.csv'), index_col='data_somministrazione')
-    consegne = pd.read_csv(os.path.join(BASE_PATH, 'covid19-opendata-vaccini/dati/consegne-vaccini-latest.csv'), index_col='data_consegna')
-    data = pd.DataFrame()
-    consegne_out = pd.DataFrame()
+def process_data(data, covid_data, date_label, drop_ages=False):
+    administration = pd.DataFrame()
     for region_name in REGIONS_MAP.keys():
-        region = vaccine_data[vaccine_data.area == region_name].groupby('data_somministrazione').sum()
-        region_consegne = consegne[consegne.area == region_name]
-        region_consegne['area'] = REGIONS_MAP[region_name]
+        if drop_ages is True:
+            region = data[data.area == region_name].groupby(
+                date_label).sum()
+        else:
+            region = data[data.area == region_name]
         region['area'] = REGIONS_MAP[region_name]
         region['popolazione'] = covid_data[REGIONS_MAP[region_name]].popolazione[0]
-        region_consegne['popolazione'] = covid_data[REGIONS_MAP[region_name]].popolazione[0]
-        consegne_out = consegne_out.append(region_consegne)
-        data = data.append(region)
-    ita_consegne = consegne.groupby('data_consegna').sum()
-    ita_consegne['area'] = 'Italia'
-    ita = data.groupby('data_somministrazione').sum()
+        administration = administration.append(region)
+    ita = administration.groupby(date_label).sum()
     ita['area'] = 'Italia'
     ita['popolazione'] = covid_data['Italia'].popolazione[0]
-    ita_consegne['popolazione'] = covid_data['Italia'].popolazione[0]
-    consegne_out = consegne_out.append(ita_consegne)
-    data = data.append(ita)
-    return data, consegne_out
+    administration = administration.append(ita)
+    return administration
+
+
+class Vaccines:
+    def __init__(self, vaccines, deliveries, covid_data):
+        self.raw = process_data(vaccines, covid_data, date_label='data_somministrazione')
+        self.administration = process_data(vaccines, covid_data, drop_ages=True, date_label='data_somministrazione')
+        self.deliveries = process_data(deliveries, covid_data, date_label='data_consegna')
+
+
+def vaccines(repo_reference, covid_data):
+    vaccine_data = pd.read_csv(os.path.join(BASE_PATH, 'covid19-opendata-vaccini/dati/somministrazioni-vaccini-latest.csv'), index_col='data_somministrazione')
+    deliveries = pd.read_csv(os.path.join(BASE_PATH, 'covid19-opendata-vaccini/dati/consegne-vaccini-latest.csv'), index_col='data_consegna')
+    return Vaccines(vaccine_data, deliveries, covid_data)
 
 
 def get_list_of_regions():
