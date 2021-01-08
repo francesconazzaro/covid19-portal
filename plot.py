@@ -6,6 +6,8 @@ import scipy.optimize
 import scipy.stats
 from matplotlib import cm
 
+import import_data
+
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
@@ -479,26 +481,38 @@ def mobility_data(mobility_plot_data, variable):
     return fig
 
 
-def plot_vaccines(vaccines):
-    fig = make_subplots(1, subplot_titles=['Percentuale di popolazione vaccinata.'])
+def plot_vaccines(vaccines, area=None, unita=100, subplot_title='Percentuale di popolazione vaccinata.', fill=None, height=700):
+    fig = make_subplots(1, subplot_titles=[subplot_title])
     maxs = []
-    for area in np.unique(vaccines.area):
-        data_plot = vaccines[vaccines.area == area]
-        total = (data_plot.sesso_maschile + data_plot.sesso_femminile).cumsum() / data_plot.popolazione * 100
+    if area is None:
+        for a in np.unique(vaccines.area):
+            data_plot = vaccines[vaccines.area == a]
+            total = (data_plot.sesso_maschile + data_plot.sesso_femminile).cumsum() / data_plot.popolazione * unita
+            ax = go.Scatter(
+                x=data_plot.index,
+                y=total,
+                fill=fill,
+                name=a,
+            )
+            fig.add_trace(ax)
+            maxs.append(total.max())
+    else:
+        plot_data = vaccines[vaccines.area == area]
+        total = (plot_data.sesso_maschile + plot_data.sesso_femminile).cumsum() / plot_data.popolazione * unita
         ax = go.Scatter(
-            x=data_plot.index,
+            x=plot_data.index,
             y=total,
-            # fill='tozeroy',
+            fill='tozeroy',
             name=area,
         )
+        maxs.append(total)
         fig.add_trace(ax)
-        maxs.append(total.max())
     fig.update_layout(
         plot_bgcolor="white",
         margin=dict(t=50, l=10, b=10, r=10),
         yaxis_title='',
         # width=1300,
-        height=700,
+        height=height,
         autosize=True,
         # legend={
         #     'orientation': "v",
@@ -515,7 +529,7 @@ def plot_vaccines(vaccines):
 
 
 def plot_deliveries(deliveries, area):
-    fig = make_subplots(1, subplot_titles=[f'Dosi di vaccino consegnate per 100 mila abitanti: {area}'])
+    fig = make_subplots(1, subplot_titles=[f'Dosi di vaccino consegnate per 100 mila abitanti'])
     plot_data = deliveries[deliveries.area == area]
     ax = go.Scatter(
         x=plot_data.index,
@@ -528,18 +542,75 @@ def plot_deliveries(deliveries, area):
         plot_bgcolor="white",
         margin=dict(t=50, l=10, b=10, r=10),
         yaxis_title='',
-        # width=1300,
-        height=700,
+        height=500,
         autosize=True,
-        # legend={
-        #     'orientation': "v",
-        #     'yanchor': "right",
-        #     # 'y': -.15, # bottom
-        #     # 'y': -.2,  # top
-        #     'xanchor': "center",
-        #     # 'x': .5,
-        # }
     )
     fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey')
     fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey')
+    return fig
+
+
+def plot_ages(vaccines, area):
+    if area == 'Italia':
+        ages = import_data.pd.read_csv(
+            import_data.os.path.join(import_data.BASE_PATH, 'covid19-opendata-vaccini/dati/anagrafica-vaccini-summary-latest.csv'),
+            index_col='fascia_anagrafica',
+        )
+    else:
+        vaccines_area = vaccines[vaccines.area == area]
+        ages = vaccines_area.groupby('fascia_anagrafica').sum()
+    pie = go.Pie(
+        values=(ages.sesso_maschile + ages.sesso_femminile).values,
+        labels=ages.index,
+        textinfo='label+percent'
+    )
+    fig = make_subplots(1, subplot_titles=[f'Fasce di età di somministrazione'])
+    fig.add_trace(pie)
+    fig.update_layout(legend={
+        'orientation': 'h',
+        'yanchor': "bottom",
+        'y': -.3,  # top
+        'xanchor': "center",
+        'x': .5,
+    }
+    )
+    return fig
+
+
+def plot_gender(vaccines, area):
+    plot_data = vaccines[vaccines.area == area].sum()
+    pie = go.Pie(
+        values=[plot_data.sesso_femminile, plot_data.sesso_maschile],
+        labels=['Sesso Femminile', 'Sesso maschile'],
+        textinfo='label+percent'
+    )
+    fig = make_subplots(1, subplot_titles=[f'Somministrazione per genere'])
+    fig.add_trace(pie)
+    fig.update_layout(legend={
+        'orientation': 'h',
+        'yanchor': "bottom",
+        'y': -.15,  # top
+        'xanchor': "center",
+        'x': .5,
+    }
+    )
+    return fig
+
+
+def plot_category(vaccines, area):
+    plot_data = vaccines[vaccines.area == area].sum()
+    pie = go.Pie(
+        values=[plot_data.categoria_operatori_sanitari_sociosanitari, plot_data.categoria_personale_non_sanitario, plot_data.categoria_ospiti_rsa],
+        labels=['Categoria operatori sanitari sociosanitari', 'Categoria personale non sanitario', 'Categoria ospiti RSA'],
+        textinfo='percent',
+    )
+    fig = make_subplots(1, subplot_titles=[f'Somministrazione per categorie'])
+    fig.add_trace(pie)
+    fig.update_layout(legend={
+            'yanchor': "bottom",
+            'y': -.3,  # top
+            'xanchor': "center",
+            'x': .5,
+        }
+)
     return fig

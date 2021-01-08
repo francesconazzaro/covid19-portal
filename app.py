@@ -45,22 +45,22 @@ def explore_regions():
         st.markdown("<h3 style='text-align: center;'>Nuovi positivi</h2>",
                     unsafe_allow_html=True)
         nuovi_positivi = DATA[country].iloc[-1].nuovi_positivi
-        st.markdown(f"<h1 style='text-align: center; color: red;'>{nuovi_positivi}</h1>", unsafe_allow_html=True)
+        st.markdown(f"<h1 style='text-align: center; color: red;'>{nuovi_positivi:,}</h1>", unsafe_allow_html=True)
     with col4:
         st.markdown("<h3 style='text-align: center;'>Deceduti oggi</h2>",
                     unsafe_allow_html=True)
         deceduti = int(DATA[country].deceduti.diff().iloc[-1])
-        st.markdown(f"<h1 style='text-align: center; color: red;'>{deceduti}</h1>", unsafe_allow_html=True)
+        st.markdown(f"<h1 style='text-align: center; color: red;'>{deceduti:,}</h1>", unsafe_allow_html=True)
     with col5:
         st.markdown("<h3 style='text-align: center;'>Persone in terapia intensiva</h2>",
                     unsafe_allow_html=True)
         terapia_intensiva = DATA[country].iloc[-1].terapia_intensiva
-        st.markdown(f"<h1 style='text-align: center; color: red;'>{terapia_intensiva}</h1>", unsafe_allow_html=True)
+        st.markdown(f"<h1 style='text-align: center; color: red;'>{terapia_intensiva:,}</h1>", unsafe_allow_html=True)
     with col6:
         st.markdown("<h3 style='text-align: center;'>Persone ricoverate</h2>",
                     unsafe_allow_html=True)
         ricoverati_con_sintomi = DATA[country].iloc[-1].ricoverati_con_sintomi
-        st.markdown(f"<h1 style='text-align: center; color: red;'>{ricoverati_con_sintomi}</h1>", unsafe_allow_html=True)
+        st.markdown(f"<h1 style='text-align: center; color: red;'>{ricoverati_con_sintomi:,}</h1>", unsafe_allow_html=True)
     # col1, col2, col3, col4, col5, col6 = st.beta_columns(6)
     # fit_expander = st.beta_expander('Personalizza Fit')
     # col1, col2, col3, col4 = fit_expander.beta_columns(4)
@@ -141,36 +141,67 @@ vaccine_repo = import_data.RepoReference(
     repo_path='covid19-opendata-vaccini',
     repo_url='https://github.com/italia/covid19-opendata-vaccini.git'
 )
-vaccines, deliveries = import_data.vaccines(vaccine_repo, DATA)
+vaccines = import_data.vaccines(vaccine_repo, DATA)
 
 what = st.radio('', ['Dati contagio', 'Dati somministrazione vaccini'])
 
 if what == 'Dati somministrazione vaccini':
-    st.header('Dati sulle vaccinazioni aggiornati al {}'.format(vaccines[vaccines.area == 'Italia'].index[-1]))
+    st.header('Dati sulle vaccinazioni aggiornati al {}'.format(vaccines.administration[vaccines.administration.area == 'Italia'].index[-1]))
     _, col1, col2, _ = st.beta_columns([1, 2, 2, 1])
-    with col1:
+    with col2:
         st.markdown("<h3 style='text-align: center;'>Dosi somministrate fino ad ora in Italia</h2>",
                     unsafe_allow_html=True)
-        tot_somm = vaccines[vaccines.area == 'Italia'].cumsum().iloc[-1].sesso_maschile + vaccines[vaccines.area == 'Italia'].cumsum().iloc[-1].sesso_femminile
-        st.markdown(f"<h1 style='text-align: center; color: red;'>{tot_somm}</h1>", unsafe_allow_html=True)
-    with col2:
+        tot_somm = vaccines.administration[vaccines.administration.area == 'Italia'].cumsum().iloc[-1].sesso_maschile + vaccines.administration[vaccines.administration.area == 'Italia'].cumsum().iloc[-1].sesso_femminile
+        st.markdown(f"<h1 style='text-align: center; color: red;'>{tot_somm:,}</h1>", unsafe_allow_html=True)
+    with col1:
         st.markdown("<h3 style='text-align: center;'>Dosi consegnate fino ad ora in Italia</h2>",
                     unsafe_allow_html=True)
-        tot_cons = deliveries[deliveries.area == 'Italia'].cumsum().iloc[-1].numero_dosi
-        st.markdown(f"<h1 style='text-align: center; color: red;'>{tot_cons}</h1>", unsafe_allow_html=True)
+        tot_cons = vaccines.deliveries[vaccines.deliveries.area == 'Italia'].cumsum().iloc[-1].numero_dosi
+        st.markdown(f"<h1 style='text-align: center; color: red;'>{tot_cons:,}</h1>", unsafe_allow_html=True)
     st.subheader('Dosi somministrate.')
     st.write('Per visualizzare una sola regione fare doppio click sul nome della regione')
-    st.plotly_chart(plot.plot_vaccines(vaccines), use_container_width=True)
-    st.subheader('Dosi consegnate.')
-    col1, _ = st.beta_columns([1, 3])
+    st.plotly_chart(plot.plot_vaccines(vaccines.administration), use_container_width=True)
+
+    st.subheader('Dettaglio per area')
+    col1, col2, col3 = st.beta_columns(3)
     with col1:
         area = col1.selectbox("Seleziona un'area", ['Italia'] + list(import_data.REGIONS_MAP.values()))
-    st.plotly_chart(plot.plot_deliveries(deliveries, area), use_container_width=True)
+    with col3:
+        st.markdown("<h3 style='text-align: center;'>Dosi somministrate fino ad ora</h2>",
+                    unsafe_allow_html=True)
+        tot_somm = vaccines.administration[vaccines.administration.area == area].cumsum().iloc[-1].sesso_maschile + vaccines.administration[vaccines.administration.area == area].cumsum().iloc[-1].sesso_femminile
+        st.markdown(f"<h1 style='text-align: center; color: red;'>{tot_somm:,}</h1>", unsafe_allow_html=True)
+    with col2:
+        st.markdown("<h3 style='text-align: center;'>Dosi consegnate fino ad ora</h2>",
+                    unsafe_allow_html=True)
+        tot_cons = vaccines.deliveries[vaccines.deliveries.area == area].cumsum().iloc[-1].numero_dosi
+        st.markdown(f"<h1 style='text-align: center; color: red;'>{tot_cons:,}</h1>", unsafe_allow_html=True)
+
+    col1, col2, col3 = st.beta_columns(3)
+    with col1:
+        col1.plotly_chart(plot.plot_ages(vaccines.raw, area), use_container_width=True)
+    with col2:
+        col2.plotly_chart(plot.plot_gender(vaccines.administration, area), use_container_width=True)
+    with col3:
+        col3.plotly_chart(plot.plot_category(vaccines.administration, area), use_container_width=True)
+    col1, col2 = st.beta_columns(2)
+    with col1:
+        col1.plotly_chart(plot.plot_deliveries(vaccines.deliveries, area), use_container_width=True)
+    with col2:
+        col2.plotly_chart(plot.plot_vaccines(
+            vaccines.administration,
+            area,
+            unita=plot.UNITA,
+            subplot_title='Popolazione vaccinata per 100 mila abitanti',
+            fill='tozeroy',
+            height=500,
+        ), use_container_width=True
+        )
     expander = st.beta_expander("This app is developed by Francesco Nazzaro (click to check raw data)")
     expander.write("Contact me on [Twitter](https://twitter.com/effenazzaro)")
     expander.write("The source code is on [GitHub](https://github.com/francesconazzaro/covid19-portal)")
     expander.write("Raw data")
-    expander.dataframe(vaccines)
+    expander.dataframe(vaccines.administration)
 
 elif what == 'Dati contagio':
     explore_regions()
