@@ -197,6 +197,7 @@ if what == 'Dati somministrazione vaccini':
             height=500,
         ), use_container_width=True
         )
+    st.plotly_chart(plot.plot_vaccines_prediction(vaccines.administration, area), use_container_width=True)
     expander = st.beta_expander("This app is developed by Francesco Nazzaro (click to check raw data)")
     expander.write("Contact me on [Twitter](https://twitter.com/effenazzaro)")
     expander.write("The source code is on [GitHub](https://github.com/francesconazzaro/covid19-portal)")

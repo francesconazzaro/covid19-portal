@@ -615,3 +615,26 @@ def plot_category(vaccines, area):
         }
 )
     return fig
+
+
+def plot_vaccines_prediction(vaccines, area, npoints=5, p0=(np.datetime64("2021-01-01", "s"), np.timedelta64(48 * 60 * 60, "s"))):
+    plot_data = vaccines[vaccines.area == area]
+    popolazione = plot_data.popolazione
+    plot_data = (plot_data.sesso_femminile + plot_data.sesso_maschile).cumsum() / popolazione * 100
+    t_0, T_d, r2 = linear_fit(plot_data, start=-npoints, stop=-1, p0=p0)
+    t100 = (70 * T_d) + t_0
+    print(t_0, T_d, t100)
+    fig = plot_vaccines(vaccines, area, unita=100, fill='tozeroy', subplot_title=f'Previsione vaccinazione 70% della popolazione: {import_data.pd.to_datetime(t100).date()}')
+    print(import_data.pd.date_range(plot_data.index[0], t100))
+    print(linear(import_data.pd.date_range(plot_data.index[0], t100), t_0, T_d))
+    ax = go.Scatter(
+        x=import_data.pd.date_range(plot_data.index[0], t100),
+        y=linear(import_data.pd.date_range(plot_data.index[0], t100), t_0, T_d),
+        name='Fit',
+    )
+    fig.add_trace(ax)
+
+    return fig
+
+
+
