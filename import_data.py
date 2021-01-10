@@ -83,8 +83,8 @@ class Vaccines:
 
 
 def vaccines(repo_reference, covid_data):
-    vaccine_data = pd.read_csv(os.path.join(BASE_PATH, 'covid19-opendata-vaccini/dati/somministrazioni-vaccini-latest.csv'), index_col='data_somministrazione')
-    deliveries = pd.read_csv(os.path.join(BASE_PATH, 'covid19-opendata-vaccini/dati/consegne-vaccini-latest.csv'), index_col='data_consegna')
+    vaccine_data = pd.read_csv(os.path.join(BASE_PATH, 'covid19-opendata-vaccini/dati/somministrazioni-vaccini-latest.csv'), index_col='data_somministrazione', parse_dates=['data_somministrazione'])
+    deliveries = pd.read_csv(os.path.join(BASE_PATH, 'covid19-opendata-vaccini/dati/consegne-vaccini-latest.csv'), index_col='data_consegna', parse_dates=['data_consegna'])
     return Vaccines(vaccine_data, deliveries, covid_data)
 
 
