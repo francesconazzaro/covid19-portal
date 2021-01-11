@@ -176,20 +176,14 @@ def covid19(repo_reference):
             popolazione_index = [index for index in popolazione.index if regione[-5:].lower() in index.lower()][0]
             terapie_intensive_index = [index for index in terapie_intensive.index if regione[-5:].lower() in index.lower()][0]
             posti_letto_index = [index for index in posti_letto.index if regione[-5:].lower() in index.lower()][0]
-            print('Unable to find', regione)
-            # continue
         data_in = data_aggregate[data_aggregate.denominazione_regione == regione].sort_index()
         data_in['popolazione'] = popolazione[popolazione_index]
         data_in['terapie_intensive_disponibili'] = terapie_intensive.posti_attuali[terapie_intensive_index]
         data_in['posti_letto_disponibili'] = posti_letto.posti_attuali[posti_letto_index]
-        try:
-            terapie_intensive.data[terapie_intensive_index] = float(data_in.terapia_intensiva[-1]) / terapie_intensive.posti_attuali[terapie_intensive_index] * 100
-        except:
-            terapie_intensive.data[terapie_intensive_index] = 'nodata'
-        try:
-            posti_letto.data[posti_letto_index] = float(data_in.ricoverati_con_sintomi[-1]) / posti_letto.posti_attuali[posti_letto_index] * 100
-        except Exception as e:
-            print(e)
-            posti_letto.data[posti_letto_index] = 'nodata'
+        ti_perc = data_in.terapia_intensiva[-1] / terapie_intensive.posti_attuali[terapie_intensive_index]
+        beds_perc = data_in.ricoverati_con_sintomi[-1] / posti_letto.posti_attuali[posti_letto_index]
+        if np.isfinite(ti_perc) and np.isfinite(beds_perc):
+            terapie_intensive.data.loc[terapie_intensive_index] = ti_perc
+            posti_letto.data.loc[posti_letto_index] = beds_perc
         regioni[regione] = data_in
     return regioni, terapie_intensive, posti_letto
