@@ -181,11 +181,17 @@ def test_positivity_rate(data, country, rule):
 def normalisation(data, population, rule):
     if RULE_MAP[rule] == 'percentage':
         new_data = data / population * UNITA
-        new_data.name = data.name
+        try:
+            new_data.name = data.name
+        except:
+            pass
         return new_data
     else:
         new_data = data
-        new_data.name = data.name
+        try:
+            new_data.name = data.name
+        except:
+            pass
         return new_data
 
 
@@ -617,16 +623,42 @@ def plot_category(vaccines, area):
     return fig
 
 
+def plot_percentage(vaccines, deliveries, area):
+    vaccines_area = vaccines[vaccines.area == area]
+    tot_vaccines = (vaccines_area.sesso_maschile + vaccines_area.sesso_femminile).cumsum().iloc[-1]
+    tot_deliveries = deliveries[deliveries.area == area].numero_dosi.cumsum().iloc[-1]
+    percentage = tot_vaccines / tot_deliveries * 100
+    pie = go.Pie(
+        values=[percentage, (100 - percentage)],
+        labels=['Dosi somministrate', 'Dosi ancora non somministrate'],
+        textinfo='percent',
+    )
+    fig = make_subplots(1)
+    fig.add_trace(pie)
+    fig.update({'layout_showlegend': False})
+    fig.update_layout(legend={
+        'yanchor': "bottom",
+        'y': -.3,  # top
+        'xanchor': "center",
+        'x': .5,
+    }, height=150, margin=dict(
+        l=0,
+        r=0,
+        b=0,
+        t=30,
+        pad=0
+    ),
+    )
+    return fig
+
+
 def plot_vaccines_prediction(vaccines, area, npoints=5, p0=(np.datetime64("2021-01-01", "s"), np.timedelta64(48 * 60 * 60, "s"))):
     plot_data = vaccines[vaccines.area == area]
     popolazione = plot_data.popolazione
     plot_data = (plot_data.sesso_femminile + plot_data.sesso_maschile).cumsum() / popolazione * 100
     t_0, T_d, r2 = linear_fit(plot_data, start=-npoints, stop=-1, p0=p0)
     t100 = (70 * T_d) + t_0
-    print(t_0, T_d, t100)
     fig = plot_vaccines(vaccines, area, unita=100, fill='tozeroy', subplot_title=f'Previsione vaccinazione 70% della popolazione: {import_data.pd.to_datetime(t100).date()}')
-    print(import_data.pd.date_range(plot_data.index[0], t100))
-    print(linear(import_data.pd.date_range(plot_data.index[0], t100), t_0, T_d))
     ax = go.Scatter(
         x=import_data.pd.date_range(plot_data.index[0], t100),
         y=linear(import_data.pd.date_range(plot_data.index[0], t100), t_0, T_d),

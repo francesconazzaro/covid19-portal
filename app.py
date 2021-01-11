@@ -44,23 +44,27 @@ def explore_regions():
     with col3:
         st.markdown("<h3 style='text-align: center;'>Nuovi positivi</h2>",
                     unsafe_allow_html=True)
-        nuovi_positivi = DATA[country].iloc[-1].nuovi_positivi
-        st.markdown(f"<h1 style='text-align: center; color: red;'>{nuovi_positivi:,}</h1>", unsafe_allow_html=True)
+        nuovi_positivi = plot.normalisation(DATA[country].iloc[-1].nuovi_positivi, DATA[country].iloc[-1].popolazione, rule)
+        text = f'{nuovi_positivi:.2f}' if plot.RULE_MAP[rule] == 'percentage' else f'{nuovi_positivi:,}'
+        st.markdown(f"<h1 style='text-align: center; color: red;'>{text}</h1>", unsafe_allow_html=True)
     with col4:
         st.markdown("<h3 style='text-align: center;'>Deceduti oggi</h2>",
                     unsafe_allow_html=True)
-        deceduti = int(DATA[country].deceduti.diff().iloc[-1])
-        st.markdown(f"<h1 style='text-align: center; color: red;'>{deceduti:,}</h1>", unsafe_allow_html=True)
+        deceduti = plot.normalisation(DATA[country].deceduti.diff().iloc[-1], DATA[country].iloc[-1].popolazione, rule)
+        text = f'{deceduti:.2f}' if plot.RULE_MAP[rule] == 'percentage' else f'{deceduti:,}'
+        st.markdown(f"<h1 style='text-align: center; color: red;'>{text}</h1>", unsafe_allow_html=True)
     with col5:
         st.markdown("<h3 style='text-align: center;'>Persone in terapia intensiva</h2>",
                     unsafe_allow_html=True)
-        terapia_intensiva = DATA[country].iloc[-1].terapia_intensiva
-        st.markdown(f"<h1 style='text-align: center; color: red;'>{terapia_intensiva:,}</h1>", unsafe_allow_html=True)
+        terapia_intensiva = plot.normalisation(DATA[country].iloc[-1].terapia_intensiva, DATA[country].iloc[-1].popolazione, rule)
+        text = f'{terapia_intensiva:.2f}' if plot.RULE_MAP[rule] == 'percentage' else f'{terapia_intensiva:,}'
+        st.markdown(f"<h1 style='text-align: center; color: red;'>{text}</h1>", unsafe_allow_html=True)
     with col6:
         st.markdown("<h3 style='text-align: center;'>Persone ricoverate</h2>",
                     unsafe_allow_html=True)
-        ricoverati_con_sintomi = DATA[country].iloc[-1].ricoverati_con_sintomi
-        st.markdown(f"<h1 style='text-align: center; color: red;'>{ricoverati_con_sintomi:,}</h1>", unsafe_allow_html=True)
+        ricoverati_con_sintomi = plot.normalisation(DATA[country].iloc[-1].ricoverati_con_sintomi, DATA[country].iloc[-1].popolazione, rule)
+        text = f'{ricoverati_con_sintomi:.2f}' if plot.RULE_MAP[rule] == 'percentage' else f'{ricoverati_con_sintomi:,}'
+        st.markdown(f"<h1 style='text-align: center; color: red;'>{text}</h1>", unsafe_allow_html=True)
     # col1, col2, col3, col4, col5, col6 = st.beta_columns(6)
     # fit_expander = st.beta_expander('Personalizza Fit')
     # col1, col2, col3, col4 = fit_expander.beta_columns(4)
@@ -146,8 +150,8 @@ vaccines = import_data.vaccines(vaccine_repo, DATA)
 what = st.radio('', ['Dati contagio', 'Dati somministrazione vaccini'])
 
 if what == 'Dati somministrazione vaccini':
-    st.header('Dati sulle vaccinazioni aggiornati al {}'.format(vaccines.administration[vaccines.administration.area == 'Italia'].index[-1]))
-    _, col1, col2, _ = st.beta_columns([1, 2, 2, 1])
+    st.header(f"Dati sulle vaccinazioni aggiornati al {vaccines.administration[vaccines.administration.area == 'Italia'].index[-1].date()}")
+    col1, col2, col3 = st.beta_columns([2, 2, 1])
     with col2:
         st.markdown("<h3 style='text-align: center;'>Dosi somministrate fino ad ora in Italia</h2>",
                     unsafe_allow_html=True)
@@ -158,12 +162,14 @@ if what == 'Dati somministrazione vaccini':
                     unsafe_allow_html=True)
         tot_cons = vaccines.deliveries[vaccines.deliveries.area == 'Italia'].cumsum().iloc[-1].numero_dosi
         st.markdown(f"<h1 style='text-align: center; color: red;'>{tot_cons:,}</h1>", unsafe_allow_html=True)
+    with col3:
+        col3.plotly_chart(plot.plot_percentage(vaccines.administration, vaccines.deliveries, 'Italia'), use_container_width=True)
     st.subheader('Dosi somministrate.')
     st.write('Per visualizzare una sola regione fare doppio click sul nome della regione')
     st.plotly_chart(plot.plot_vaccines(vaccines.administration), use_container_width=True)
 
     st.subheader('Dettaglio per area')
-    col1, col2, col3 = st.beta_columns(3)
+    col1, col2, col3, col4 = st.beta_columns([1, 2, 2, 2])
     with col1:
         area = col1.selectbox("Seleziona un'area", ['Italia'] + list(import_data.REGIONS_MAP.values()))
     with col3:
@@ -176,7 +182,8 @@ if what == 'Dati somministrazione vaccini':
                     unsafe_allow_html=True)
         tot_cons = vaccines.deliveries[vaccines.deliveries.area == area].cumsum().iloc[-1].numero_dosi
         st.markdown(f"<h1 style='text-align: center; color: red;'>{tot_cons:,}</h1>", unsafe_allow_html=True)
-
+    with col4:
+        col4.plotly_chart(plot.plot_percentage(vaccines.administration, vaccines.deliveries, area), use_container_width=True)
     col1, col2, col3 = st.beta_columns(3)
     with col1:
         col1.plotly_chart(plot.plot_ages(vaccines.raw, area), use_container_width=True)
