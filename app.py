@@ -45,25 +45,26 @@ def explore_regions():
         st.markdown("<h3 style='text-align: center;'>Nuovi positivi</h2>",
                     unsafe_allow_html=True)
         nuovi_positivi = plot.normalisation(DATA[country].iloc[-1].nuovi_positivi, DATA[country].iloc[-1].popolazione, rule)
-        text = f'{nuovi_positivi:.2f}' if plot.RULE_MAP[rule] == 'percentage' else f'{nuovi_positivi:,}'
+        text = f'{nuovi_positivi:.2f}' if plot.RULE_MAP[rule] == 'percentage' else f'{int(nuovi_positivi):,}'
         st.markdown(f"<h1 style='text-align: center; color: red;'>{text}</h1>", unsafe_allow_html=True)
     with col4:
         st.markdown("<h3 style='text-align: center;'>Deceduti oggi</h2>",
                     unsafe_allow_html=True)
         deceduti = plot.normalisation(DATA[country].deceduti.diff().iloc[-1], DATA[country].iloc[-1].popolazione, rule)
-        text = f'{deceduti:.2f}' if plot.RULE_MAP[rule] == 'percentage' else f'{deceduti:,}'
+        text = f'{deceduti:.2f}' if plot.RULE_MAP[rule] == 'percentage' else f'{int(deceduti):,}'
+        print(plot.RULE_MAP[rule] == 'percentage')
         st.markdown(f"<h1 style='text-align: center; color: red;'>{text}</h1>", unsafe_allow_html=True)
     with col5:
         st.markdown("<h3 style='text-align: center;'>Persone in terapia intensiva</h2>",
                     unsafe_allow_html=True)
         terapia_intensiva = plot.normalisation(DATA[country].iloc[-1].terapia_intensiva, DATA[country].iloc[-1].popolazione, rule)
-        text = f'{terapia_intensiva:.2f}' if plot.RULE_MAP[rule] == 'percentage' else f'{terapia_intensiva:,}'
+        text = f'{terapia_intensiva:.2f}' if plot.RULE_MAP[rule] == 'percentage' else f'{int(terapia_intensiva):,}'
         st.markdown(f"<h1 style='text-align: center; color: red;'>{text}</h1>", unsafe_allow_html=True)
     with col6:
         st.markdown("<h3 style='text-align: center;'>Persone ricoverate</h2>",
                     unsafe_allow_html=True)
         ricoverati_con_sintomi = plot.normalisation(DATA[country].iloc[-1].ricoverati_con_sintomi, DATA[country].iloc[-1].popolazione, rule)
-        text = f'{ricoverati_con_sintomi:.2f}' if plot.RULE_MAP[rule] == 'percentage' else f'{ricoverati_con_sintomi:,}'
+        text = f'{ricoverati_con_sintomi:.2f}' if plot.RULE_MAP[rule] == 'percentage' else f'{int(ricoverati_con_sintomi):,}'
         st.markdown(f"<h1 style='text-align: center; color: red;'>{text}</h1>", unsafe_allow_html=True)
     # col1, col2, col3, col4, col5, col6 = st.beta_columns(6)
     # fit_expander = st.beta_expander('Personalizza Fit')
