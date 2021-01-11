@@ -164,12 +164,12 @@ if what == 'Dati somministrazione vaccini':
         st.markdown(f"<h1 style='text-align: center; color: red;'>{tot_cons:,}</h1>", unsafe_allow_html=True)
     with col3:
         col3.plotly_chart(plot.plot_percentage(vaccines.administration, vaccines.deliveries, 'Italia'), use_container_width=True)
-    st.subheader('Dosi somministrate.')
+    st.subheader('Dosi somministrate')
     st.write('Per visualizzare una sola regione fare doppio click sul nome della regione')
     st.plotly_chart(plot.plot_vaccines(vaccines.administration), use_container_width=True)
 
     st.subheader('Dettaglio per area')
-    col1, col2, col3, col4 = st.beta_columns([1, 2, 2, 2])
+    col1, col2, col3, col4, col5 = st.beta_columns([1, 2, 2, 2, 2])
     with col1:
         area = col1.selectbox("Seleziona un'area", ['Italia'] + list(import_data.REGIONS_MAP.values()))
     with col3:
@@ -183,7 +183,12 @@ if what == 'Dati somministrazione vaccini':
         tot_cons = vaccines.deliveries[vaccines.deliveries.area == area].cumsum().iloc[-1].numero_dosi
         st.markdown(f"<h1 style='text-align: center; color: red;'>{tot_cons:,}</h1>", unsafe_allow_html=True)
     with col4:
-        col4.plotly_chart(plot.plot_percentage(vaccines.administration, vaccines.deliveries, area), use_container_width=True)
+        st.markdown("<h3 style='text-align: center;'>Dosi somministrate al giorno</h2>",
+                    unsafe_allow_html=True)
+        avg_somm = tot_somm / len(vaccines.administration[vaccines.administration.area == area].cumsum().index)
+        st.markdown(f"<h1 style='text-align: center; color: red;'>{avg_somm:,.2f}</h1>", unsafe_allow_html=True)
+    with col5:
+        col5.plotly_chart(plot.plot_percentage(vaccines.administration, vaccines.deliveries, area), use_container_width=True)
     col1, col2, col3 = st.beta_columns(3)
     with col1:
         col1.plotly_chart(plot.plot_ages(vaccines.raw, area), use_container_width=True)
