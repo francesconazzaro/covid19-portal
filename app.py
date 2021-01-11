@@ -105,40 +105,40 @@ def explore_regions():
         st.markdown(f"<h1 style='text-align: center; color: red;'>{perc.iloc[-1]:.2f}</h1>", unsafe_allow_html=True)
     st.plotly_chart(plot.test_positivity_rate(DATA, country, rule=percentage_rule), use_container_width=True)
     mobility_expander()
-    # table_expander = st.beta_expander('Tabelle andamento')
-    # table_expander.subheader(f'Andamento degli ultimi 5 giorni: {country} ({rule})')
-    # col1, col2, col3, col4, col5 = table_expander.beta_columns(5)
-    # data_country = DATA[country].copy()
-    # data_country.index = data_country.index.strftime(fmt)
-    # with col1:
-    #     col1.write('Nuovi Positivi')
-    #     df = plot.normalisation(data_country.nuovi_positivi, data_country.popolazione, rule)[-5:]
-    #     df.name = 'positivi'
-    #     col1.dataframe(df.to_frame().style.background_gradient(cmap='Reds'))
-    # with col2:
-    #     col2.write('Ricoveri')
-    #     df = plot.normalisation(data_country.ricoverati_con_sintomi, data_country.popolazione, rule)[-5:]
-    #     df.name = 'ricoveri'
-    #     col2.dataframe(df.to_frame().style.background_gradient(cmap='Reds'))
-    # with col3:
-    #     col3.write('Terapia Intensiva')
-    #     df = plot.normalisation(data_country.terapia_intensiva, data_country.popolazione, rule)[-5:]
-    #     df.name = 'TI'
-    #     col3.dataframe(df.to_frame().style.background_gradient(cmap='Reds'))
-    # with col4:
-    #     col4.write('Deceduti')
-    #     df = plot.normalisation(data_country.deceduti.diff(), data_country.popolazione, rule)[-5:]
-    #     col4.dataframe(df.to_frame().style.background_gradient(cmap='Reds'))
-    # with col5:
-    #     if plot.PERCENTAGE_RULE[percentage_rule] == 'tamponi':
-    #         col5.write('Percentuale Tamponi Positivi')
-    #         tpr = data_country.nuovi_positivi[-5:] / data_country.tamponi.diff()[-5:] * 100
-    #         tpr.name = 'TPR (%)'
-    #     elif plot.PERCENTAGE_RULE[percentage_rule] == 'casi':
-    #         col5.write('Percentuale Casi Positivi')
-    #         tpr = data_country.nuovi_positivi[-5:] / data_country.casi_testati.diff()[-5:] * 100
-    #         tpr.name = 'CPR (%)'
-    #     col5.dataframe(tpr.to_frame().style.background_gradient(cmap='Reds'))
+    table_expander = st.beta_expander('Tabelle andamento')
+    table_expander.subheader(f'Andamento degli ultimi 5 giorni: {country} ({rule})')
+    col1, col2, col3, col4, col5 = table_expander.beta_columns(5)
+    data_country = DATA[country].copy()
+    data_country.index = data_country.index.strftime(fmt)
+    with col1:
+        col1.write('Nuovi Positivi')
+        df = plot.normalisation(data_country.nuovi_positivi, data_country.popolazione, rule)[-5:]
+        df.name = 'positivi'
+        col1.dataframe(df.to_frame().style.background_gradient(cmap='Reds'))
+    with col2:
+        col2.write('Ricoveri')
+        df = plot.normalisation(data_country.ricoverati_con_sintomi, data_country.popolazione, rule)[-5:]
+        df.name = 'ricoveri'
+        col2.dataframe(df.to_frame().style.background_gradient(cmap='Reds'))
+    with col3:
+        col3.write('Terapia Intensiva')
+        df = plot.normalisation(data_country.terapia_intensiva, data_country.popolazione, rule)[-5:]
+        df.name = 'TI'
+        col3.dataframe(df.to_frame().style.background_gradient(cmap='Reds'))
+    with col4:
+        col4.write('Deceduti')
+        df = plot.normalisation(data_country.deceduti.diff(), data_country.popolazione, rule)[-5:]
+        col4.dataframe(df.to_frame().style.background_gradient(cmap='Reds'))
+    with col5:
+        if plot.PERCENTAGE_RULE[percentage_rule] == 'tamponi':
+            col5.write('Percentuale Tamponi Positivi')
+            tpr = data_country.nuovi_positivi[-5:] / data_country.tamponi.diff()[-5:] * 100
+            tpr.name = 'TPR (%)'
+        elif plot.PERCENTAGE_RULE[percentage_rule] == 'casi':
+            col5.write('Percentuale Casi Positivi')
+            tpr = data_country.nuovi_positivi[-5:] / data_country.casi_testati.diff()[-5:] * 100
+            tpr.name = 'CPR (%)'
+        col5.dataframe(tpr.to_frame().style.background_gradient(cmap='Reds'))
 
 
 st.title('COVID-19: Situazione in Italia')
@@ -221,18 +221,22 @@ elif what == 'Dati contagio':
     explore_regions()
     st.header('Confronto tra regioni')
     col1, col2, col3 = st.beta_columns([2, 2, 3])
+    import_data.pd.options.display.float_format = '{:.2f}'.format
     with col1:
         st.subheader('Percentuale di posti letto in area medica occupati regione per regione')
         st.write('')
-        st.dataframe(DATA_RIC.data.to_frame().style.background_gradient(cmap='Reds'), height=500)
+        ric = DATA_RIC.data.to_frame()
+        st.dataframe(ric.style.background_gradient(cmap='Reds').format("{:.2%}"), height=700)
     with col2:
         st.subheader('Percentuale di Terapie Intensive occupate regione per regione')
         st.write('')
-        st.dataframe(DATA_TI.data.to_frame().style.background_gradient(cmap='Reds'), height=500)
+        ti = DATA_TI.data.to_frame()
+        st.dataframe(ti.style.background_gradient(cmap='Reds').format("{:.2%}"), height=700)
     with col3:
         rule = st.selectbox('Variabile', ['Nuovi Positivi', 'Terapie Intensive', 'Percentuale tamponi positivi', 'Deceduti'])
         st.plotly_chart(plot.summary(DATA, rule, st), use_container_width=True)
-    st.write("Dati sul totale delle terapie intensive e dei posti letto in area medica aggiornati al 2020-10-28")
+    st.write("*Dati sul totale delle terapie intensive e dei posti letto in area medica aggiornati al 2020-10-28.")
+    st.write("**Dati per P.A. Bolzano e P.A. Trento non disponibili.")
 
     # st.plotly_chart(plot.mortality(DATA))
 
