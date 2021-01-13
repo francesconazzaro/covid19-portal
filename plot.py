@@ -518,17 +518,15 @@ def plot_vaccines(vaccines, area=None, unita=100, subplot_title='Percentuale di 
         plot_bgcolor="white",
         margin=dict(t=50, l=10, b=10, r=10),
         yaxis_title='',
-        # width=1300,
         height=height,
         autosize=True,
-        # legend={
-        #     'orientation': "v",
-        #     'yanchor': "right",
-        #     # 'y': -.15, # bottom
-        #     # 'y': -.2,  # top
-        #     'xanchor': "center",
-        #     # 'x': .5,
-        # }
+        legend={
+            'orientation': "h",
+            'yanchor': "bottom",
+            'y': -.4,
+            'xanchor': "center",
+            'x': .5,
+        }
     )
     fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey')
     fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[0, max(maxs) + .05])
@@ -658,14 +656,23 @@ def plot_vaccines_prediction(vaccines, area, npoints=7, p0=(np.datetime64("2021-
     plot_data = (plot_data.sesso_femminile + plot_data.sesso_maschile).cumsum() / popolazione * 100
     t_0, T_d, r2 = linear_fit(plot_data, start=-npoints, stop=-1, p0=p0)
     t100 = (70 * T_d) + t_0
-    fig = plot_vaccines(vaccines, area, unita=100, fill='tozeroy', subplot_title=f'Previsione vaccinazione 70% della popolazione: {import_data.pd.to_datetime(t100).date()}')
+    subplot_title = f'Previsione vaccinazione 70% della popolazione: {import_data.pd.to_datetime(t100).date()}<br>' \
+                    f'Fit sugli ultimi {npoints} giorni'
+    fig = plot_vaccines(vaccines, area, unita=100, fill='tozeroy', subplot_title=subplot_title)
     ax = go.Scatter(
         x=import_data.pd.date_range(plot_data.index[0], t100),
         y=linear(import_data.pd.date_range(plot_data.index[0], t100), t_0, T_d),
         name='Fit',
     )
     fig.add_trace(ax)
-
+    fig.update_layout(legend={
+        'orientation': 'v',
+        'yanchor': "bottom",
+        'y': .9,  # top
+        'xanchor': "center",
+        'x': 0.1,
+    }
+    )
     return fig
 
 
