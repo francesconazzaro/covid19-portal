@@ -652,7 +652,7 @@ def plot_percentage(vaccines, deliveries, area):
     return fig
 
 
-def plot_vaccines_prediction(vaccines, area, npoints=5, p0=(np.datetime64("2021-01-01", "s"), np.timedelta64(48 * 60 * 60, "s"))):
+def plot_vaccines_prediction(vaccines, area, npoints=7, p0=(np.datetime64("2021-01-01", "s"), np.timedelta64(48 * 60 * 60, "s"))):
     plot_data = vaccines[vaccines.area == area]
     popolazione = plot_data.popolazione
     plot_data = (plot_data.sesso_femminile + plot_data.sesso_maschile).cumsum() / popolazione * 100
