@@ -521,11 +521,9 @@ def plot_vaccines(vaccines, area=None, unita=100, subplot_title='Percentuale di 
         height=height,
         autosize=True,
         legend={
-            'orientation': "h",
-            'yanchor': "bottom",
-            'y': -.4,
-            'xanchor': "center",
-            'x': .5,
+            'font': dict(
+                size=10,
+            ),
         }
     )
     fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey')
