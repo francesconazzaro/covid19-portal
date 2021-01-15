@@ -516,7 +516,7 @@ def plot_vaccines(vaccines, area=None, unita=100, subplot_title='Percentuale di 
         fig.add_trace(ax)
     fig.update_layout(
         plot_bgcolor="white",
-        margin=dict(t=50, l=10, b=10, r=10),
+        margin=dict(t=50,  l=10, b=10, r=10),
         yaxis_title='',
         height=height,
         autosize=True,
