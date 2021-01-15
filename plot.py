@@ -654,7 +654,7 @@ def plot_percentage(vaccines, deliveries, area):
     tot_deliveries = deliveries[deliveries.area == area].numero_dosi.cumsum().iloc[-1]
     pie = go.Pie(
         values=[tot_vaccines, (tot_deliveries - tot_vaccines)],
-        labels=['Dosi somministrate', 'Dosi ancora non somministrate'],
+        labels=['Dosi somministrate',  'Dosi ancora non somministrate'],
         textinfo='percent',
     )
     fig = make_subplots(1)
