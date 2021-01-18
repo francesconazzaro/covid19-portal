@@ -500,6 +500,7 @@ def plot_vaccines(vaccines, area=None, unita=100, subplot_title='Percentuale di 
                 y=total,
                 fill=fill,
                 name=a,
+                mode='lines+markers',
             )
             fig.add_trace(ax)
             maxs.append(total.max())
@@ -517,6 +518,7 @@ def plot_vaccines(vaccines, area=None, unita=100, subplot_title='Percentuale di 
             y=total,
             # fill='tonexty',
             name='Numero somministrazioni cumulate',
+            mode='lines+markers',
         )
         bar = go.Bar(
             x=plot_data.index,
@@ -554,6 +556,7 @@ def plot_deliveries(deliveries, area):
         y=plot_data.numero_dosi.cumsum() / plot_data.popolazione * UNITA,
         # fill='tozeroy',
         name='Numero dosi consegnate cumulate',
+        mode='lines+markers',
     )
     bar = go.Bar(
         x=plot_data.index,
@@ -689,6 +692,7 @@ def plot_vaccines_prediction(vaccines, area, npoints=7, p0=(np.datetime64("2021-
         x=import_data.pd.date_range(plot_data.index[0], t100),
         y=linear(import_data.pd.date_range(plot_data.index[0], t100), t_0, T_d),
         name='Fit',
+        mode='lines',
     )
     fig.add_trace(ax)
     fig.update_layout(legend={
