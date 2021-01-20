@@ -169,6 +169,9 @@ if what == 'Dati somministrazione vaccini':
     st.write('Per visualizzare una sola regione fare doppio click sul nome della regione')
     st.plotly_chart(plot.plot_vaccines(vaccines.administration), use_container_width=True)
 
+    second_dose_expander = st.beta_expander("Percentuale popolazione vaccinata (seconda dose)")
+    second_dose_expander.plotly_chart(plot.second_dose(vaccines.administration), use_container_width=True)
+
     st.subheader('Dettaglio per area')
     col1, col2, col3, col4, col5 = st.beta_columns([1, 2, 2, 2, 2])
     with col1:
@@ -205,12 +208,12 @@ if what == 'Dati somministrazione vaccini':
             vaccines.administration,
             area,
             unita=plot.UNITA,
-            subplot_title='Popolazione vaccinata per 100 mila abitanti',
+            subplot_title='Dosi somministrate per 100 mila abitanti',
             fill='tozeroy',
             height=500,
         ), use_container_width=True
         )
-    st.plotly_chart(plot.plot_vaccines_prediction(vaccines.administration, area), use_container_width=True)
+    st.plotly_chart(plot.second_dose(vaccines.administration, area), use_container_width=True)
     expander = st.beta_expander("This app is developed by Francesco Nazzaro (click to check raw data)")
     expander.write("Contact me on [Twitter](https://twitter.com/effenazzaro)")
     expander.write("The source code is on [GitHub](https://github.com/francesconazzaro/covid19-portal)")

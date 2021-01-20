@@ -488,7 +488,7 @@ def mobility_data(mobility_plot_data, variable):
     return fig
 
 
-def plot_vaccines(vaccines, area=None, unita=100, subplot_title='Percentuale di popolazione vaccinata', fill=None, height=500):
+def plot_vaccines(vaccines, area=None, unita=UNITA, subplot_title='Dosi somministrate per 100 mila abitanti', fill=None, height=500):
     fig = make_subplots(1, subplot_titles=[subplot_title])
     maxs = []
     if area is None:
@@ -614,12 +614,13 @@ def plot_ages(vaccines, area):
 
 def plot_gender(vaccines, area):
     plot_data = vaccines[vaccines.area == area].sum()
+    not_prima_dose = plot_data.prima_dose - plot_data.seconda_dose
     pie = go.Pie(
-        values=[plot_data.sesso_femminile, plot_data.sesso_maschile],
-        labels=['Sesso Femminile', 'Sesso maschile'],
+        values=[not_prima_dose, plot_data.seconda_dose],
+        labels=['Seconda dose ancora non somministrata', 'Seconda dose'],
         textinfo='label+percent'
     )
-    fig = make_subplots(1, subplot_titles=[f'Somministrazione per genere'])
+    fig = make_subplots(1, subplot_titles=[f'Somministrazione seconda dose'])
     fig.add_trace(pie)
     fig.update_layout(legend={
         'orientation': 'h',
@@ -635,8 +636,18 @@ def plot_gender(vaccines, area):
 def plot_category(vaccines, area):
     plot_data = vaccines[vaccines.area == area].sum()
     pie = go.Pie(
-        values=[plot_data.categoria_operatori_sanitari_sociosanitari, plot_data.categoria_personale_non_sanitario, plot_data.categoria_ospiti_rsa],
-        labels=['Categoria operatori sanitari sociosanitari', 'Categoria personale non sanitario', 'Categoria ospiti RSA'],
+        values=[
+            plot_data.categoria_operatori_sanitari_sociosanitari,
+            plot_data.categoria_personale_non_sanitario,
+            plot_data.categoria_ospiti_rsa,
+            plot_data.categoria_over80,
+        ],
+        labels=[
+            'Categoria operatori sanitari sociosanitari',
+            'Categoria personale non sanitario',
+            'Categoria ospiti RSA',
+            'Categoria over 80',
+        ],
         textinfo='percent',
     )
     fig = make_subplots(1, subplot_titles=[f'Somministrazione per categorie'])
@@ -705,5 +716,64 @@ def plot_vaccines_prediction(vaccines, area, npoints=7, p0=(np.datetime64("2021-
     )
     return fig
 
+
+def second_dose(vaccines, area=None, unita=100, subplot_title='Percentuale popolazione vaccinata (seconda dose somministrata)', fill=None, height=500):
+    fig = make_subplots(1, subplot_titles=[subplot_title])
+    maxs = []
+    if area is None:
+        for a in np.unique(vaccines.area):
+            plot_data = vaccines[vaccines.area == a]
+            total = plot_data.seconda_dose.cumsum() / plot_data.popolazione * unita
+            ax = go.Scatter(
+                x=plot_data.index,
+                y=total,
+                fill=fill,
+                name=a,
+                mode='lines+markers',
+            )
+            fig.add_trace(ax)
+            maxs.append(total.max())
+        fig.update_layout(legend={
+            'font': dict(
+                size=10,
+            ),
+        }
+)
+    else:
+        plot_data = vaccines[vaccines.area == area]
+        total = plot_data.seconda_dose.cumsum() / plot_data.popolazione * unita
+        ax = go.Scatter(
+            x=plot_data.index,
+            y=total,
+            # fill='tonexty',
+            name='Vaccinazioni cumulate',
+            mode='lines+markers',
+        )
+        bar = go.Bar(
+            x=plot_data.index,
+            y=plot_data.seconda_dose / plot_data.popolazione * unita,
+            name='Vaccinazioni',
+        )
+        maxs.append(total)
+        fig.add_trace(ax)
+        fig.add_trace(bar)
+        fig.update_layout(legend={
+            'orientation': "h",
+            'yanchor': "bottom",
+            # 'y': -.15, # bottom
+            'y': .9,  # top
+            'xanchor': "center",
+            'x': .5,
+        })
+    fig.update_layout(
+        plot_bgcolor="white",
+        margin=dict(t=50,  l=10, b=10, r=10),
+        yaxis_title='',
+        height=height,
+        autosize=True,
+    )
+    fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[np.datetime64('2021-01-16'), plot_data.index[-1]])
+    fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[0, max(maxs) + .01])
+    return fig
 
 
