@@ -197,7 +197,7 @@ if what == 'Dati somministrazione vaccini':
     with col1:
         col1.plotly_chart(plot.plot_ages(vaccines.raw, area), use_container_width=True)
     with col2:
-        col2.plotly_chart(plot.plot_gender(vaccines.administration, area), use_container_width=True)
+        col2.plotly_chart(plot.plot_second_dose_percentage(vaccines.administration, area), use_container_width=True)
     with col3:
         col3.plotly_chart(plot.plot_category(vaccines.administration, area), use_container_width=True)
     col1, col2 = st.beta_columns(2)

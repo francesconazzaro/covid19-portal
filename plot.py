@@ -529,11 +529,11 @@ def plot_vaccines(vaccines, area=None, unita=UNITA, subplot_title='Dosi somminis
         fig.add_trace(ax)
         fig.add_trace(bar)
         fig.update_layout(legend={
-            'orientation': "h",
+            'orientation': "v",
             'yanchor': "bottom",
             # 'y': -.15, # bottom
-            'y': .9,  # top
-            'xanchor': "center",
+            'y': .85,  # top
+            'xanchor': "right",
             'x': .5,
         })
     fig.update_layout(
@@ -572,11 +572,11 @@ def plot_deliveries(deliveries, area):
         height=500,
         autosize=True,
         legend={
-            'orientation': "h",
+            'orientation': "v",
             'yanchor': "bottom",
             # 'y': -.15, # bottom
-            'y': .9,  # top
-            'xanchor': "center",
+            'y': .85,  # top
+            'xanchor': "right",
             'x': .5,
         }
     )
@@ -612,13 +612,13 @@ def plot_ages(vaccines, area):
     return fig
 
 
-def plot_gender(vaccines, area):
+def plot_second_dose_percentage(vaccines, area):
     plot_data = vaccines[vaccines.area == area].sum()
     not_prima_dose = plot_data.prima_dose - plot_data.seconda_dose
     pie = go.Pie(
         values=[not_prima_dose, plot_data.seconda_dose],
         labels=['Seconda dose ancora non somministrata', 'Seconda dose'],
-        textinfo='label+percent'
+        textinfo='percent'
     )
     fig = make_subplots(1, subplot_titles=[f'Somministrazione seconda dose'])
     fig.add_trace(pie)
