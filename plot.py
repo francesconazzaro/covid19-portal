@@ -549,7 +549,7 @@ def plot_vaccines(vaccines, area=None, unita=UNITA, subplot_title='Dosi somminis
 
 
 def plot_deliveries(deliveries, area):
-    fig = make_subplots(1, subplot_titles=[f'Dosi di vaccino consegnate per 100 mila abitanti'])
+    fig = make_subplots(1, subplot_titles=[f"Dosi di vaccino consegnate per 100 mila abitanti"])
     plot_data = deliveries[deliveries.area == area]
     ax = go.Scatter(
         x=plot_data.index,
