@@ -4,4 +4,4 @@ It is developed with [Streamlit](https://www.streamlit.io/). I followed [this gu
 
 The app is [HERE](https://covid19-portal.herokuapp.com/).
 
-[<img src="https://raw.githubusercontent.com/francesconazzaro/covid19-portal/master/image.png?token=ACI4QZOMHDECP6CNZWZLYLC7TP35M">](https://covid19-portal.herokuapp.com/)
+[<img src="https://github.com/francesconazzaro/covid19-portal/blob/master/image.png">](https://covid19-portal.herokuapp.com/)
