@@ -202,7 +202,7 @@ def get_fmt(rule):
         return '{:.0f}'
 
 
-def plot_average(plot_data, palette, fig, name, palette_alpha, fmt, start=None, stop=None, log=True):
+def plot_average(plot_data, palette, fig, name, palette_alpha, fmt=None, start=None, stop=None, log=True):
     line = dict(color=next(palette))
     fig.add_trace(go.Line(
         x=plot_data.index, y=plot_data.rolling(7).mean().values,
@@ -791,110 +791,41 @@ def second_dose(vaccines, area=None, unita=100, subplot_title='Percentuale popol
     return fig
 
 
-def plot_total_test(data, country, rule):
+def plot_variables(data_list, names, rule=None, popolazione=None, title='', yaxis_title='', xaxes_range=None, nrows=1):
     PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
     PALETTE_ALPHA = itertools.cycle(get_matplotlib_cmap('tab10', bins=8, alpha=.3))
-
-    data = data[country]
 
     maxs = []
     mins = []
 
-    fig = make_subplots(1, 1, subplot_titles=[f'Totale tamponi: {country}'])
-    fmt = get_fmt(rule)
-    plot_data = normalisation(data.tamponi_test_molecolare.diff(), data.popolazione, rule)
-    plot_data = plot_data[~np.isnan(plot_data)]
-    maxs.append(plot_data.max())
-    mins.append(plot_data.min())
-    plot_average(
-        plot_data,
-        fig=fig,
-        name='Test molecolare',
-        palette=PALETTE,
-        palette_alpha=PALETTE_ALPHA,
-        fmt=fmt,
-    )
-    plot_data = normalisation(data.tamponi_test_antigenico_rapido.diff(), data.popolazione, rule)
-    plot_data = plot_data[~np.isnan(plot_data)]
-    maxs.append(plot_data.max())
-    mins.append(plot_data.min())
-    plot_average(
-        plot_data,
-        fig=fig,
-        name='Test antigenico',
-        palette=PALETTE,
-        palette_alpha=PALETTE_ALPHA,
-        fmt=fmt,
-    )
+    fig = make_subplots(1, 1, subplot_titles=[title])
+    for data, name in zip(data_list, names):
+        if rule is not None:
+            plot_data = normalisation(data, popolazione, rule)
+        else:
+            plot_data = data
+        plot_data = plot_data[~np.isnan(plot_data)]
+        maxs.append(plot_data.max())
+        mins.append(plot_data.min())
+        plot_average(
+            plot_data,
+            fig=fig,
+            name=name,
+            palette=PALETTE,
+            palette_alpha=PALETTE_ALPHA,
+        )
 
-    maximum = np.nanmax(maxs)
-    minimum = np.nanmin(mins)
+        maximum = np.nanmax(maxs)
+        minimum = np.nanmin(mins)
     yscale = 'linear'
-    fig.update_xaxes(row=1, col=1, showgrid=True, gridwidth=1, gridcolor='LightPink', range=[plot_data.index[0], plot_data.index[-1] + np.timedelta64(1, 'D')])
+    if xaxes_range is None:
+        xaxes_range = [plot_data.index[0], plot_data.index[-1] + np.timedelta64(1, 'D')]
+    fig.update_xaxes(row=1, col=1, showgrid=True, gridwidth=1, gridcolor='LightPink', range=xaxes_range)
     fig.update_yaxes(row=1, col=1, type=yscale, showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[minimum, maximum])#, showexponent='all', exponentformat='power')
     fig.update_layout(
         plot_bgcolor="white",
         margin=dict(t=70, l=0, b=0, r=0),
-        yaxis_title='Totale',
-        height=500,
-        autosize=True,
-        legend={
-            'orientation': "h",
-            'yanchor': "bottom",
-            'y': .9, # top
-            'xanchor': "center",
-            'x': .5,
-        }
-    )
-    return fig
-
-
-def plot_tpr_test(data, country, rule):
-    PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
-    PALETTE_ALPHA = itertools.cycle(get_matplotlib_cmap('tab10', bins=8, alpha=.3))
-
-    data = data[country]
-
-    maxs = []
-    mins = []
-
-    fig = make_subplots(1, 1, subplot_titles=[f'Percentuale tamponi positivi: {country}'])
-    fmt = get_fmt(rule)
-    plot_data = data.totale_positivi_test_molecolare.diff() / data.tamponi_test_molecolare.diff() * 100
-    plot_data = plot_data[~np.isnan(plot_data)]
-    maxs.append(plot_data.max())
-    mins.append(plot_data.min())
-    plot_average(
-        plot_data,
-        fig=fig,
-        name='Test molecolare',
-        palette=PALETTE,
-        palette_alpha=PALETTE_ALPHA,
-        fmt=fmt,
-        # log=log,
-    )
-    plot_data = data.totale_positivi_test_antigenico_rapido.diff() / data.tamponi_test_antigenico_rapido.diff() * 100
-    plot_data = plot_data[~np.isnan(plot_data)]
-    maxs.append(plot_data.max())
-    mins.append(plot_data.min())
-    plot_average(
-        plot_data,
-        fig=fig,
-        name='Test antigenico',
-        palette=PALETTE,
-        palette_alpha=PALETTE_ALPHA,
-        fmt=fmt,
-    )
-
-    maximum = np.nanmax(maxs)
-    minimum = np.nanmin(mins)
-    yscale = 'linear'
-    fig.update_xaxes(row=1, col=1, showgrid=True, gridwidth=1, gridcolor='LightPink', range=[plot_data.index[0], plot_data.index[-1] + np.timedelta64(1, 'D')])
-    fig.update_yaxes(row=1, col=1, type=yscale, showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[minimum, maximum])#, showexponent='all', exponentformat='power')
-    fig.update_layout(
-        plot_bgcolor="white",
-        margin=dict(t=70, l=0, b=0, r=0),
-        yaxis_title='Percentuale',
+        yaxis_title=yaxis_title,
         height=500,
         autosize=True,
         legend={

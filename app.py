@@ -150,8 +150,47 @@ def explore_regions():
         col5.dataframe(tpr.to_frame().style.background_gradient(cmap='Reds'))
     test_expander = st.beta_expander('Dettaglio sui Test')
     col1, col2 = test_expander.beta_columns(2)
-    col1.plotly_chart(plot.plot_total_test(DATA, country, rule), use_container_width=True)
-    col2.plotly_chart(plot.plot_tpr_test(DATA, country, rule), use_container_width=True)
+    plot_variables = [
+        DATA[country].tamponi_test_molecolare.diff(),
+        DATA[country].tamponi_test_antigenico_rapido.diff(),
+    ]
+    col1.plotly_chart(plot.plot_variables(
+        plot_variables,
+        ['Test molecolare', 'Test antigenico'],
+        popolazione=DATA[country].popolazione,
+        rule=rule,
+        title=f'Andamento tamponi: {country} ({rule})',
+    ), use_container_width=True)
+    plot_variables = [
+        DATA[country].totale_positivi_test_molecolare.diff() / DATA[country].tamponi_test_molecolare.diff() * 100,
+        DATA[country].totale_positivi_test_antigenico_rapido.diff() / DATA[country].tamponi_test_antigenico_rapido.diff() * 100,
+    ]
+    col2.plotly_chart(plot.plot_variables(
+        plot_variables,
+        ['Test molecolare', 'Test antigenico'],
+        title=f'Percentuale tamponi positivi: {country}',
+    ), use_container_width=True)
+    # ti_expander = st.beta_expander('Dettaglio sulle Terapie Intensive')
+    # col1, col2 = ti_expander.beta_columns(2)
+    # plot_variables = [
+    #     DATA[country].ingressi_terapia_intensiva,
+    #     DATA[country].ingressi_terapia_intensiva - DATA[country].terapia_intensiva.diff(),
+    # ]
+    # col1.plotly_chart(plot.plot_variables(
+    #     plot_variables,
+    #     ['Ingressi', 'Uscite'],
+    #     title=f'Terapia intensiva: {country} ({rule})',
+    # ), use_container_width=True)
+    # plot_variables = [
+    #     DATA[country].terapia_intensiva.diff(),
+    # ]
+    # ingressi_not_nan = DATA[country].ingressi_terapia_intensiva[~plot.np.isnan(DATA[country].ingressi_terapia_intensiva)]
+    # col2.plotly_chart(plot.plot_variables(
+    #     plot_variables,
+    #     ['Uscite terapia intensiva'],
+    #     title=f'Percentuale tamponi positivi: {country}',
+    #     xaxes_range=[ingressi_not_nan.index[0], ingressi_not_nan.index[-1]],
+    # ), use_container_width=True)
 
 
 
