@@ -106,10 +106,11 @@ def explore_regions():
     st.plotly_chart(plot.test_positivity_rate(DATA, country, rule=percentage_rule), use_container_width=True)
     mobility_expander()
     table_expander = st.beta_expander('Tabelle andamento')
-    col1, _ = table_expander.beta_columns([1, 7])
+    col1, _, col2 = table_expander.beta_columns([1, 3, 7])
     with col1:
         days_before = col1.selectbox("Lunghezza tabelle", [5, 10, 25])
-    table_expander.subheader(f'Andamento degli ultimi {days_before} giorni: {country} ({rule})')
+    with col2:
+        col2.subheader(f'Andamento degli ultimi {days_before} giorni: {country} ({rule})')
     col1, col2, col3, col3bis, col4, col5 = table_expander.beta_columns(6, )#[2, 2, 2, 2, 3, 3])
     data_country = DATA[country].copy()
     data_country.index = data_country.index.strftime(fmt)
