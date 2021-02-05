@@ -290,7 +290,7 @@ elif what == 'Dati contagio':
         st.dataframe(ti.style.background_gradient(cmap='Reds').format("{:.2%}"), height=700)
     with col3:
         rule = st.selectbox('Variabile', ['Nuovi Positivi', 'Terapie Intensive', 'Ingressi Terapie Intensive', 'Percentuale tamponi positivi', 'Deceduti'])
-        st.plotly_chart(plot.summary(DATA, rule, st), use_container_width=True)
+        st.plotly_chart(plot.summary(DATA, rule), use_container_width=True)
     st.write("*Dati sul totale delle terapie intensive e dei posti letto in area medica aggiornati al 2020-10-28.")
     st.write("**Dati per P.A. Bolzano e P.A. Trento non disponibili.")
 

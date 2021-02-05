@@ -5,6 +5,7 @@ import numpy as np
 import scipy.optimize
 import scipy.stats
 from matplotlib import cm
+import streamlit as st
 
 import import_data
 
@@ -134,8 +135,9 @@ def get_matplotlib_cmap(cmap_name, bins, alpha=1):
     return contour_colour_list
 
 
-def test_positivity_rate(data, country, rule):
-    data = data[country]
+@st.cache(allow_output_mutation=True)
+def test_positivity_rate(data_in, country, rule):
+    data = data_in[country]
     PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
     PALETTE_ALPHA = itertools.cycle(get_matplotlib_cmap('tab10', bins=8, alpha=.3))
     fig = make_subplots(1, 1, subplot_titles=[rule])
@@ -178,6 +180,7 @@ def test_positivity_rate(data, country, rule):
     return fig
 
 
+@st.cache
 def normalisation(data, population, rule):
     if RULE_MAP[rule] == 'percentage':
         new_data = data / population * UNITA
@@ -242,12 +245,13 @@ def plot_average(plot_data, palette, fig, name, palette_alpha, fmt=None, start=N
     # )
 
 
-def plot_selection(data, country, rule, start_positivi, start_ti, start_ricoveri, stop_positivi, stop_ti, stop_ricoveri, start_deceduti, stop_deceduti, log=True):
+@st.cache(allow_output_mutation=True)
+def plot_selection(data_in, country, rule, start_positivi, start_ti, start_ricoveri, stop_positivi, stop_ti, stop_ricoveri, start_deceduti, stop_deceduti, log=True):
 
     PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
     PALETTE_ALPHA = itertools.cycle(get_matplotlib_cmap('tab10', bins=8, alpha=.3))
 
-    data = data[country]
+    data = data_in[country]
 
     maxs = []
     mins = []
@@ -360,7 +364,8 @@ def plot_selection(data, country, rule, start_positivi, start_ti, start_ricoveri
     return fig
 
 
-def summary(data, what, st):
+@st.cache(allow_output_mutation=True)
+def summary(data, what):
     titles = [title for title in data if title not in ['P.A. Bolzano', 'P.A. Trento']]
     fig = make_subplots(4, 5, shared_xaxes='all', shared_yaxes='all', subplot_titles=titles,
                         vertical_spacing=.08)
@@ -422,6 +427,7 @@ def translate(data, days_delay=0):
     return data_t
 
 
+@st.cache
 def mortality(data, offset=-7):
     italy = data['Italia']
     fig = make_subplots(1, 1, subplot_titles=['Mortalità apparente'])
@@ -444,6 +450,7 @@ def mortality(data, offset=-7):
     return fig
 
 
+@st.cache(allow_output_mutation=True)
 def comparison(data, offset=7):
     deceduti = data.deceduti.diff().rolling(7).mean()
     positivi_shift = translate(data.nuovi_positivi.rolling(7).mean(), offset) / 100 * 1.3
@@ -481,6 +488,7 @@ def comparison(data, offset=7):
     return fig
 
 
+@st.cache
 def mobility_data(mobility_plot_data, variable):
     fig = make_subplots(1, subplot_titles=[variable])
     ax = go.Scatter(x=mobility_plot_data.index,
@@ -505,6 +513,7 @@ def mobility_data(mobility_plot_data, variable):
     return fig
 
 
+@st.cache(allow_output_mutation=True)
 def plot_vaccines(vaccines, area=None, unita=UNITA, subplot_title='Dosi somministrate per 100 mila abitanti', fill=None, height=500):
     fig = make_subplots(1, subplot_titles=[subplot_title])
     maxs = []
@@ -565,6 +574,7 @@ def plot_vaccines(vaccines, area=None, unita=UNITA, subplot_title='Dosi somminis
     return fig
 
 
+@st.cache(allow_output_mutation=True)
 def plot_deliveries(deliveries, area):
     fig = make_subplots(1, subplot_titles=[f"Dosi di vaccino consegnate per 100 mila abitanti"])
     plot_data = deliveries[deliveries.area == area]
@@ -601,6 +611,7 @@ def plot_deliveries(deliveries, area):
     return fig
 
 
+@st.cache(allow_output_mutation=True)
 def plot_ages(vaccines, area):
     if area == 'Italia':
         ages = import_data.pd.read_csv(
@@ -628,6 +639,7 @@ def plot_ages(vaccines, area):
     return fig
 
 
+@st.cache(allow_output_mutation=True)
 def plot_second_dose_percentage(vaccines, area):
     plot_data = vaccines[vaccines.area == area].sum()
     not_prima_dose = plot_data.prima_dose - plot_data.seconda_dose
@@ -649,6 +661,7 @@ def plot_second_dose_percentage(vaccines, area):
     return fig
 
 
+@st.cache(allow_output_mutation=True)
 def plot_category(vaccines, area):
     plot_data = vaccines[vaccines.area == area].sum()
     pie = go.Pie(
@@ -678,6 +691,7 @@ def plot_category(vaccines, area):
     return fig
 
 
+@st.cache(allow_output_mutation=True)
 def plot_percentage(vaccines, deliveries, area):
     vaccines_area = vaccines[vaccines.area == area]
     tot_vaccines = (vaccines_area.sesso_maschile + vaccines_area.sesso_femminile).cumsum().iloc[-1]
@@ -706,6 +720,7 @@ def plot_percentage(vaccines, deliveries, area):
     return fig
 
 
+@st.cache(allow_output_mutation=True)
 def plot_vaccines_prediction(vaccines, area, npoints=7, p0=(np.datetime64("2021-01-01", "s"), np.timedelta64(48 * 60 * 60, "s"))):
     plot_data = vaccines[vaccines.area == area]
     popolazione = plot_data.popolazione
@@ -733,6 +748,7 @@ def plot_vaccines_prediction(vaccines, area, npoints=7, p0=(np.datetime64("2021-
     return fig
 
 
+@st.cache(allow_output_mutation=True)
 def second_dose(vaccines, area=None, unita=100, subplot_title='Percentuale popolazione vaccinata (seconda dose somministrata)', fill=None, height=500):
     fig = make_subplots(1, subplot_titles=[subplot_title])
     maxs = []
@@ -791,6 +807,7 @@ def second_dose(vaccines, area=None, unita=100, subplot_title='Percentuale popol
     return fig
 
 
+@st.cache(allow_output_mutation=True)
 def plot_variables(data_list, names, rule=None, popolazione=None, title='', yaxis_title='', xaxes_range=None, nrows=1):
     PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
     PALETTE_ALPHA = itertools.cycle(get_matplotlib_cmap('tab10', bins=8, alpha=.3))
