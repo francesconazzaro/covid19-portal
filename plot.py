@@ -491,7 +491,6 @@ def mobility_data(mobility_plot_data, variable):
         plot_bgcolor="white",
         margin=dict(t=50, l=10, b=10, r=10),
         yaxis_title='',
-        # width=1300,
         height=500,
         autosize=True,
         legend={
@@ -592,7 +591,6 @@ def plot_deliveries(deliveries, area):
         legend={
             'orientation': "v",
             'yanchor': "bottom",
-            # 'y': -.15, # bottom
             'y': .85,  # top
             'xanchor': "right",
             'x': .5,
@@ -763,7 +761,6 @@ def second_dose(vaccines, area=None, unita=100, subplot_title='Percentuale popol
         ax = go.Scatter(
             x=plot_data.index,
             y=total,
-            # fill='tonexty',
             name='Vaccinazioni cumulate',
             mode='lines+markers',
         )
@@ -778,7 +775,6 @@ def second_dose(vaccines, area=None, unita=100, subplot_title='Percentuale popol
         fig.update_layout(legend={
             'orientation': "h",
             'yanchor': "bottom",
-            # 'y': -.15, # bottom
             'y': .9,  # top
             'xanchor': "center",
             'x': .5,
@@ -814,12 +810,9 @@ def plot_total_test(data, country, rule):
         plot_data,
         fig=fig,
         name='Test molecolare',
-        # start=start_ti,
-        # stop=stop_ti,
         palette=PALETTE,
         palette_alpha=PALETTE_ALPHA,
         fmt=fmt,
-        # log=log,
     )
     plot_data = normalisation(data.tamponi_test_antigenico_rapido.diff(), data.popolazione, rule)
     plot_data = plot_data[~np.isnan(plot_data)]
@@ -829,18 +822,11 @@ def plot_total_test(data, country, rule):
         plot_data,
         fig=fig,
         name='Test antigenico',
-        # start=start_ti,
-        # stop=stop_ti,
         palette=PALETTE,
         palette_alpha=PALETTE_ALPHA,
         fmt=fmt,
-        # log=log,
     )
 
-    # if log is True:
-    #     maximum = np.nanmax(np.log10(maxs)) + .5
-    #     minimum = np.nanmin(np.log10(mins))
-    #     yscale = 'log'
     maximum = np.nanmax(maxs)
     minimum = np.nanmin(mins)
     yscale = 'linear'
@@ -850,13 +836,11 @@ def plot_total_test(data, country, rule):
         plot_bgcolor="white",
         margin=dict(t=70, l=0, b=0, r=0),
         yaxis_title='Totale',
-        # width=1300,
         height=500,
         autosize=True,
         legend={
             'orientation': "h",
             'yanchor': "bottom",
-            # 'y': -.15, # bottom
             'y': .9, # top
             'xanchor': "center",
             'x': .5,
@@ -884,8 +868,6 @@ def plot_tpr_test(data, country, rule):
         plot_data,
         fig=fig,
         name='Test molecolare',
-        # start=start_ti,
-        # stop=stop_ti,
         palette=PALETTE,
         palette_alpha=PALETTE_ALPHA,
         fmt=fmt,
@@ -899,18 +881,11 @@ def plot_tpr_test(data, country, rule):
         plot_data,
         fig=fig,
         name='Test antigenico',
-        # start=start_ti,
-        # stop=stop_ti,
         palette=PALETTE,
         palette_alpha=PALETTE_ALPHA,
         fmt=fmt,
-        # log=log,
     )
 
-    # if log is True:
-    #     maximum = np.nanmax(np.log10(maxs)) + .5
-    #     minimum = np.nanmin(np.log10(mins))
-    #     yscale = 'log'
     maximum = np.nanmax(maxs)
     minimum = np.nanmin(mins)
     yscale = 'linear'
@@ -920,13 +895,11 @@ def plot_tpr_test(data, country, rule):
         plot_bgcolor="white",
         margin=dict(t=70, l=0, b=0, r=0),
         yaxis_title='Percentuale',
-        # width=1300,
         height=500,
         autosize=True,
         legend={
             'orientation': "h",
             'yanchor': "bottom",
-            # 'y': -.15, # bottom
             'y': .9, # top
             'xanchor': "center",
             'x': .5,
