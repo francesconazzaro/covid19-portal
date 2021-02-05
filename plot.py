@@ -795,3 +795,141 @@ def second_dose(vaccines, area=None, unita=100, subplot_title='Percentuale popol
     return fig
 
 
+def plot_total_test(data, country, rule):
+    PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
+    PALETTE_ALPHA = itertools.cycle(get_matplotlib_cmap('tab10', bins=8, alpha=.3))
+
+    data = data[country]
+
+    maxs = []
+    mins = []
+
+    fig = make_subplots(1, 1, subplot_titles=[f'Totale tamponi: {country}'])
+    fmt = get_fmt(rule)
+    plot_data = normalisation(data.tamponi_test_molecolare.diff(), data.popolazione, rule)
+    plot_data = plot_data[~np.isnan(plot_data)]
+    maxs.append(plot_data.max())
+    mins.append(plot_data.min())
+    plot_average(
+        plot_data,
+        fig=fig,
+        name='Test molecolare',
+        # start=start_ti,
+        # stop=stop_ti,
+        palette=PALETTE,
+        palette_alpha=PALETTE_ALPHA,
+        fmt=fmt,
+        # log=log,
+    )
+    plot_data = normalisation(data.tamponi_test_antigenico_rapido.diff(), data.popolazione, rule)
+    plot_data = plot_data[~np.isnan(plot_data)]
+    maxs.append(plot_data.max())
+    mins.append(plot_data.min())
+    plot_average(
+        plot_data,
+        fig=fig,
+        name='Test antigenico',
+        # start=start_ti,
+        # stop=stop_ti,
+        palette=PALETTE,
+        palette_alpha=PALETTE_ALPHA,
+        fmt=fmt,
+        # log=log,
+    )
+
+    # if log is True:
+    #     maximum = np.nanmax(np.log10(maxs)) + .5
+    #     minimum = np.nanmin(np.log10(mins))
+    #     yscale = 'log'
+    maximum = np.nanmax(maxs)
+    minimum = np.nanmin(mins)
+    yscale = 'linear'
+    fig.update_xaxes(row=1, col=1, showgrid=True, gridwidth=1, gridcolor='LightPink', range=[plot_data.index[0], plot_data.index[-1] + np.timedelta64(1, 'D')])
+    fig.update_yaxes(row=1, col=1, type=yscale, showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[minimum, maximum])#, showexponent='all', exponentformat='power')
+    fig.update_layout(
+        plot_bgcolor="white",
+        margin=dict(t=70, l=0, b=0, r=0),
+        yaxis_title='Totale',
+        # width=1300,
+        height=500,
+        autosize=True,
+        legend={
+            'orientation': "h",
+            'yanchor': "bottom",
+            # 'y': -.15, # bottom
+            'y': .9, # top
+            'xanchor': "center",
+            'x': .5,
+        }
+    )
+    return fig
+
+
+def plot_tpr_test(data, country, rule):
+    PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
+    PALETTE_ALPHA = itertools.cycle(get_matplotlib_cmap('tab10', bins=8, alpha=.3))
+
+    data = data[country]
+
+    maxs = []
+    mins = []
+
+    fig = make_subplots(1, 1, subplot_titles=[f'Percentuale tamponi positivi: {country}'])
+    fmt = get_fmt(rule)
+    plot_data = data.totale_positivi_test_molecolare.diff() / data.tamponi_test_molecolare.diff() * 100
+    plot_data = plot_data[~np.isnan(plot_data)]
+    maxs.append(plot_data.max())
+    mins.append(plot_data.min())
+    plot_average(
+        plot_data,
+        fig=fig,
+        name='Test molecolare',
+        # start=start_ti,
+        # stop=stop_ti,
+        palette=PALETTE,
+        palette_alpha=PALETTE_ALPHA,
+        fmt=fmt,
+        # log=log,
+    )
+    plot_data = data.totale_positivi_test_antigenico_rapido.diff() / data.tamponi_test_antigenico_rapido.diff() * 100
+    plot_data = plot_data[~np.isnan(plot_data)]
+    maxs.append(plot_data.max())
+    mins.append(plot_data.min())
+    plot_average(
+        plot_data,
+        fig=fig,
+        name='Test antigenico',
+        # start=start_ti,
+        # stop=stop_ti,
+        palette=PALETTE,
+        palette_alpha=PALETTE_ALPHA,
+        fmt=fmt,
+        # log=log,
+    )
+
+    # if log is True:
+    #     maximum = np.nanmax(np.log10(maxs)) + .5
+    #     minimum = np.nanmin(np.log10(mins))
+    #     yscale = 'log'
+    maximum = np.nanmax(maxs)
+    minimum = np.nanmin(mins)
+    yscale = 'linear'
+    fig.update_xaxes(row=1, col=1, showgrid=True, gridwidth=1, gridcolor='LightPink', range=[plot_data.index[0], plot_data.index[-1] + np.timedelta64(1, 'D')])
+    fig.update_yaxes(row=1, col=1, type=yscale, showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[minimum, maximum])#, showexponent='all', exponentformat='power')
+    fig.update_layout(
+        plot_bgcolor="white",
+        margin=dict(t=70, l=0, b=0, r=0),
+        yaxis_title='Percentuale',
+        # width=1300,
+        height=500,
+        autosize=True,
+        legend={
+            'orientation': "h",
+            'yanchor': "bottom",
+            # 'y': -.15, # bottom
+            'y': .9, # top
+            'xanchor': "center",
+            'x': .5,
+        }
+    )
+    return fig

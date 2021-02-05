@@ -148,6 +148,11 @@ def explore_regions():
             tpr = data_country.nuovi_positivi[-days_before:] / data_country.casi_testati.diff()[-days_before:] * 100
             tpr.name = 'CPR (%)'
         col5.dataframe(tpr.to_frame().style.background_gradient(cmap='Reds'))
+    test_expander = st.beta_expander('Dettaglio sui Test')
+    col1, col2 = test_expander.beta_columns(2)
+    col1.plotly_chart(plot.plot_total_test(DATA, country, rule), use_container_width=True)
+    col2.plotly_chart(plot.plot_tpr_test(DATA, country, rule), use_container_width=True)
+
 
 
 st.title('COVID-19: Situazione in Italia')
