@@ -314,8 +314,22 @@ def plot_selection(data, country, rule, start_positivi, start_ti, start_ricoveri
         fmt=fmt,
         log=log,
     )
-
-    # add_events(fig)
+    next(PALETTE_ALPHA)
+    next(PALETTE)
+    plot_data = normalisation(data.ingressi_terapia_intensiva, data.popolazione, rule)
+    maxs.append(plot_data.max())
+    mins.append((plot_data.rolling(7).mean()[20:] + .001).min())
+    plot_average(
+        plot_data,
+        fig=fig,
+        name='Ingressi Terapie Intensive',
+        start=start_ti,
+        stop=stop_ti,
+        palette=PALETTE,
+        palette_alpha=PALETTE_ALPHA,
+        fmt=fmt,
+        log=log,
+    )
 
     if log is True:
         maximum = np.nanmax(np.log10(maxs)) + .5
@@ -364,6 +378,10 @@ def summary(data, what, st):
             plot_data = region.terapia_intensiva.rolling(7).mean() / region.popolazione * UNITA
             title = "Terapie Intensive per 100.000 abitanti"
             yscale = 'log'
+        if what == 'Ingressi Terapie Intensive':
+                plot_data = region.ingressi_terapia_intensiva.rolling(7).mean() / region.popolazione * UNITA
+                title = "Ingressi Terapie Intensive per 100.000 abitanti"
+                yscale = 'log'
         elif what == 'Nuovi Positivi':
             plot_data = region.nuovi_positivi.rolling(7).mean() / region.popolazione * UNITA
             title = "Nuovi positivi per 100.000 abitanti"

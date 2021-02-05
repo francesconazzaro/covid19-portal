@@ -106,37 +106,45 @@ def explore_regions():
     st.plotly_chart(plot.test_positivity_rate(DATA, country, rule=percentage_rule), use_container_width=True)
     mobility_expander()
     table_expander = st.beta_expander('Tabelle andamento')
-    table_expander.subheader(f'Andamento degli ultimi 5 giorni: {country} ({rule})')
-    col1, col2, col3, col4, col5 = table_expander.beta_columns(5)
+    col1, _ = table_expander.beta_columns([1, 7])
+    with col1:
+        days_before = col1.selectbox("Lunghezza tabelle", [5, 10, 25])
+    table_expander.subheader(f'Andamento degli ultimi {days_before} giorni: {country} ({rule})')
+    col1, col2, col3, col3bis, col4, col5 = table_expander.beta_columns(6, )#[2, 2, 2, 2, 3, 3])
     data_country = DATA[country].copy()
     data_country.index = data_country.index.strftime(fmt)
     with col1:
         col1.write('Nuovi Positivi')
-        df = plot.normalisation(data_country.nuovi_positivi, data_country.popolazione, rule)[-5:]
+        df = plot.normalisation(data_country.nuovi_positivi, data_country.popolazione, rule)[-days_before:]
         df.name = 'positivi'
         col1.dataframe(df.to_frame().style.background_gradient(cmap='Reds'))
     with col2:
         col2.write('Ricoveri')
-        df = plot.normalisation(data_country.ricoverati_con_sintomi, data_country.popolazione, rule)[-5:]
+        df = plot.normalisation(data_country.ricoverati_con_sintomi, data_country.popolazione, rule)[-days_before:]
         df.name = 'ricoveri'
         col2.dataframe(df.to_frame().style.background_gradient(cmap='Reds'))
     with col3:
         col3.write('Terapia Intensiva')
-        df = plot.normalisation(data_country.terapia_intensiva, data_country.popolazione, rule)[-5:]
+        df = plot.normalisation(data_country.terapia_intensiva, data_country.popolazione, rule)[-days_before:]
         df.name = 'TI'
         col3.dataframe(df.to_frame().style.background_gradient(cmap='Reds'))
+    with col3bis:
+        col3bis.write('Ingressi Terapia Intensiva')
+        df = plot.normalisation(data_country.ingressi_terapia_intensiva, data_country.popolazione, rule)[-days_before:]
+        df.name = 'TI'
+        col3bis.dataframe(df.to_frame().style.background_gradient(cmap='Reds'))
     with col4:
         col4.write('Deceduti')
-        df = plot.normalisation(data_country.deceduti.diff(), data_country.popolazione, rule)[-5:]
+        df = plot.normalisation(data_country.deceduti.diff(), data_country.popolazione, rule)[-days_before:]
         col4.dataframe(df.to_frame().style.background_gradient(cmap='Reds'))
     with col5:
         if plot.PERCENTAGE_RULE[percentage_rule] == 'tamponi':
             col5.write('Percentuale Tamponi Positivi')
-            tpr = data_country.nuovi_positivi[-5:] / data_country.tamponi.diff()[-5:] * 100
+            tpr = data_country.nuovi_positivi[-days_before:] / data_country.tamponi.diff()[-days_before:] * 100
             tpr.name = 'TPR (%)'
         elif plot.PERCENTAGE_RULE[percentage_rule] == 'casi':
             col5.write('Percentuale Casi Positivi')
-            tpr = data_country.nuovi_positivi[-5:] / data_country.casi_testati.diff()[-5:] * 100
+            tpr = data_country.nuovi_positivi[-days_before:] / data_country.casi_testati.diff()[-days_before:] * 100
             tpr.name = 'CPR (%)'
         col5.dataframe(tpr.to_frame().style.background_gradient(cmap='Reds'))
 
@@ -236,7 +244,7 @@ elif what == 'Dati contagio':
         ti = DATA_TI.data.to_frame()
         st.dataframe(ti.style.background_gradient(cmap='Reds').format("{:.2%}"), height=700)
     with col3:
-        rule = st.selectbox('Variabile', ['Nuovi Positivi', 'Terapie Intensive', 'Percentuale tamponi positivi', 'Deceduti'])
+        rule = st.selectbox('Variabile', ['Nuovi Positivi', 'Terapie Intensive', 'Ingressi Terapie Intensive', 'Percentuale tamponi positivi', 'Deceduti'])
         st.plotly_chart(plot.summary(DATA, rule, st), use_container_width=True)
     st.write("*Dati sul totale delle terapie intensive e dei posti letto in area medica aggiornati al 2020-10-28.")
     st.write("**Dati per P.A. Bolzano e P.A. Trento non disponibili.")
