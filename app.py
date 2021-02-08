@@ -35,7 +35,7 @@ def mobility_expander():
 
 def explore_regions():
     st.header('Dati sul contagio aggiornati al {}'.format(DATA['Italia'].index[-1].date()))
-    col1, col2, col3, col4, col5, col6 = st.beta_columns([1, 1, 1, 1, 1, 1])
+    col1, col2, col3, col4, col5, col5bis, col6 = st.beta_columns([2, 1, 2, 2, 2, 2, 2])
     with col1:
         country = st.selectbox("Seleziona un'area", list(DATA.keys()))
         log = st.checkbox('Scala logaritmica', True)
@@ -59,6 +59,12 @@ def explore_regions():
                     unsafe_allow_html=True)
         terapia_intensiva = plot.normalisation(DATA[country].iloc[-1].terapia_intensiva, DATA[country].iloc[-1].popolazione, rule)
         text = f'{terapia_intensiva:.2f}' if plot.RULE_MAP[rule] == 'percentage' else f'{int(terapia_intensiva):,}'
+        st.markdown(f"<h1 style='text-align: center; color: red;'>{text}</h1>", unsafe_allow_html=True)
+    with col5bis:
+        st.markdown("<h3 style='text-align: center;'>Ingressi in terapia intensiva</h2>",
+                    unsafe_allow_html=True)
+        ingressi = plot.normalisation(DATA[country].iloc[-1].ingressi_terapia_intensiva, DATA[country].iloc[-1].popolazione, rule)
+        text = f'{ingressi:.2f}' if plot.RULE_MAP[rule] == 'percentage' else f'{int(ingressi):,}'
         st.markdown(f"<h1 style='text-align: center; color: red;'>{text}</h1>", unsafe_allow_html=True)
     with col6:
         st.markdown("<h3 style='text-align: center;'>Persone ricoverate</h2>",
@@ -195,15 +201,20 @@ def explore_regions():
 
 
 st.title('COVID-19: Situazione in Italia')
+st.text("")
 vaccine_repo = import_data.RepoReference(
     repo_path='covid19-opendata-vaccini',
     repo_url='https://github.com/italia/covid19-opendata-vaccini.git'
 )
 vaccines = import_data.vaccines(vaccine_repo, DATA)
 
-what = st.radio('', ['Dati contagio', 'Dati somministrazione vaccini'])
+col0, col1, col2, _ = st.beta_columns([1, 1, 2, 5])
+col0.write('Dati disponibili:')
+contagio = col1.button('Contagio')
+vaccini = col2.button('Somministrazione vaccini')
+contagio = True
 
-if what == 'Dati somministrazione vaccini':
+if vaccini:
     st.header(f"Dati sulle vaccinazioni aggiornati al {vaccines.administration[vaccines.administration.area == 'Italia'].index[-1].date()}")
     col1, col2, col3 = st.beta_columns([2, 2, 1])
     with col2:
@@ -273,7 +284,7 @@ if what == 'Dati somministrazione vaccini':
     expander.write("Raw data")
     expander.dataframe(vaccines.administration)
 
-elif what == 'Dati contagio':
+elif contagio:
     explore_regions()
     st.header('Confronto tra regioni')
     col1, col2, col3 = st.beta_columns([2, 2, 3])
