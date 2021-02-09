@@ -365,6 +365,50 @@ def plot_selection(data_in, country, rule, start_positivi, start_ti, start_ricov
 
 
 @st.cache(allow_output_mutation=True, show_spinner=False)
+def vaccines_summary(vaccines, what):
+    titles = [title for title in np.unique(vaccines.administration.area) if title not in ['Italia', 'P.A. Bolzano', 'P.A. Trento']]
+    titles = ['Italia'] + titles
+    fig = make_subplots(4, 5, shared_xaxes='all', shared_yaxes='all', subplot_titles=titles,
+                        vertical_spacing=.08)
+    minus = 0
+    PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
+    maxs = []
+    for i, name in enumerate(titles):
+        col = (i - minus) % 5 + 1
+        row = (i - minus) // 5 + 1
+        region = vaccines.administration[vaccines.administration.area == name]
+        if name in ['P.A. Bolzano', 'P.A. Trento']:
+            minus += 1
+            continue
+        if what == 'Dosi somministrate':
+            plot_data = (region.prima_dose.cumsum() + region.seconda_dose.cumsum()) / region.popolazione * UNITA
+            title = "Dosi somministrate per 100 mila abitanti"
+        if what == 'Percentuale popolazione vaccinata':
+            plot_data = region.seconda_dose.cumsum() / region.popolazione * 100
+            title = "Percentuale popolazione vaccinata"
+        if what == 'Dosi consegnate':
+            plot_data = region.prima_dose.cumsum() / region.popolazione * UNITA
+            title = "Dosi consegnate per 100 mila abitanti"
+        maxs.append(plot_data.values[-90:].max())
+        fig.add_trace(go.Scatter(x=plot_data.index[-90:], y=plot_data.values[-90:], showlegend=False,
+                                 name=title, marker=dict(color=next(PALETTE)), fill='tozeroy'), row, col)
+    fig.update_xaxes(showgrid=True, gridwidth=1, tickangle=45, gridcolor='LightGrey')
+    fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[0, max(maxs)])
+    fig.update_layout(
+        title=title,
+        plot_bgcolor="white",
+        margin=dict(t=50, l=10, b=10, r=10),
+        # width=1300,
+        height=600,
+        autosize=True,
+    )
+    PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
+    for i in fig['layout']['annotations']:
+        i['font'] = dict(size=15, color=next(PALETTE))
+    return fig
+
+
+@st.cache(allow_output_mutation=True, show_spinner=False)
 def summary(data, what):
     titles = [title for title in data if title not in ['P.A. Bolzano', 'P.A. Trento']]
     fig = make_subplots(4, 5, shared_xaxes='all', shared_yaxes='all', subplot_titles=titles,
@@ -777,53 +821,59 @@ def plot_vaccines_prediction(vaccines, area, npoints=7, p0=(np.datetime64("2021-
 
 
 @st.cache(allow_output_mutation=True, show_spinner=False)
-def second_dose(vaccines, area=None, unita=100, subplot_title='Percentuale popolazione vaccinata (seconda dose somministrata)', fill=None, height=500):
+def cumulate_and_not(data_list, names, population_list, unita=100, subplot_title='', start=None, height=500):
     PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
     PALETTE_ALPHA = itertools.cycle(get_matplotlib_cmap('tab10', bins=8, alpha=1))
     fig = make_subplots(1, subplot_titles=[subplot_title], specs=[[{"secondary_y": True}]])
-    plot_data = vaccines[vaccines.area == area]
-    total = plot_data.seconda_dose.cumsum() / plot_data.popolazione * unita
-    ax_perc = go.Scatter(
-        x=plot_data.index,
-        y=total,
-        name='Vaccinazioni cumulate',
-        mode='lines+markers',
-        marker=dict(color=next(PALETTE))
+    maxs_perc = []
+    maxs_tot = []
+    for data, population, name in zip(data_list, population_list, names):
+        cumsum = data.cumsum()
+        percentage = data / population * unita
+        percentage_cumsum = data.cumsum() / population * unita
+        ax_perc = go.Scatter(
+            x=percentage_cumsum.index,
+            y=percentage_cumsum,
+            name=f'{name} cumulate',
+            mode='lines+markers',
+            marker=dict(color=next(PALETTE))
+        )
+        ax_tot = go.Scatter(
+            x=cumsum.index,
+            y=cumsum,
+            name=f'{name} cumulate',
+            mode='lines+markers',
+            showlegend=False,
+            marker=dict(color=next(PALETTE_ALPHA))
+        )
+        bar_tot = go.Bar(
+            x=data.index,
+            y=data,
+            name=f'{name}',
+            showlegend=False,
+            marker_color=next(PALETTE_ALPHA)
+        )
+        bar_perc = go.Bar(
+            x=percentage.index,
+            y=percentage,
+            name=f'{name}',
+            marker_color=next(PALETTE)
+        )
+        maxs_perc.append(percentage_cumsum.max())
+        maxs_tot.append(cumsum.max())
+        fig.add_trace(ax_perc)
+        fig.add_trace(bar_perc)
+        fig.add_trace(ax_tot, secondary_y=True)
+        fig.add_trace(bar_tot, secondary_y=True)
+    fig.update_layout(
+        legend={
+            'orientation': "v",
+            'yanchor': "bottom",
+            'y': .85,  # top
+            'xanchor': "right",
+            'x': .5,
+        }
     )
-    ax_tot = go.Scatter(
-        x=plot_data.index,
-        y=plot_data.seconda_dose.cumsum(),
-        name='Vaccinazioni cumulate',
-        mode='lines+markers',
-        showlegend=False,
-        marker=dict(color=next(PALETTE_ALPHA))
-    )
-    bar_tot = go.Bar(
-        x=plot_data.index,
-        y=plot_data.seconda_dose,
-        name='Vaccinazioni',
-        showlegend=False,
-        marker_color=next(PALETTE_ALPHA)
-    )
-    bar_perc = go.Bar(
-        x=plot_data.index,
-        y=plot_data.seconda_dose / plot_data.popolazione * unita,
-        name='Vaccinazioni',
-        marker_color=next(PALETTE)
-    )
-    maxs_perc = total
-    maxs_tot = plot_data.seconda_dose.cumsum()
-    fig.add_trace(ax_perc)
-    fig.add_trace(bar_perc)
-    fig.add_trace(ax_tot, secondary_y=True)
-    fig.add_trace(bar_tot, secondary_y=True)
-    fig.update_layout(legend={
-        'orientation': "v",
-        'yanchor': "bottom",
-        'y': .9,  # top
-        'xanchor': "center",
-        'x': .5,
-    })
     fig.update_layout(
         plot_bgcolor="white",
         margin=dict(t=50,  l=10, b=10, r=10),
@@ -831,8 +881,14 @@ def second_dose(vaccines, area=None, unita=100, subplot_title='Percentuale popol
         height=height,
         autosize=True,
     )
-    fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[np.datetime64('2021-01-16'), plot_data.index[-1]])
-    fig.update_yaxes(showgrid=True, title_text='Percentuale', gridwidth=1, gridcolor='LightGrey', range=[0, max(maxs_perc)])
+    if unita == 100:
+        primary_title = 'Percentuale'
+    else:
+        primary_title = f'Dati per {unita:,} abitanti'
+    if not start:
+        start = data.index[0]
+    fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[start, data.index[-1]])
+    fig.update_yaxes(showgrid=True, title_text=primary_title, gridwidth=1, gridcolor='LightGrey', range=[0, max(maxs_perc)])
     fig.update_yaxes(showgrid=False, title_text='Totale', gridwidth=1, gridcolor='LightGrey', range=[0, max(maxs_tot)], secondary_y=True)
     return fig
 

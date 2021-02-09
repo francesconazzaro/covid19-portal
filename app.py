@@ -35,7 +35,8 @@ def mobility_expander():
 
 def explore_regions():
     st.header('Dati sul contagio aggiornati al {}'.format(DATA['Italia'].index[-1].date()))
-    col1, col2, col3, col4, col5, col5bis, col6 = st.beta_columns([2, 1, 2, 2, 2, 2, 2])
+    col1, col2, line, col3, col4, col5, col5bis, col6 = st.beta_columns([8, 6, 1, 8, 8, 8, 8, 8])
+    line.markdown(LINE, unsafe_allow_html=True)
     with col1:
         country = st.selectbox("Seleziona un'area", list(DATA.keys()))
         log = st.checkbox('Scala logaritmica', True)
@@ -198,7 +199,18 @@ def explore_regions():
     #     xaxes_range=[ingressi_not_nan.index[0], ingressi_not_nan.index[-1]],
     # ), use_container_width=True)
 
+LINE = """<style>
+.vl {
+  border-left: 2px solid black;
+  height: 200px;
+  position: absolute;
+  left: 50%;
+  margin-left: -3px;
+  top: 0;
+}
+</style>
 
+<div class="vl"></div>"""
 
 st.title('COVID-19: Situazione in Italia')
 st.text("")
@@ -216,26 +228,27 @@ if what == 'Dati somministrazione vaccini':
     col1, _ = st.beta_columns([1, 6])
     area = col1.selectbox("Seleziona un'area", ['Italia'] + list(import_data.REGIONS_MAP.values()))
     vaccini = True
-    col1, col2, col2bis, col3, col3bis = st.beta_columns([2, 2, 1, 2, 1])
-    with col2:
+    pie1, title1, line, pie2, title2, title3 = st.beta_columns([2, 4, 1, 2, 4, 4])
+    line.markdown(LINE, unsafe_allow_html=True)
+    with title3:
         st.markdown("<h3 style='text-align: center;'>Dosi somministrate fino ad ora</h2>",
                     unsafe_allow_html=True)
         tot_somm = vaccines.administration[vaccines.administration.area == area].cumsum().iloc[-1].sesso_maschile + vaccines.administration[vaccines.administration.area == area].cumsum().iloc[-1].sesso_femminile
         st.markdown(f"<h1 style='text-align: center; color: red;'>{tot_somm:,}</h1>", unsafe_allow_html=True)
-    with col1:
+    with title2:
         st.markdown("<h3 style='text-align: center;'>Dosi consegnate fino ad ora</h2>",
                     unsafe_allow_html=True)
         tot_cons = vaccines.deliveries[vaccines.deliveries.area == area].cumsum().iloc[-1].numero_dosi
         st.markdown(f"<h1 style='text-align: center; color: red;'>{tot_cons:,}</h1>", unsafe_allow_html=True)
-    with col2bis:
-        col2bis.plotly_chart(plot.plot_percentage(vaccines.administration, vaccines.deliveries, area), use_container_width=True)
-    with col3:
+    with pie2:
+        st.plotly_chart(plot.plot_percentage(vaccines.administration, vaccines.deliveries, area), use_container_width=True)
+    with title1:
         st.markdown("<h3 style='text-align: center;'>Popolazione vaccinata (seconda dose)</h2>",
                     unsafe_allow_html=True)
         tot_somm = vaccines.administration[vaccines.administration.area == area].cumsum().iloc[-1].seconda_dose
         st.markdown(f"<h1 style='text-align: center; color: red;'>{tot_somm:,}</h1>", unsafe_allow_html=True)
-    with col3bis:
-        col3bis.plotly_chart(plot.plot_vaccine_popolation(vaccines.administration, area), use_container_width=True)
+    with pie1:
+        st.plotly_chart(plot.plot_vaccine_popolation(vaccines.administration, area), use_container_width=True)
 
     col1, col2, col3 = st.beta_columns(3)
     with col1:
@@ -246,18 +259,30 @@ if what == 'Dati somministrazione vaccini':
         col3.plotly_chart(plot.plot_category(vaccines.administration, area), use_container_width=True)
     col1, col2 = st.beta_columns(2)
     with col2:
-        col2.plotly_chart(plot.plot_deliveries(vaccines.deliveries, area), use_container_width=True)
+        data_list = [vaccines.deliveries.numero_dosi[vaccines.deliveries.area == area]]
+        population = [vaccines.administration.popolazione[vaccines.administration.area == area]]
+        names = ['Numero dosi consegnate']
+        col2.plotly_chart(plot.cumulate_and_not(
+            data_list,
+            names,
+            population_list=population,
+            subplot_title='Dosi di vaccino consegnate per 100 mila abitanti',
+            unita=100000
+        ), use_container_width=True)
     with col1:
-        col1.plotly_chart(plot.second_dose(vaccines.administration, area), use_container_width=True)
-    st.plotly_chart(plot.plot_vaccines(
-        vaccines.administration,
-        area,
-        unita=plot.UNITA,
-        subplot_title='Dosi somministrate per 100 mila abitanti',
-        fill='tozeroy',
-        height=500,
-    ), use_container_width=True
-    )
+        data_list = [vaccines.administration.seconda_dose[vaccines.administration.area == area]]
+        population = [vaccines.administration.popolazione[vaccines.administration.area == area]]
+        names = ['Vaccinazioni']
+        col1.plotly_chart(plot.cumulate_and_not(data_list, names, population_list=population, start='2021-01-16', subplot_title='Percentuale popolazione vaccinata (seconda dose somministrata)'), use_container_width=True)
+    st.header('Confronto tra regioni')
+    col1, _, col2 = st.beta_columns([2, 1, 5])
+    with col1:
+        st.subheader('Percentuale popolazione vaccinata')
+        st.write('')
+        data = vaccines.administration.groupby('area').sum().seconda_dose / vaccines.administration.groupby('area').mean().popolazione
+        st.dataframe(data.to_frame().style.background_gradient(cmap='Reds').format("{:.2%}"), height=700)
+    rule = col2.selectbox('Variabile', ['Percentuale popolazione vaccinata', 'Dosi somministrate', 'Dosi consegnate'])
+    col2.plotly_chart(plot.vaccines_summary(vaccines, rule), use_container_width=True)
     expander = st.beta_expander("This app is developed by Francesco Nazzaro (click to check raw data)")
     expander.write("Contact me on [Twitter](https://twitter.com/effenazzaro)")
     expander.write("The source code is on [GitHub](https://github.com/francesconazzaro/covid19-portal)")
