@@ -52,7 +52,7 @@ def explore_regions():
                     unsafe_allow_html=True)
         deceduti = plot.normalisation(DATA[country].deceduti.diff().iloc[-1], DATA[country].iloc[-1].popolazione, rule)
         text = f'{deceduti:.2f}' if plot.RULE_MAP[rule] == 'percentage' else f'{int(deceduti):,}'
-        print(plot.RULE_MAP[rule] == 'percentage')
+        # print(plot.RULE_MAP[rule] == 'percentage')
         st.markdown(f"<h1 style='text-align: center; color: red;'>{text}</h1>", unsafe_allow_html=True)
     with col5:
         st.markdown("<h3 style='text-align: center;'>Persone in terapia intensiva</h2>",

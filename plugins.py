@@ -15,7 +15,7 @@ except FileNotFoundError:
     GA_TAG_2 = ''
 
 SRC = "https://www.googletagmanager.com/gtag/js?id=G-PEHWGSLTJP"
-print(GA_TAG_2)
+# print(GA_TAG_2)
 
 
 def google_analytics():

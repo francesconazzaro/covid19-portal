@@ -156,7 +156,6 @@ def covid19(repo_reference):
     popolazione = population()
     terapie_intensive = intensive_care()
     posti_letto = beds()
-    print('CACHE MISS')
     data_aggregate = pd.read_csv(repo_reference.regions_path, index_col='data', parse_dates=['data'])
     ita = pd.read_csv(repo_reference.italy_path, index_col='data', parse_dates=['data'])
 
