@@ -247,13 +247,7 @@ if what == 'Dati somministrazione vaccini':
     with pie1:
         st.plotly_chart(plot.plot_vaccine_popolation(vaccines.administration, area), use_container_width=True)
 
-    col1, col2, col3 = st.beta_columns(3)
-    with col1:
-        col1.plotly_chart(plot.plot_ages(vaccines.raw, area), use_container_width=True)
-    with col2:
-        col2.plotly_chart(plot.plot_second_dose_percentage(vaccines.administration, area), use_container_width=True)
-    with col3:
-        col3.plotly_chart(plot.plot_category(vaccines.administration, area), use_container_width=True)
+
     col1, col2 = st.beta_columns(2)
     with col2:
         data_list = [vaccines.deliveries.numero_dosi[vaccines.deliveries.area == area]]
@@ -271,6 +265,14 @@ if what == 'Dati somministrazione vaccini':
         population = [vaccines.administration.popolazione[vaccines.administration.area == area]]
         names = ['Vaccinazioni']
         col1.plotly_chart(plot.cumulate_and_not(data_list, names, population_list=population, start='2021-01-16', subplot_title='Percentuale popolazione vaccinata (seconda dose somministrata)'), use_container_width=True)
+
+    col1, col2, col3 = st.beta_columns(3)
+    with col1:
+        col1.plotly_chart(plot.plot_ages(vaccines.raw, area), use_container_width=True)
+    with col2:
+        col2.plotly_chart(plot.plot_second_dose_percentage(vaccines.administration, area), use_container_width=True)
+    with col3:
+        col3.plotly_chart(plot.plot_category(vaccines.administration, area), use_container_width=True)
     st.header('Confronto tra regioni')
     col1, _, col2 = st.beta_columns([2, 1, 5])
     with col1:
