@@ -33,15 +33,14 @@ def mobility_expander():
     expander_mobility.plotly_chart(plot.mobility_data(mobility_plot_data, variable), use_container_width=True)
 
 
-def explore_regions():
+def explore_regions(country):
     st.header('Dati sul contagio aggiornati al {}'.format(DATA['Italia'].index[-1].date()))
-    col1, col2, line, col3, col4, col5, col5bis, col6 = st.beta_columns([8, 6, 1, 8, 8, 8, 8, 8])
+    col1, line, col3, col4, col5, col5bis, col6 = st.beta_columns([10, 1, 8, 8, 8, 8, 8])
     line.markdown(LINE, unsafe_allow_html=True)
     with col1:
-        country = st.selectbox("Seleziona un'area", list(DATA.keys()))
-        log = st.checkbox('Scala logaritmica', True)
-    with col2:
         rule = st.radio('', list(plot.RULE_MAP.keys()))
+        st.write('')
+        log = st.checkbox('Scala logaritmica', True)
     with col3:
         st.markdown("<h3 style='text-align: center;'>Nuovi positivi</h2>",
                     unsafe_allow_html=True)
@@ -220,14 +219,12 @@ vaccine_repo = import_data.RepoReference(
 )
 vaccines = import_data.vaccines(vaccine_repo, DATA)
 
-col1, _ = st.beta_columns([1, 3])
-what = col1.selectbox('Seleziona analisi', ['Dati contagio', 'Dati somministrazione vaccini'])
+col1, col2, _ = st.beta_columns([3, 2, 9])
+what = col1.selectbox('Seleziona un dato', ['Dati contagio', 'Dati somministrazione vaccini'])
+area = col2.selectbox("Seleziona un'area", ['Italia'] + list(import_data.REGIONS_MAP.values()))
 
 if what == 'Dati somministrazione vaccini':
     st.header(f"Dati sulle vaccinazioni aggiornati al {vaccines.administration[vaccines.administration.area == 'Italia'].index[-1].date()}")
-    col1, _ = st.beta_columns([1, 6])
-    area = col1.selectbox("Seleziona un'area", ['Italia'] + list(import_data.REGIONS_MAP.values()))
-    vaccini = True
     pie1, title1, line, pie2, title2, title3 = st.beta_columns([2, 4, 1, 2, 4, 4])
     line.markdown(LINE, unsafe_allow_html=True)
     with title3:
@@ -290,7 +287,7 @@ if what == 'Dati somministrazione vaccini':
     expander.dataframe(vaccines.administration)
 
 elif what == 'Dati contagio':
-    explore_regions()
+    explore_regions(area)
     st.header('Confronto tra regioni')
     col1, col2, col3 = st.beta_columns([2, 2, 3])
     import_data.pd.options.display.float_format = '{:.2f}'.format
