@@ -364,34 +364,46 @@ def plot_selection(data_in, country, rule, start_positivi, start_ti, start_ricov
     return fig
 
 
+def vaccines_summary_plot_data(region, what):
+    if what == 'Dosi somministrate':
+        plot_data = (
+                                region.prima_dose.cumsum() + region.seconda_dose.cumsum()) / region.popolazione * UNITA
+        title = "Dosi somministrate per 100 mila abitanti"
+    if what == 'Percentuale popolazione vaccinata':
+        plot_data = region.seconda_dose.cumsum() / region.popolazione * 100
+        title = "Percentuale popolazione vaccinata"
+    if what == 'Dosi consegnate':
+        plot_data = region.prima_dose.cumsum() / region.popolazione * UNITA
+        title = "Dosi consegnate per 100 mila abitanti"
+    return plot_data, title
+
 @st.cache(allow_output_mutation=True, show_spinner=False)
 def vaccines_summary(vaccines, what):
     titles = [title for title in np.unique(vaccines.administration.area) if title not in ['Italia', 'P.A. Bolzano', 'P.A. Trento']]
-    titles = ['Italia'] + titles
+    titles = sorted(['Trentino Alto Adige'] + titles)
     fig = make_subplots(4, 5, shared_xaxes='all', shared_yaxes='all', subplot_titles=titles,
                         vertical_spacing=.08)
     minus = 0
     PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
     maxs = []
+    italia = vaccines.administration[vaccines.administration.area == 'Italia']
+    plot_data_italy, _ = vaccines_summary_plot_data(italia, what)
     for i, name in enumerate(titles):
         col = (i - minus) % 5 + 1
         row = (i - minus) // 5 + 1
-        region = vaccines.administration[vaccines.administration.area == name]
-        if name in ['P.A. Bolzano', 'P.A. Trento']:
-            minus += 1
-            continue
-        if what == 'Dosi somministrate':
-            plot_data = (region.prima_dose.cumsum() + region.seconda_dose.cumsum()) / region.popolazione * UNITA
-            title = "Dosi somministrate per 100 mila abitanti"
-        if what == 'Percentuale popolazione vaccinata':
-            plot_data = region.seconda_dose.cumsum() / region.popolazione * 100
-            title = "Percentuale popolazione vaccinata"
-        if what == 'Dosi consegnate':
-            plot_data = region.prima_dose.cumsum() / region.popolazione * UNITA
-            title = "Dosi consegnate per 100 mila abitanti"
+        if name == 'Trentino Alto Adige':
+            bolzano = vaccines.administration[vaccines.administration.area == 'P.A. Bolzano']
+            trento = vaccines.administration[vaccines.administration.area == 'P.A. Trento']
+            region = bolzano + trento
+        else:
+            region = vaccines.administration[vaccines.administration.area == name]
+        plot_data, title = vaccines_summary_plot_data(region, what)
         maxs.append(plot_data.values[-90:].max())
         fig.add_trace(go.Scatter(x=plot_data.index[-90:], y=plot_data.values[-90:], showlegend=False,
                                  name=title, marker=dict(color=next(PALETTE)), fill='tozeroy'), row, col)
+        fig.add_trace(go.Scatter(x=plot_data_italy.index[-90:], y=plot_data_italy.values[-90:], showlegend=False,
+                                 name='Italia', marker=dict(color='rgba(31, 119, 180, .5)')), row,
+                      col)
     fig.update_xaxes(showgrid=True, gridwidth=1, tickangle=45, gridcolor='LightGrey')
     fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[0, max(maxs)])
     fig.update_layout(
@@ -408,46 +420,58 @@ def vaccines_summary(vaccines, what):
     return fig
 
 
+def summary_plot_data(region, what):
+    if what == 'Terapie Intensive':
+        plot_data = region.terapia_intensiva.rolling(7).mean() / region.popolazione * UNITA
+        title = "Terapie Intensive per 100.000 abitanti"
+        yscale = 'log'
+    if what == 'Ingressi Terapie Intensive':
+        plot_data = region.ingressi_terapia_intensiva.rolling(
+            7).mean() / region.popolazione * UNITA
+        title = "Ingressi Terapie Intensive per 100.000 abitanti"
+        yscale = 'log'
+    elif what == 'Nuovi Positivi':
+        plot_data = region.nuovi_positivi.rolling(7).mean() / region.popolazione * UNITA
+        title = "Nuovi positivi per 100.000 abitanti"
+        yscale = 'log'
+    elif what == 'Percentuale tamponi positivi':
+        plot_data = region.nuovi_positivi.rolling(7).mean() / region.tamponi.diff().rolling(
+            7).mean() * 100
+        title = "Percentuale tamponi positivi."
+        yscale = 'linear'
+    elif what == 'Deceduti':
+        plot_data = region.deceduti.diff().rolling(7).mean() / region.tamponi.diff().rolling(
+            7).mean() * 100
+        title = "Deceduti giornalieri per 100.000 abitanti."
+        yscale = 'log'
+    return plot_data, title
+
+
 @st.cache(allow_output_mutation=True, show_spinner=False)
 def summary(data, what):
-    titles = [title for title in data if title not in ['P.A. Bolzano', 'P.A. Trento']]
+    titles = [title for title in data if title not in ['P.A. Bolzano', 'P.A. Trento', 'Italia']]
+    titles += ['Trentino Alto Adige']
+    titles = sorted(titles)
     fig = make_subplots(4, 5, shared_xaxes='all', shared_yaxes='all', subplot_titles=titles,
                         vertical_spacing=.08)
     minus = 0
     PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
     maxs = []
-    for i, name in enumerate(data):
+    plot_data_italy, _ = summary_plot_data(data['Italia'], what)
+    for i, name in enumerate(titles):
         col = (i - minus) % 5 + 1
         row = (i - minus) // 5 + 1
-        region = data[name]
-        if name in ['P.A. Bolzano', 'P.A. Trento']:
-            minus += 1
-            continue
-        if what == 'Terapie Intensive':
-            plot_data = region.terapia_intensiva.rolling(7).mean() / region.popolazione * UNITA
-            title = "Terapie Intensive per 100.000 abitanti"
-            yscale = 'log'
-        if what == 'Ingressi Terapie Intensive':
-                plot_data = region.ingressi_terapia_intensiva.rolling(7).mean() / region.popolazione * UNITA
-                title = "Ingressi Terapie Intensive per 100.000 abitanti"
-                yscale = 'log'
-        elif what == 'Nuovi Positivi':
-            plot_data = region.nuovi_positivi.rolling(7).mean() / region.popolazione * UNITA
-            title = "Nuovi positivi per 100.000 abitanti"
-            yscale = 'log'
-        elif what == 'Percentuale tamponi positivi':
-            plot_data = region.nuovi_positivi.rolling(7).mean() / region.tamponi.diff().rolling(
-                7).mean() * 100
-            title = "Percentuale tamponi positivi."
-            yscale = 'linear'
-        elif what == 'Deceduti':
-            plot_data = region.deceduti.diff().rolling(7).mean() / region.tamponi.diff().rolling(
-                7).mean() * 100
-            title = "Deceduti giornalieri per 100.000 abitanti."
-            yscale = 'log'
+        if name == 'Trentino Alto Adige':
+            region = data['P.A. Bolzano'] + data['P.A. Trento']
+        else:
+            region = data[name]
+        plot_data, title = summary_plot_data(region, what)
         maxs.append(plot_data.values[-90:].max())
         fig.add_trace(go.Scatter(x=plot_data.index[-90:], y=plot_data.values[-90:], showlegend=False,
                                  name=title, marker=dict(color=next(PALETTE)), fill='tozeroy'), row, col)
+        fig.add_trace(go.Scatter(x=plot_data_italy.index[-90:], y=plot_data_italy.values[-90:], showlegend=False,
+                                 name='Italia', marker=dict(color='rgba(31, 119, 180, .5)')), row,
+                      col)
     fig.update_xaxes(showgrid=True, gridwidth=1, tickangle=45, gridcolor='LightGrey')
     fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[0, max(maxs)])
     fig.update_layout(
@@ -455,7 +479,7 @@ def summary(data, what):
         plot_bgcolor="white",
         margin=dict(t=50, l=10, b=10, r=10),
         # width=1300,
-        height=500,
+        height=600,
         autosize=True,
     )
     PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))

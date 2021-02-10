@@ -274,7 +274,7 @@ if what == 'Dati somministrazione vaccini':
     with col3:
         col3.plotly_chart(plot.plot_category(vaccines.administration, area), use_container_width=True)
     st.header('Confronto tra regioni')
-    col1, _, col2 = st.beta_columns([2, 1, 5])
+    col1, _, col2 = st.beta_columns([4, 1, 10])
     with col1:
         st.subheader('Percentuale popolazione vaccinata')
         st.write('')
