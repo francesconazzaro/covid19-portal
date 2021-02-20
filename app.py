@@ -261,10 +261,10 @@ if what == 'Dati somministrazione vaccini':
             unita=100000
         ), use_container_width=True)
     with col1:
-        data_list = [vaccines.administration.seconda_dose[vaccines.administration.area == area]]
-        population = [vaccines.administration.popolazione[vaccines.administration.area == area]]
-        names = ['Vaccinazioni']
-        col1.plotly_chart(plot.cumulate_and_not(data_list, names, population_list=population, start='2021-01-16', subplot_title='Percentuale popolazione vaccinata (seconda dose somministrata)'), use_container_width=True)
+        data_list = [vaccines.administration.prima_dose[vaccines.administration.area == area], vaccines.administration.seconda_dose[vaccines.administration.area == area]]
+        population = [vaccines.administration.popolazione[vaccines.administration.area == area]] * 2
+        names = ['Prima dose', 'Seconda dose']
+        col1.plotly_chart(plot.plot_fill(data_list, names, population_list=population, subplot_title='Somministrazioni per 100 mila abitanti'), use_container_width=True)
 
     col1, col2, col3 = st.beta_columns(3)
     with col1:
