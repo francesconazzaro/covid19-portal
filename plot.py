@@ -721,10 +721,10 @@ def plot_second_dose_percentage(vaccines, area):
     fig.update_layout(legend={
         'orientation': 'h',
         'yanchor': "bottom",
-        'y': -.15,  # top
+        'y': -.2,  # top
         'xanchor': "center",
         'x': .5,
-    }
+    }, height=440
     )
     return fig
 
@@ -738,23 +738,27 @@ def plot_category(vaccines, area):
             plot_data.categoria_personale_non_sanitario,
             plot_data.categoria_ospiti_rsa,
             plot_data.categoria_over80,
+            plot_data.categoria_forze_armate,
+            plot_data.categoria_personale_scolastico,
         ],
         labels=[
             'Categoria operatori sanitari sociosanitari',
             'Categoria personale non sanitario',
             'Categoria ospiti RSA',
             'Categoria over 80',
+            'Categoria forze armate',
+            'Categoria personale scolastico',
         ],
         textinfo='percent',
     )
     fig = make_subplots(1, subplot_titles=[f'Somministrazione per categorie'])
     fig.add_trace(pie)
     fig.update_layout(legend={
-            'yanchor': "bottom",
-            'y': -.3,  # top
-            'xanchor': "center",
+        'yanchor': "bottom",
+            'y': -.5,  # top
+            'xanchor': "right",
             'x': .5,
-        }
+        }, height=500
 )
     return fig
 
@@ -899,7 +903,6 @@ def plot_fill(data_list, names, population_list, unita=100000, subplot_title='',
         primary_title = f'Dati per {unita:,} abitanti'
     if not start:
         start = data.index[0]
-        print('STARTTTTTT', start)
     fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[start, data.index[-1] + np.timedelta64(1, 'D')])
     fig.update_yaxes(showgrid=True, title_text=primary_title, gridwidth=1, gridcolor='LightGrey') #, range=[0, max(maxs_perc)])
     fig.update_yaxes(showgrid=False, title_text='Totale', gridwidth=1, gridcolor='LightGrey', secondary_y=True)#, range=[0, max(maxs_tot)])
