@@ -159,7 +159,7 @@ class RepoReference:
         self.italy_path = os.path.join(base_path, 'COVID-19/dati-andamento-nazionale/dpc-covid19-ita-andamento-nazionale.csv')
 
 
-# @st.cache(show_spinner=False)
+@st.cache(show_spinner=False)
 def covid19(repo_reference):
     popolazione = population()
     terapie_intensive = intensive_care()
