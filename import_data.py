@@ -57,8 +57,8 @@ def beds():
     return posti_letto
 
 
-def process_data(data, covid_data, date_label, drop_ages=False):
-    administration = pd.DataFrame()
+def process_data(data, covid_data, date_label, drop_ages=False, deliveries=False):
+    result = pd.DataFrame()
     for region_name in REGIONS_MAP.keys():
         if drop_ages is True:
             region = data[data.area == region_name].groupby(
@@ -67,19 +67,27 @@ def process_data(data, covid_data, date_label, drop_ages=False):
             region = data[data.area == region_name]
         region['area'] = REGIONS_MAP[region_name]
         region['popolazione'] = covid_data[REGIONS_MAP[region_name]].popolazione[0]
-        administration = administration.append(region)
-    ita = administration.groupby(date_label).sum()
+        result = result.append(region)
+    if deliveries:
+        ita = pd.DataFrame()
+        for fornitore in np.unique(data.fornitore):
+            fornitore_data = data[data.fornitore == fornitore].groupby(date_label).sum()
+            fornitore_data['fornitore'] = fornitore
+            ita = ita.append(fornitore_data)
+        ita = ita.sort_index()
+    else:
+        ita = result.groupby(date_label).sum()
     ita['area'] = 'Italia'
     ita['popolazione'] = covid_data['Italia'].popolazione[0]
-    administration = administration.append(ita)
-    return administration
+    result = result.append(ita)
+    return result
 
 
 class Vaccines:
     def __init__(self, vaccines, deliveries, covid_data):
         self.raw = process_data(vaccines, covid_data, date_label='data_somministrazione')
         self.administration = process_data(vaccines, covid_data, drop_ages=True, date_label='data_somministrazione')
-        self.deliveries = process_data(deliveries, covid_data, date_label='data_consegna')
+        self.deliveries = process_data(deliveries, covid_data, date_label='data_consegna', deliveries=True)
 
 
 def vaccines(repo_reference, covid_data):
@@ -151,7 +159,7 @@ class RepoReference:
         self.italy_path = os.path.join(base_path, 'COVID-19/dati-andamento-nazionale/dpc-covid19-ita-andamento-nazionale.csv')
 
 
-@st.cache(show_spinner=False)
+# @st.cache(show_spinner=False)
 def covid19(repo_reference):
     popolazione = population()
     terapie_intensive = intensive_care()

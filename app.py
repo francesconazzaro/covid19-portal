@@ -250,29 +250,32 @@ if what == 'Dati somministrazione vaccini':
 
     col1, col2 = st.beta_columns(2)
     with col2:
-        data_list = [vaccines.deliveries.numero_dosi[vaccines.deliveries.area == area]]
-        population = [vaccines.administration.popolazione[vaccines.administration.area == area]]
+        vacc_area = vaccines.deliveries[vaccines.deliveries.area == area]
+        fornitori = plot.np.unique(vacc_area.fornitore)
+        data_list = [vacc_area[vacc_area.fornitore == fornitori[0]].numero_dosi]
+        population = vaccines.administration.popolazione[vaccines.administration.area == area]
         names = ['Numero dosi consegnate']
-        col2.plotly_chart(plot.cumulate_and_not(
-            data_list,
-            names,
-            population_list=population,
-            subplot_title='Dosi di vaccino consegnate per 100 mila abitanti',
+        col2.plotly_chart(plot.plot_deliveries(
+            vacc_area,
+            population=population,
+            subplot_title='Dosi di vaccino consegnate',
             unita=100000
         ), use_container_width=True)
     with col1:
         data_list = [vaccines.administration.prima_dose[vaccines.administration.area == area], vaccines.administration.seconda_dose[vaccines.administration.area == area]]
         population = [vaccines.administration.popolazione[vaccines.administration.area == area]] * 2
         names = ['Prima dose', 'Seconda dose']
-        col1.plotly_chart(plot.plot_fill(data_list, names, population_list=population, subplot_title='Somministrazioni per 100 mila abitanti'), use_container_width=True)
+        col1.plotly_chart(plot.plot_fill(data_list, names, population_list=population, subplot_title='Somministrazioni vaccino'), use_container_width=True)
 
-    col1, col2, col3 = st.beta_columns(3)
+    col1, col2, col3, col4 = st.beta_columns(4)
     with col1:
         col1.plotly_chart(plot.plot_ages(vaccines.raw, area), use_container_width=True)
     with col2:
         col2.plotly_chart(plot.plot_second_dose_percentage(vaccines.administration, area), use_container_width=True)
     with col3:
         col3.plotly_chart(plot.plot_category(vaccines.administration, area), use_container_width=True)
+    with col4:
+        col4.plotly_chart(plot.plot_fornitore(vaccines.deliveries, area), use_container_width=True)
     st.header('Confronto tra regioni')
     col1, _, col2 = st.beta_columns([4, 1, 10])
     with col1:
