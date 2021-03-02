@@ -666,7 +666,6 @@ def plot_deliveries(deliveries, area):
             y=fornitore_data.numero_dosi / fornitore_data.popolazione * UNITA,
             name=f'Numero dosi consegnate {fornitore}',
         )
-        print(fornitore)
         fig.add_trace(bar)
     fig.add_trace(ax)
     fig.update_layout(
@@ -677,9 +676,9 @@ def plot_deliveries(deliveries, area):
         autosize=True,
         legend={
             'orientation': "v",
-            'yanchor': "bottom",
+            'yanchor': "top",
             'y': .85,  # top
-            'xanchor': "right",
+            'xanchor': "center",
             'x': .5,
         }
     )
@@ -708,10 +707,10 @@ def plot_ages(vaccines, area):
     fig.update_layout(legend={
         'orientation': 'h',
         'yanchor': "bottom",
-        'y': -.3,  # top
+        'y': -.35,  # top
         'xanchor': "center",
         'x': .5,
-    }
+    }, height=470,
     )
     return fig
 
@@ -763,10 +762,11 @@ def plot_category(vaccines, area):
     fig = make_subplots(1, subplot_titles=[f'Somministrazione per categorie'])
     fig.add_trace(pie)
     fig.update_layout(legend={
+        'orientation': 'h',
         'yanchor': "bottom",
-            'y': -.5,  # top
-            'xanchor': "right",
-            'x': .5,
+        'y': -.5,  # top
+        'xanchor': "center",
+        'x': .5,
         }, height=500
 )
     return fig
@@ -785,7 +785,7 @@ def plot_fornitore(vaccines, area):
     fig.update_layout(legend={
         'orientation': 'h',
         'yanchor': "bottom",
-        'y': -.2,  # top
+        'y': -.3,  # top
         'xanchor': "center",
         'x': .5,
     }, height=440
@@ -952,20 +952,19 @@ def plot_deliveries(deliveries, population, unita=100, subplot_title='', start=N
     percentage_cumsum = cumsum / population * unita
     for fornitore in np.unique(sorted(deliveries.fornitore)):
         fornitore_data = deliveries[deliveries.fornitore == fornitore].numero_dosi
-        print('-------', fornitore, deliveries)
         bar_tot = go.Bar(
             x=fornitore_data.index,
             y=fornitore_data,
             name=f'{fornitore}',
             showlegend=False,
-            legendgroup=f'Dosi consegnate da {fornitore}',
+            legendgroup=f'{fornitore}',
             marker_color=next(PALETTE_ALPHA)
         )
         percentage = fornitore_data / population * unita
         bar_perc = go.Bar(
             x=percentage.index,
             y=percentage,
-            name=f'Dosi consegnate da {fornitore}',
+            name=f'{fornitore}',
             hoverinfo='skip',
             legendgroup=f'Dosi consegnate da {fornitore}',
             marker_color=next(PALETTE)
@@ -975,7 +974,7 @@ def plot_deliveries(deliveries, population, unita=100, subplot_title='', start=N
     ax_perc = go.Scatter(
         x=percentage_cumsum.index,
         y=percentage_cumsum,
-        name='Numero dosi consegnate cumulate',
+        name='Cumulate',
         mode='lines+markers',
         hoverinfo='skip',
         legendgroup='Numero dosi consegnate cumulate',

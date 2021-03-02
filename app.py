@@ -267,11 +267,11 @@ if what == 'Dati somministrazione vaccini':
         names = ['Prima dose', 'Seconda dose']
         col1.plotly_chart(plot.plot_fill(data_list, names, population_list=population, subplot_title='Somministrazioni vaccino'), use_container_width=True)
 
-    col1, col2, col3, col4 = st.beta_columns(4)
+    col1, col3, col4 = st.beta_columns(3)
     with col1:
         col1.plotly_chart(plot.plot_ages(vaccines.raw, area), use_container_width=True)
-    with col2:
-        col2.plotly_chart(plot.plot_second_dose_percentage(vaccines.administration, area), use_container_width=True)
+    # with col2:
+    #     col2.plotly_chart(plot.plot_second_dose_percentage(vaccines.administration, area), use_container_width=True)
     with col3:
         col3.plotly_chart(plot.plot_category(vaccines.administration, area), use_container_width=True)
     with col4:
