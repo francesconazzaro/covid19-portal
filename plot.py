@@ -44,6 +44,15 @@ ITALY_EVENTS = [
     {'x': '2020-10-24', 'label': 'Lockdown morbido'},
 ]
 
+CATEGORIES = [
+    {'name': 'categoria_operatori_sanitari_sociosanitari', 'label': 'Operatori sanitari sociosanitari'},
+    {'name': 'categoria_personale_non_sanitario', 'label': 'Personale non sanitario'},
+    {'name': 'categoria_ospiti_rsa', 'label': 'Ospiti RSA'},
+    {'name': 'categoria_over80', 'label': 'Over 80'},
+    {'name': 'categoria_forze_armate', 'label': 'Forze armate'},
+    {'name': 'categoria_personale_scolastico', 'label': 'Personale scolastico'},
+]
+
 
 def add_events(fig, events=ITALY_EVENTS, start=None, stop=None, offset=0, **kwargs):
     PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
@@ -370,8 +379,7 @@ def plot_selection(data_in, country, rule, start_positivi, start_ti, start_ricov
 
 def vaccines_summary_plot_data(region, what):
     if what == 'Dosi somministrate':
-        plot_data = (
-                                region.prima_dose.cumsum() + region.seconda_dose.cumsum()) / region.popolazione * UNITA
+        plot_data = (region.prima_dose.cumsum() + region.seconda_dose.cumsum()) / region.popolazione * UNITA
         title = "Dosi somministrate per 100 mila abitanti"
     if what == 'Percentuale popolazione vaccinata':
         plot_data = region.seconda_dose.cumsum() / region.popolazione * 100
@@ -421,7 +429,7 @@ def vaccines_summary(vaccines, what):
     )
     PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
     for i in fig['layout']['annotations']:
-        i['font'] = dict(size=15, color=next(PALETTE))
+        i['font'] = dict(size=12, color=next(PALETTE))
     return fig
 
 
@@ -490,7 +498,7 @@ def summary(data, what):
     )
     PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
     for i in fig['layout']['annotations']:
-        i['font'] = dict(size=15, color=next(PALETTE))
+        i['font'] = dict(size=12, color=next(PALETTE))
     return fig
 
 
@@ -687,6 +695,31 @@ def plot_deliveries(deliveries, area):
     return fig
 
 
+def categories_timeseries(vaccines, area):
+    data_area = vaccines[vaccines.area == area]
+    population = data_area.popolazione
+    data_list = []
+    populations = []
+    names = []
+    maxs = []
+    for category in CATEGORIES:
+        plot_data = getattr(data_area, category['name'])
+        data_list.append(plot_data)
+        maxs.append(plot_data.sum())
+        populations.append(population)
+        names.append(category['label'])
+    order = np.argsort(maxs)[::-1]
+    legend = {
+        'orientation': "v",
+        'yanchor': "bottom",
+        'y': .55,  # top
+        'xanchor': "right",
+        'x': .5,
+    }
+    return plot_fill([data_list[i] for i in order], [names[i] for i in order], population_list=populations, subplot_title='Somministrazioni vaccino per categoria', legend=legend)
+
+
+
 @st.cache(allow_output_mutation=True, show_spinner=False)
 def plot_ages(vaccines, area):
     if area == 'Italia':
@@ -741,22 +774,8 @@ def plot_second_dose_percentage(vaccines, area):
 def plot_category(vaccines, area):
     plot_data = vaccines[vaccines.area == area].sum()
     pie = go.Pie(
-        values=[
-            plot_data.categoria_operatori_sanitari_sociosanitari,
-            plot_data.categoria_personale_non_sanitario,
-            plot_data.categoria_ospiti_rsa,
-            plot_data.categoria_over80,
-            plot_data.categoria_forze_armate,
-            plot_data.categoria_personale_scolastico,
-        ],
-        labels=[
-            'Categoria operatori sanitari sociosanitari',
-            'Categoria personale non sanitario',
-            'Categoria ospiti RSA',
-            'Categoria over 80',
-            'Categoria forze armate',
-            'Categoria personale scolastico',
-        ],
+        values=[getattr(plot_data, category['name']) for category in CATEGORIES],
+        labels=[category['label'] for category in CATEGORIES],
         textinfo='percent',
     )
     fig = make_subplots(1, subplot_titles=[f'Somministrazione per categorie'])
@@ -764,10 +783,10 @@ def plot_category(vaccines, area):
     fig.update_layout(legend={
         'orientation': 'h',
         'yanchor': "bottom",
-        'y': -.5,  # top
+        'y': -.65,  # top
         'xanchor': "center",
         'x': .5,
-        }, height=500
+        }, height=550
 )
     return fig
 
@@ -788,7 +807,7 @@ def plot_fornitore(vaccines, area):
         'y': -.3,  # top
         'xanchor': "center",
         'x': .5,
-    }, height=440
+    }, height=460
     )
     return fig
 
@@ -878,22 +897,22 @@ def plot_vaccines_prediction(vaccines, area, npoints=7, p0=(np.datetime64("2021-
     return fig
 
 
-def plot_fill(data_list, names, population_list, unita=100000, subplot_title='', start=None, height=500):
-    PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
-    PALETTE_ALPHA = itertools.cycle(get_matplotlib_cmap('tab10', bins=8, alpha=1))
+def plot_fill(data_list, names, population_list, unita=100000, subplot_title='', start=None, height=500, legend=None):
+    PALETTE = itertools.cycle(plotly.colors.qualitative.Plotly)#itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
+    PALETTE_ALPHA = itertools.cycle(plotly.colors.qualitative.Plotly)#itertools.cycle(get_matplotlib_cmap('tab10', bins=8, alpha=1))
     fig = make_subplots(1, subplot_titles=[subplot_title], specs=[[{"secondary_y": True}]])
     maxs_perc = []
     maxs_tot = []
     for i, (data, population, name) in enumerate(zip(data_list, population_list, names)):
         cumsum = data.cumsum()
         percentage_cumsum = data.cumsum() / population * unita
-
         ax_perc = go.Scatter(
             x=percentage_cumsum.index,
             y=percentage_cumsum,
             name=f'{name}',
-            mode='lines+markers',
+            # mode='lines+markers',
             stackgroup='One',
+            showlegend=True if name else False,
             hoverinfo='skip',
             legendgroup=name,
             marker=dict(color=next(PALETTE))
@@ -902,7 +921,7 @@ def plot_fill(data_list, names, population_list, unita=100000, subplot_title='',
             x=cumsum.index,
             y=cumsum,
             name=f'{name}',
-            mode='lines+markers',
+            # mode='lines+markers',
             showlegend=False,
             stackgroup='Two',
             legendgroup=name,
@@ -912,14 +931,16 @@ def plot_fill(data_list, names, population_list, unita=100000, subplot_title='',
         maxs_tot.append(cumsum.max())
         fig.add_trace(ax_perc)
         fig.add_trace(ax_tot, secondary_y=True)
-    fig.update_layout(
-        legend={
+    if not legend:
+        legend = {
             'orientation': "v",
             'yanchor': "bottom",
             'y': .85,  # top
             'xanchor': "right",
             'x': .5,
         }
+    fig.update_layout(
+        legend=legend
     )
     fig.update_layout(
         plot_bgcolor="white",

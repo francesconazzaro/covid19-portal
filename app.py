@@ -219,11 +219,11 @@ vaccine_repo = import_data.RepoReference(
 )
 vaccines = import_data.vaccines(vaccine_repo, DATA)
 
-col1, col2, _ = st.beta_columns([3, 2, 9])
-what = col1.selectbox('Seleziona un dato', ['Dati contagio', 'Dati somministrazione vaccini'])
+col1, col2, _ = st.beta_columns([2, 2, 9])
+what = col1.selectbox('Seleziona un dato', ['Contagio', 'Vaccini'])
 area = col2.selectbox("Seleziona un'area", ['Italia'] + list(import_data.REGIONS_MAP.values()))
 
-if what == 'Dati somministrazione vaccini':
+if what == 'Vaccini':
     st.header(f"Dati sulle vaccinazioni aggiornati al {vaccines.administration[vaccines.administration.area == 'Italia'].index[-1].date()}")
     pie1, title1, line, pie2, title2, title3 = st.beta_columns([2, 4, 1, 2, 4, 4])
     line.markdown(LINE, unsafe_allow_html=True)
@@ -276,6 +276,15 @@ if what == 'Dati somministrazione vaccini':
         col3.plotly_chart(plot.plot_category(vaccines.administration, area), use_container_width=True)
     with col4:
         col4.plotly_chart(plot.plot_fornitore(vaccines.deliveries, area), use_container_width=True)
+    andamenti = st.beta_expander("Dettaglio andamenti")
+    col1, col2 = andamenti.beta_columns(2)
+    col1.plotly_chart(plot.categories_timeseries(vaccines.administration, area), use_container_width=True)
+
+    data_list = [vaccines.administration.seconda_dose[vaccines.administration.area == area]]
+    population = [vaccines.administration.popolazione[vaccines.administration.area == area]]
+    names = ['Popolazione vaccinata (ha ricevuto la seconda dose)']
+    col2.plotly_chart(plot.plot_fill(data_list, [''], population, unita=100, subplot_title=names[0]), use_container_width=True)
+
     st.header('Confronto tra regioni')
     col1, _, col2 = st.beta_columns([4, 1, 10])
     with col1:
@@ -291,7 +300,7 @@ if what == 'Dati somministrazione vaccini':
     expander.write("Raw data")
     expander.dataframe(vaccines.administration)
 
-elif what == 'Dati contagio':
+elif what == 'Contagio':
     explore_regions(area)
     st.header('Confronto tra regioni')
     col1, col2, col3 = st.beta_columns([2, 2, 3])
