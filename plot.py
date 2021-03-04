@@ -719,7 +719,7 @@ def categories_timeseries(vaccines, area, cumulate=False):
         if cumulate:
             plot_data = getattr(data_area, category['name'])
         else:
-            plot_data = getattr(data_area, category['name']).diff()
+            plot_data = getattr(data_area, category['name']).diff().rolling(7).mean()
         data_list.append(plot_data)
         maxs.append(plot_data.sum())
         populations.append(population)
@@ -760,8 +760,14 @@ def ages_timeseries(vaccines, area, cumulate=False):
     if cumulate:
         data_list = [sum_doses(twentys), sum_doses(thirtys), sum_doses(fortys), sum_doses(fiftys), sum_doses(sixtys), sum_doses(seventys), sum_doses(eightys)]
     else:
-        data_list = [sum_doses(twentys).diff(), sum_doses(thirtys).diff(), sum_doses(fortys).diff(), sum_doses(fiftys).diff(),
-                     sum_doses(sixtys).diff(), sum_doses(seventys).diff(), sum_doses(eightys).diff()]
+        data_list = [
+            sum_doses(twentys).diff().rolling(7).mean(),
+            sum_doses(thirtys).diff().rolling(7).mean(),
+            sum_doses(fortys).diff().rolling(7).mean(),
+            sum_doses(fiftys).diff().rolling(7).mean(),
+            sum_doses(sixtys).diff().rolling(7).mean(),
+            sum_doses(seventys).diff().rolling(7).mean(),
+            sum_doses(eightys).diff().rolling(7).mean()]
     names = ['20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80-89']
     legend = {
         'orientation': "v",
