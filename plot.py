@@ -149,6 +149,9 @@ def test_positivity_rate(data_in, country, rule):
     data = data_in[country]
     PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
     PALETTE_ALPHA = itertools.cycle(get_matplotlib_cmap('tab10', bins=8, alpha=.3))
+    next(PALETTE)
+    next(PALETTE)
+    next(PALETTE)
     fig = make_subplots(1, 1, subplot_titles=[rule])
     # plot_data = region.nuovi_positivi.rolling(7).mean() / region.tamponi.diff().rolling(
     #     7).mean() * 100
@@ -162,7 +165,7 @@ def test_positivity_rate(data_in, country, rule):
         x=plot_data.index,
         y=plot_data.values,
         name='Media',
-        mode='lines+markers',
+        # mode='lines+markers',
         showlegend=False,
         legendgroup='postam',
         marker=dict(color=next(PALETTE)),
@@ -573,15 +576,19 @@ def comparison(data, offset=7):
 @st.cache(show_spinner=False)
 def mobility_data(mobility_plot_data, variable):
     fig = make_subplots(1, subplot_titles=[variable])
-    ax = go.Scatter(x=mobility_plot_data.index,
-                    y=getattr(mobility_plot_data, variable), fill='tozeroy',
-                    name='')
+    PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
+    next(PALETTE)
+    next(PALETTE)
+    ax = go.Scatter(x=mobility_plot_data.rolling(7).mean().index,
+                    y=getattr(mobility_plot_data, variable).rolling(7).mean(), fill='tozeroy',
+                    name='', marker=dict(color=next(PALETTE)))
     fig.add_trace(ax)
     fig.update_layout(
         plot_bgcolor="white",
         margin=dict(t=50, l=10, b=10, r=10),
         yaxis_title='',
         height=500,
+        hovermode="x unified",
         autosize=True,
         legend={
             'orientation': "h",
@@ -592,6 +599,9 @@ def mobility_data(mobility_plot_data, variable):
             'x': .5,
         }
     )
+    fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey')
+    fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey')
+
     return fig
 
 
