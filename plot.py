@@ -716,10 +716,7 @@ def categories_timeseries(vaccines, area, cumulate=False):
     names = []
     maxs = []
     for category in CATEGORIES:
-        if cumulate:
-            plot_data = getattr(data_area, category['name'])
-        else:
-            plot_data = getattr(data_area, category['name']).diff().rolling(7).mean()
+        plot_data = getattr(data_area, category['name']).rolling(7).mean()
         data_list.append(plot_data)
         maxs.append(plot_data.sum())
         populations.append(population)
@@ -732,7 +729,7 @@ def categories_timeseries(vaccines, area, cumulate=False):
         'xanchor': "right",
         'x': .5,
     }
-    return plot_fill([data_list[i] for i in order], [names[i] for i in order], population_list=populations, subplot_title='Somministrazioni vaccino per categoria', legend=legend)
+    return plot_fill([data_list[i] for i in order], [names[i] for i in order], population_list=populations, cumulate=cumulate, subplot_title='Somministrazioni vaccino per categoria', legend=legend)
 
 
 def sum_doses(data):
@@ -757,17 +754,14 @@ def ages_timeseries(vaccines, area, cumulate=False):
         sixtys = region[region.fascia_anagrafica == '60-69'].groupby('data_somministrazione').sum()
         seventys = region[region.fascia_anagrafica == '70-79'].groupby('data_somministrazione').sum()
         eightys = region[region.fascia_anagrafica == '80-89'].groupby('data_somministrazione').sum()
-    if cumulate:
-        data_list = [sum_doses(twentys), sum_doses(thirtys), sum_doses(fortys), sum_doses(fiftys), sum_doses(sixtys), sum_doses(seventys), sum_doses(eightys)]
-    else:
-        data_list = [
-            sum_doses(twentys).diff().rolling(7).mean(),
-            sum_doses(thirtys).diff().rolling(7).mean(),
-            sum_doses(fortys).diff().rolling(7).mean(),
-            sum_doses(fiftys).diff().rolling(7).mean(),
-            sum_doses(sixtys).diff().rolling(7).mean(),
-            sum_doses(seventys).diff().rolling(7).mean(),
-            sum_doses(eightys).diff().rolling(7).mean()]
+    data_list = [
+        sum_doses(twentys).rolling(7).mean(),
+        sum_doses(thirtys).rolling(7).mean(),
+        sum_doses(fortys).rolling(7).mean(),
+        sum_doses(fiftys).rolling(7).mean(),
+        sum_doses(sixtys).rolling(7).mean(),
+        sum_doses(seventys).rolling(7).mean(),
+        sum_doses(eightys).rolling(7).mean()]
     names = ['20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80-89']
     legend = {
         'orientation': "v",
@@ -776,7 +770,7 @@ def ages_timeseries(vaccines, area, cumulate=False):
         'xanchor': "left",
         'x': .1,
     }
-    return plot_fill(data_list, names, subplot_title="Somministrazioni vaccino per fascia d'età", legend=legend)
+    return plot_fill(data_list, names, subplot_title="Somministrazioni vaccino per fascia d'età", cumulate=cumulate, legend=legend)
 
 
 @st.cache(allow_output_mutation=True, show_spinner=False)
@@ -956,7 +950,7 @@ def plot_vaccines_prediction(vaccines, area, npoints=7, p0=(np.datetime64("2021-
     return fig
 
 
-def plot_fill(data_list, names, population_list=None, unita=100000, subplot_title='', start=None, height=500, legend=None):
+def plot_fill(data_list, names, population_list=None, unita=100000, cumulate=True, subplot_title='', start=None, height=500, legend=None):
     PALETTE = itertools.cycle(plotly.colors.qualitative.Plotly)#itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
     PALETTE_ALPHA = itertools.cycle(plotly.colors.qualitative.Plotly)#itertools.cycle(get_matplotlib_cmap('tab10', bins=8, alpha=1))
     fig = make_subplots(1, subplot_titles=[subplot_title], specs=[[{"secondary_y": True}]])
@@ -968,9 +962,10 @@ def plot_fill(data_list, names, population_list=None, unita=100000, subplot_titl
     else:
         primary_grid = False
     for i, (data, population, name) in enumerate(zip(data_list, population_list, names)):
-        cumsum = data.cumsum()
+        if cumulate:
+            data = data.cumsum()
         if population is not None:
-            percentage_cumsum = data.cumsum() / population * unita
+            percentage_cumsum = data / population * unita
             ax_perc = go.Scatter(
                 x=percentage_cumsum.index,
                 y=percentage_cumsum,
@@ -984,8 +979,8 @@ def plot_fill(data_list, names, population_list=None, unita=100000, subplot_titl
             maxs_perc.append(percentage_cumsum.max())
             fig.add_trace(ax_perc)
         ax_tot = go.Scatter(
-            x=cumsum.index,
-            y=cumsum,
+            x=data.index,
+            y=data,
             name=f'{name}',
             # mode='lines+markers',
             showlegend=True if name else False,
@@ -993,7 +988,7 @@ def plot_fill(data_list, names, population_list=None, unita=100000, subplot_titl
             legendgroup=name,
             marker=dict(color=next(PALETTE_ALPHA))
         )
-        maxs_tot.append(cumsum.max())
+        maxs_tot.append(data.max())
         fig.add_trace(ax_tot, secondary_y=True)
     if not legend:
         legend = {
