@@ -737,13 +737,13 @@ def ages_timeseries(vaccines, area, cumulate=False):
         eightys = vaccines[vaccines.fascia_anagrafica == '80-89'].groupby('data_somministrazione').sum()
     else:
         region = vaccines[vaccines.area == area]
-        twentys = region[region.fascia_anagrafica == '20-29']
-        thirtys = region[region.fascia_anagrafica == '30-39']
-        fortys = region[region.fascia_anagrafica == '40-49']
-        fiftys = region[region.fascia_anagrafica == '50-59']
-        sixtys = region[region.fascia_anagrafica == '60-69']
-        seventys = region[region.fascia_anagrafica == '70-79']
-        eightys = region[region.fascia_anagrafica == '80-89']
+        twentys = region[region.fascia_anagrafica == '20-29'].groupby('data_somministrazione').sum()
+        thirtys = region[region.fascia_anagrafica == '30-39'].groupby('data_somministrazione').sum()
+        fortys = region[region.fascia_anagrafica == '40-49'].groupby('data_somministrazione').sum()
+        fiftys = region[region.fascia_anagrafica == '50-59'].groupby('data_somministrazione').sum()
+        sixtys = region[region.fascia_anagrafica == '60-69'].groupby('data_somministrazione').sum()
+        seventys = region[region.fascia_anagrafica == '70-79'].groupby('data_somministrazione').sum()
+        eightys = region[region.fascia_anagrafica == '80-89'].groupby('data_somministrazione').sum()
     if cumulate:
         data_list = [sum_doses(twentys), sum_doses(thirtys), sum_doses(fortys), sum_doses(fiftys), sum_doses(sixtys), sum_doses(seventys), sum_doses(eightys)]
     else:
@@ -1001,6 +1001,7 @@ def plot_fill(data_list, names, population_list=None, unita=100000, subplot_titl
         primary_title = f'Dati per {unita:,} abitanti'
     if not start:
         start = data.index[0]
+    print('----------------', data.index[-1])
     fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[start, data.index[-1] + np.timedelta64(1, 'D')])
     fig.update_yaxes(showgrid=True, title_text=primary_title, gridwidth=1, gridcolor='LightGrey') #, range=[0, max(maxs_perc)])
     fig.update_yaxes(showgrid=primary_grid, title_text='Totale', gridwidth=1, gridcolor='LightGrey', secondary_y=True)#, range=[0, max(maxs_tot)])
