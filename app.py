@@ -277,13 +277,16 @@ if what == 'Vaccini':
     with col4:
         col4.plotly_chart(plot.plot_fornitore(vaccines.deliveries, area), use_container_width=True)
     andamenti = st.beta_expander("Dettaglio andamenti")
+    col1, col2 = andamenti.beta_columns([1, 5])
+    status = col1.selectbox('', ['Cumulato', 'Non cumulato'])
+    if status == 'Cumulato':
+        cumulate = True
+    else:
+        cumulate = False
     col1, col2 = andamenti.beta_columns(2)
-    col1.plotly_chart(plot.categories_timeseries(vaccines.administration, area), use_container_width=True)
-
-    data_list = [vaccines.administration.seconda_dose[vaccines.administration.area == area]]
-    population = [vaccines.administration.popolazione[vaccines.administration.area == area]]
-    names = ['Popolazione vaccinata (ha ricevuto la seconda dose)']
-    col2.plotly_chart(plot.plot_fill(data_list, [''], population, unita=100, subplot_title=names[0]), use_container_width=True)
+    col1.plotly_chart(plot.ages_timeseries(vaccines.raw, area, cumulate=cumulate), use_container_width=True)
+    col2.plotly_chart(plot.categories_timeseries(vaccines.administration, area, cumulate=cumulate), use_container_width=True)
+    # col2.plotly_chart(plot.plot_fill(data_list, [''], population, unita=100, subplot_title=names[0]), use_container_width=True)
 
     st.header('Confronto tra regioni')
     col1, _, col2 = st.beta_columns([4, 1, 10])

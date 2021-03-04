@@ -695,7 +695,7 @@ def plot_deliveries(deliveries, area):
     return fig
 
 
-def categories_timeseries(vaccines, area):
+def categories_timeseries(vaccines, area, cumulate=False):
     data_area = vaccines[vaccines.area == area]
     population = data_area.popolazione
     data_list = []
@@ -703,7 +703,10 @@ def categories_timeseries(vaccines, area):
     names = []
     maxs = []
     for category in CATEGORIES:
-        plot_data = getattr(data_area, category['name'])
+        if cumulate:
+            plot_data = getattr(data_area, category['name'])
+        else:
+            plot_data = getattr(data_area, category['name']).diff()
         data_list.append(plot_data)
         maxs.append(plot_data.sum())
         populations.append(population)
@@ -712,12 +715,49 @@ def categories_timeseries(vaccines, area):
     legend = {
         'orientation': "v",
         'yanchor': "bottom",
-        'y': .55,  # top
+        'y': .50,  # top
         'xanchor': "right",
         'x': .5,
     }
     return plot_fill([data_list[i] for i in order], [names[i] for i in order], population_list=populations, subplot_title='Somministrazioni vaccino per categoria', legend=legend)
 
+
+def sum_doses(data):
+    return data.prima_dose + data.seconda_dose
+
+
+def ages_timeseries(vaccines, area, cumulate=False):
+    if area == 'Italia':
+        twentys = vaccines[vaccines.fascia_anagrafica == '20-29'].groupby('data_somministrazione').sum()
+        thirtys = vaccines[vaccines.fascia_anagrafica == '30-39'].groupby('data_somministrazione').sum()
+        fortys = vaccines[vaccines.fascia_anagrafica == '40-49'].groupby('data_somministrazione').sum()
+        fiftys = vaccines[vaccines.fascia_anagrafica == '50-59'].groupby('data_somministrazione').sum()
+        sixtys = vaccines[vaccines.fascia_anagrafica == '60-69'].groupby('data_somministrazione').sum()
+        seventys = vaccines[vaccines.fascia_anagrafica == '70-79'].groupby('data_somministrazione').sum()
+        eightys = vaccines[vaccines.fascia_anagrafica == '80-89'].groupby('data_somministrazione').sum()
+    else:
+        region = vaccines[vaccines.area == area]
+        twentys = region[region.fascia_anagrafica == '20-29']
+        thirtys = region[region.fascia_anagrafica == '30-39']
+        fortys = region[region.fascia_anagrafica == '40-49']
+        fiftys = region[region.fascia_anagrafica == '50-59']
+        sixtys = region[region.fascia_anagrafica == '60-69']
+        seventys = region[region.fascia_anagrafica == '70-79']
+        eightys = region[region.fascia_anagrafica == '80-89']
+    if cumulate:
+        data_list = [sum_doses(twentys), sum_doses(thirtys), sum_doses(fortys), sum_doses(fiftys), sum_doses(sixtys), sum_doses(seventys), sum_doses(eightys)]
+    else:
+        data_list = [sum_doses(twentys).diff(), sum_doses(thirtys).diff(), sum_doses(fortys).diff(), sum_doses(fiftys).diff(),
+                     sum_doses(sixtys).diff(), sum_doses(seventys).diff(), sum_doses(eightys).diff()]
+    names = ['20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80-89']
+    legend = {
+        'orientation': "v",
+        'yanchor': "bottom",
+        'y': .45,  # top
+        'xanchor': "left",
+        'x': .1,
+    }
+    return plot_fill(data_list, names, subplot_title="Somministrazioni vaccino per fascia d'età", legend=legend)
 
 
 @st.cache(allow_output_mutation=True, show_spinner=False)
@@ -897,39 +937,44 @@ def plot_vaccines_prediction(vaccines, area, npoints=7, p0=(np.datetime64("2021-
     return fig
 
 
-def plot_fill(data_list, names, population_list, unita=100000, subplot_title='', start=None, height=500, legend=None):
+def plot_fill(data_list, names, population_list=None, unita=100000, subplot_title='', start=None, height=500, legend=None):
     PALETTE = itertools.cycle(plotly.colors.qualitative.Plotly)#itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
     PALETTE_ALPHA = itertools.cycle(plotly.colors.qualitative.Plotly)#itertools.cycle(get_matplotlib_cmap('tab10', bins=8, alpha=1))
     fig = make_subplots(1, subplot_titles=[subplot_title], specs=[[{"secondary_y": True}]])
     maxs_perc = []
     maxs_tot = []
+    if not population_list:
+        population_list = [None,] * len(data_list)
+        primary_grid = True
+    else:
+        primary_grid = False
     for i, (data, population, name) in enumerate(zip(data_list, population_list, names)):
         cumsum = data.cumsum()
-        percentage_cumsum = data.cumsum() / population * unita
-        ax_perc = go.Scatter(
-            x=percentage_cumsum.index,
-            y=percentage_cumsum,
-            name=f'{name}',
-            # mode='lines+markers',
-            stackgroup='One',
-            showlegend=True if name else False,
-            hoverinfo='skip',
-            legendgroup=name,
-            marker=dict(color=next(PALETTE))
-        )
+        if population is not None:
+            percentage_cumsum = data.cumsum() / population * unita
+            ax_perc = go.Scatter(
+                x=percentage_cumsum.index,
+                y=percentage_cumsum,
+                # mode='lines+markers',
+                showlegend=False,
+                stackgroup='One',
+                hoverinfo='skip',
+                legendgroup=name,
+                marker=dict(color=next(PALETTE))
+            )
+            maxs_perc.append(percentage_cumsum.max())
+            fig.add_trace(ax_perc)
         ax_tot = go.Scatter(
             x=cumsum.index,
             y=cumsum,
             name=f'{name}',
             # mode='lines+markers',
-            showlegend=False,
+            showlegend=True if name else False,
             stackgroup='Two',
             legendgroup=name,
             marker=dict(color=next(PALETTE_ALPHA))
         )
-        maxs_perc.append(percentage_cumsum.max())
         maxs_tot.append(cumsum.max())
-        fig.add_trace(ax_perc)
         fig.add_trace(ax_tot, secondary_y=True)
     if not legend:
         legend = {
@@ -958,7 +1003,7 @@ def plot_fill(data_list, names, population_list, unita=100000, subplot_title='',
         start = data.index[0]
     fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[start, data.index[-1] + np.timedelta64(1, 'D')])
     fig.update_yaxes(showgrid=True, title_text=primary_title, gridwidth=1, gridcolor='LightGrey') #, range=[0, max(maxs_perc)])
-    fig.update_yaxes(showgrid=False, title_text='Totale', gridwidth=1, gridcolor='LightGrey', secondary_y=True)#, range=[0, max(maxs_tot)])
+    fig.update_yaxes(showgrid=primary_grid, title_text='Totale', gridwidth=1, gridcolor='LightGrey', secondary_y=True)#, range=[0, max(maxs_tot)])
     return fig
 
 
