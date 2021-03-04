@@ -574,11 +574,14 @@ def comparison(data, offset=7):
 
 
 @st.cache(show_spinner=False)
-def mobility_data(mobility_plot_data, variable):
+def mobility_data(mobility_plot_data, variable, variables):
     fig = make_subplots(1, subplot_titles=[variable])
     PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
-    next(PALETTE)
-    next(PALETTE)
+    for v in variables:
+        if v == variable:
+            break
+        else:
+            next(PALETTE)
     ax = go.Scatter(x=mobility_plot_data.rolling(7).mean().index,
                     y=getattr(mobility_plot_data, variable).rolling(7).mean(), fill='tozeroy',
                     name='', marker=dict(color=next(PALETTE)))

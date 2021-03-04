@@ -30,7 +30,7 @@ def mobility_expander():
     with col4:
         variable = col4.selectbox('Variabile', mobility_country.get_variables())
     mobility_plot_data = mobility_country.select(sub_region_1, sub_region_2)
-    expander_mobility.plotly_chart(plot.mobility_data(mobility_plot_data, variable), use_container_width=True)
+    expander_mobility.plotly_chart(plot.mobility_data(mobility_plot_data, variable, variables=mobility_country.get_variables()), use_container_width=True)
 
 
 def explore_regions(country):
