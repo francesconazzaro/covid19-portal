@@ -736,6 +736,26 @@ def sum_doses(data):
     return data.prima_dose + data.seconda_dose
 
 
+def fornitori_timeseries(vaccines, area, cumulate=False):
+    plot_data = {}
+    if area == 'Italia':
+        for fornitore in np.unique(vaccines.fornitore.values.astype(str)):
+            if fornitore != 'nan':
+                plot_data[fornitore] = sum_doses(vaccines[vaccines.fornitore == fornitore].groupby('data_somministrazione').sum().rolling(7).mean())
+    else:
+        region = vaccines[vaccines.area == area]
+        for fornitore in np.unique(region.fornitore.values.astype(str)):
+            plot_data[fornitore] = sum_doses(region[region.fornitore == fornitore].groupby('data_somministrazione').sum().rolling(7).mean())
+    legend = {
+        'orientation': "v",
+        'yanchor': "bottom",
+        'y': .65,  # top
+        'xanchor': "left",
+        'x': .1,
+    }
+    return plot_fill(plot_data.values(), plot_data.keys(), subplot_title="Somministrazioni vaccino per fornitore", cumulate=cumulate, legend=legend)
+
+
 def ages_timeseries(vaccines, area, cumulate=False):
     if area == 'Italia':
         twentys = vaccines[vaccines.fascia_anagrafica == '20-29'].groupby('data_somministrazione').sum()
@@ -1015,7 +1035,6 @@ def plot_fill(data_list, names, population_list=None, unita=100000, cumulate=Tru
         primary_title = f'Dati per {unita:,} abitanti'
     if not start:
         start = data.index[0]
-    print('----------------', data.index[-1])
     fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[start, data.index[-1] + np.timedelta64(1, 'D')])
     fig.update_yaxes(showgrid=True, title_text=primary_title, gridwidth=1, gridcolor='LightGrey') #, range=[0, max(maxs_perc)])
     fig.update_yaxes(showgrid=primary_grid, title_text='Totale', gridwidth=1, gridcolor='LightGrey', secondary_y=True)#, range=[0, max(maxs_tot)])

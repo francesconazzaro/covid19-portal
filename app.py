@@ -286,7 +286,13 @@ if what == 'Vaccini':
     col1, col2 = andamenti.beta_columns(2)
     col1.plotly_chart(plot.ages_timeseries(vaccines.raw, area, cumulate=cumulate), use_container_width=True)
     col2.plotly_chart(plot.categories_timeseries(vaccines.administration, area, cumulate=cumulate), use_container_width=True)
-    # col2.plotly_chart(plot.plot_fill(data_list, [''], population, unita=100, subplot_title=names[0]), use_container_width=True)
+
+    col1, col2 = andamenti.beta_columns(2)
+    data_list = [vaccines.administration.seconda_dose[vaccines.administration.area == area].rolling(7).mean()]
+    population = [vaccines.administration.popolazione[vaccines.administration.area == area]]
+    names = ['Popolazione vaccinata (ha ricevuto la seconda dose)']
+    col1.plotly_chart(plot.fornitori_timeseries(vaccines.raw, area, cumulate=cumulate), use_container_width=True)
+    col2.plotly_chart(plot.plot_fill(data_list, [''], population, cumulate=cumulate, unita=100, subplot_title=names[0]), use_container_width=True)
 
     st.header('Confronto tra regioni')
     col1, _, col2 = st.beta_columns([4, 1, 10])
@@ -301,7 +307,7 @@ if what == 'Vaccini':
     expander.write("Contact me on [Twitter](https://twitter.com/effenazzaro)")
     expander.write("The source code is on [GitHub](https://github.com/francesconazzaro/covid19-portal)")
     expander.write("Raw data")
-    expander.dataframe(vaccines.administration)
+    expander.dataframe(vaccines.raw)
 
 elif what == 'Contagio':
     explore_regions(area)
