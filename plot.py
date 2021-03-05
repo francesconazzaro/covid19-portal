@@ -525,7 +525,7 @@ def summary(data, what):
         autosize=True,
         hovermode="x unified",
     )
-    PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
+    PALETTE = get_default_palette()  # itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
     for i in fig['layout']['annotations']:
         i['font'] = dict(size=12, color=next(PALETTE))
     return fig
