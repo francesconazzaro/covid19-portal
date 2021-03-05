@@ -233,9 +233,9 @@ query_params = st.experimental_get_query_params()
 what = col1.selectbox('Seleziona un dato', ['Contagio', 'Vaccini'],
                       index=default_what_map[query_params.get('dato', ['contagio'])[0].lower()])
 
-default_area_index = 0
+default_area_index = -1
 for i, region_id in enumerate(import_data.REGIONS_MAP.keys()):
-    if region_id == query_params.get('area')[0]:
+    if region_id.lower() == query_params.get('area', ['IT'])[0].lower():
         default_area_index = i
         break
 
