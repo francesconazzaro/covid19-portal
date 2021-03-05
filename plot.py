@@ -797,51 +797,28 @@ def age_timeseries(vaccines, area, fascia_anagrafica, demography, unita=100, cum
             return data
     fig = make_subplots(1, subplot_titles=[f'Percentuale popolazione che ha ricevuto la seconda dose<br>nella fascia {fascia_anagrafica}'], specs=[[{"secondary_y": True}]])
     maxs_perc = []
-    maxs_tot = []
     for fornitore in np.unique(sorted(plot_data.fornitore)):
         fornitore_data = cum(plot_data[plot_data.fornitore == fornitore].seconda_dose.groupby('data_somministrazione').sum())
-        # bar_tot = go.Bar(
-        #     x=fornitore_data.index,
-        #     y=fornitore_data,
-        #     name=f'{fornitore}',
-        #     # showlegend=False,
-        #     legendgroup=f'{fornitore}',
-        #     marker_color=next(PALETTE_ALPHA)
-        # )
         percentage = fornitore_data / demography[area].loc[fascia_anagrafica] * unita
         bar_perc = go.Bar(
             x=percentage.index,
             y=percentage,
             name=f'{fornitore}',
-            hoverinfo='skip',
             legendgroup=f'{fornitore}',
             marker_color=next(PALETTE)
         )
         fig.add_trace(bar_perc, secondary_y=True)
         maxs_perc.append(percentage.max())
-        # fig.add_trace(bar_tot, secondary_y=True)
     total = cum(plot_data.groupby('data_somministrazione').sum().rolling(7).mean().seconda_dose)
     total_perc = total / demography[area].loc[fascia_anagrafica] * unita
     ax_perc = go.Scatter(
         x=total_perc.index,
         y=total_perc,
         name='Media su 7 giorni',
-        # mode='lines+markers',
-        hoverinfo='skip',
         legendgroup='Numero dosi consegnate cumulate',
         marker=dict(color=next(PALETTE))
     )
-    # ax_tot = go.Scatter(
-    #     x=total.index,
-    #     y=total,
-    #     name='Cumulate',
-    #     mode='lines+markers',
-    #     showlegend=False,
-    #     legendgroup='Numero dosi consegnate cumulate',
-    #     marker=dict(color=next(PALETTE_ALPHA))
-    # )
     fig.add_trace(ax_perc, secondary_y=True)
-    # fig.add_trace(ax_tot, secondary_y=True)
     fig.update_layout(
         legend={
             'orientation': "v",
@@ -866,7 +843,6 @@ def age_timeseries(vaccines, area, fascia_anagrafica, demography, unita=100, cum
     max_perc = sum(maxs_perc) + sum(maxs_perc) * .1
     fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[start, total.index[-1] + np.timedelta64(1, 'D')])
     fig.update_yaxes(showgrid=True, title_text=primary_title, gridwidth=1, gridcolor='LightGrey', range=[0, max_perc], secondary_y=True)
-    # fig.update_yaxes(showgrid=False, title_text='Totale', gridwidth=1, gridcolor='LightGrey', secondary_y=True, range=[0, max_tot])
     return fig
 
 
