@@ -41,6 +41,50 @@ REGIONS_MAP = {
 }
 
 
+ISTAT_REGION_MAP = {
+    "Valle d'Aosta": "Valle d'Aosta / Vallée d'Aoste",
+    "P.A. Bolzano": "Provincia Autonoma Bolzano / Bozen",
+    "P.A. Trento": "Provincia Autonoma Trento",
+    "Friuli Venezia Giulia": "Friuli-Venezia Giulia",
+}
+
+
+def demography(vaccines):
+    dem_in = pd.read_csv(os.path.join(CWD, 'resources/demografia.csv'))
+    dem_in = dem_in[dem_in.STATCIV2 == 99]
+    dem_in = dem_in[dem_in.SEXISTAT1 == 9]
+    dem_out = pd.DataFrame(index=['16-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80-89', '90+'])
+    for area in np.unique(vaccines.raw.area):
+        region = dem_in[dem_in.Territorio == ISTAT_REGION_MAP.get(area, area)]
+        for eta in range(20, 90, 10):
+            value = 0
+            for i in range(10):
+                eta_id = f'Y{eta + i}'
+                value += region[region.ETA1 == eta_id].Value.values[0]
+            fascia_id = f'{eta}-{eta + 9}'
+            try:
+                dem_out[area].loc[fascia_id] = value
+            except KeyError:
+                dem_out[area] = 0
+                dem_out[area].loc[fascia_id] = value
+        value = 0
+        for i in range(16, 20):
+            eta_id = f'Y{i}'
+            value += region[region.ETA1 == eta_id].Value.values[0]
+        fascia_id = '16-19'
+        dem_out[area].loc[fascia_id] = value
+
+        value = 0
+        for i in range(90, 100):
+            eta_id = f'Y{i}'
+            value += region[region.ETA1 == eta_id].Value.values[0]
+        eta_id = 'Y_GE100'
+        value += region[region.ETA1 == eta_id].Value.values[0]
+        fascia_id = '90+'
+        dem_out[area].loc[fascia_id] = value
+    return dem_out
+
+
 def population():
     popolazione_regioni = pd.read_csv(os.path.join(CWD, 'resources/popolazione_regioni_italiane.csv'), index_col='regione')
     popolazione = popolazione_regioni.TotaleMaschi + popolazione_regioni.TotaleFemmine

@@ -218,10 +218,29 @@ vaccine_repo = import_data.RepoReference(
     repo_url='https://github.com/italia/covid19-opendata-vaccini.git'
 )
 vaccines = import_data.vaccines(vaccine_repo, DATA)
+demography = import_data.demography(vaccines)
+
+default_what_map = {'infection': 0, 'vaccines': 1, 'contagio': 0, 'vaccini': 1}
+
+
+def sanitize(string):
+    return string.replace(' ', '-')
+
 
 col1, col2, _ = st.beta_columns([2, 2, 9])
-what = col1.selectbox('Seleziona un dato', ['Contagio', 'Vaccini'])
-area = col2.selectbox("Seleziona un'area", ['Italia'] + list(import_data.REGIONS_MAP.values()))
+query_params = st.experimental_get_query_params()
+
+what = col1.selectbox('Seleziona un dato', ['Contagio', 'Vaccini'],
+                      index=default_what_map[query_params.get('dato', ['contagio'])[0].lower()])
+
+default_area_index = 0
+for i, region_id in enumerate(import_data.REGIONS_MAP.keys()):
+    if region_id == query_params.get('area')[0]:
+        default_area_index = i
+        break
+
+area = col2.selectbox("Seleziona un'area", ['Italia'] + list(import_data.REGIONS_MAP.values()),
+                      index=default_area_index + 1)
 
 if what == 'Vaccini':
     st.header(f"Dati sulle vaccinazioni aggiornati al {vaccines.administration[vaccines.administration.area == 'Italia'].index[-1].date()}")
@@ -276,23 +295,22 @@ if what == 'Vaccini':
         col3.plotly_chart(plot.plot_category(vaccines.administration, area), use_container_width=True)
     with col4:
         col4.plotly_chart(plot.plot_fornitore(vaccines.deliveries, area), use_container_width=True)
-    andamenti = st.beta_expander("Dettaglio andamenti")
-    col1, col2 = andamenti.beta_columns([1, 5])
-    status = col1.selectbox('', ['Cumulato', 'Non cumulato'])
+    st.subheader(f"Dettaglio andamenti {area}")
+    col1, _, col2, _ = st.beta_columns([1, 2, 1, 2])
+    status = col1.selectbox('', ['Cumulato', 'Giornaliero'])
+    fascia_anagrafica = col2.selectbox('Seleziona fascia anagrafica', ['16-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80-89', '90+'], index=7)
     if status == 'Cumulato':
         cumulate = True
     else:
         cumulate = False
-    col1, col2 = andamenti.beta_columns(2)
+    col1, col2 = st.beta_columns(2)
     col1.plotly_chart(plot.ages_timeseries(vaccines.raw, area, cumulate=cumulate), use_container_width=True)
-    col2.plotly_chart(plot.categories_timeseries(vaccines.administration, area, cumulate=cumulate), use_container_width=True)
+    col2.plotly_chart(plot.age_timeseries(vaccines.raw, area, fascia_anagrafica, demography, cumulate=cumulate), use_container_width=True)
 
-    col1, col2 = andamenti.beta_columns(2)
-    data_list = [vaccines.administration.seconda_dose[vaccines.administration.area == area].rolling(7).mean()]
-    population = [vaccines.administration.popolazione[vaccines.administration.area == area]]
-    names = ['Popolazione vaccinata (ha ricevuto la seconda dose)']
-    col1.plotly_chart(plot.fornitori_timeseries(vaccines.raw, area, cumulate=cumulate), use_container_width=True)
-    col2.plotly_chart(plot.plot_fill(data_list, [''], population, cumulate=cumulate, unita=100, subplot_title=names[0]), use_container_width=True)
+    col1, col2 = st.beta_columns(2)
+    col2.plotly_chart(plot.fornitori_timeseries(vaccines.raw, area, cumulate=cumulate), use_container_width=True)
+    col1.plotly_chart(plot.categories_timeseries(vaccines.administration, area, cumulate=cumulate), use_container_width=True)
+    # col2.plotly_chart(plot.plot_fill(data_list, [''], population, cumulate=cumulate, unita=100, subplot_title=names[0]), use_container_width=True)
 
     st.header('Confronto tra regioni')
     col1, _, col2 = st.beta_columns([4, 1, 10])

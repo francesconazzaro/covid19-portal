@@ -152,7 +152,7 @@ def test_positivity_rate(data_in, country, rule):
     next(PALETTE)
     next(PALETTE)
     next(PALETTE)
-    fig = make_subplots(1, 1, subplot_titles=[rule])
+    fig = make_subplots(1, 1, subplot_titles=[rule], specs=[[{"secondary_y": True}]])
     # plot_data = region.nuovi_positivi.rolling(7).mean() / region.tamponi.diff().rolling(
     #     7).mean() * 100
     if PERCENTAGE_RULE[rule] == 'tamponi':
@@ -170,7 +170,7 @@ def test_positivity_rate(data_in, country, rule):
         legendgroup='postam',
         marker=dict(color=next(PALETTE)),
         fill='tozeroy',
-    ), 1, 1)
+    ), 1, 1, secondary_y=True)
     fig.add_trace(go.Scatter(
         x=plot_data_points.index,
         y=plot_data_points.values,
@@ -179,11 +179,11 @@ def test_positivity_rate(data_in, country, rule):
         legendgroup='postam',
         showlegend=False,
         marker=dict(color=next(PALETTE_ALPHA)),
-    ), 1, 1)
+    ), 1, 1, secondary_y=True)
     # fig.add_annotation(x=plot_data.index[-1], y=plot_data.values[-1], text='{:.2f}'.format(plot_data.values[-1]))
     # fig.add_annotation(x=plot_data.index[-1], y=plot_data.rolling(7).mean().values[-1], text='{:.2f}'.format(plot_data.rolling(7).mean().values[-1]))
     fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey')
-    fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[0, plot_data[-500:].max() + 1])
+    fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[0, plot_data[-500:].max() + 1], secondary_y=True)
     fig.update_layout(
         plot_bgcolor="white",
         margin=dict(t=30, l=10, b=10, r=10),
@@ -219,7 +219,7 @@ def get_fmt(rule):
         return '{:.0f}'
 
 
-def plot_average(plot_data, palette, fig, name, palette_alpha, fmt=None, start=None, stop=None, log=True):
+def plot_average(plot_data, palette, fig, name, palette_alpha, secondary_y=True, fmt=None, start=None, stop=None, log=True):
     line = dict(color=next(palette))
     fig.add_trace(go.Line(
         x=plot_data.index, y=plot_data.rolling(7).mean().values,
@@ -227,7 +227,7 @@ def plot_average(plot_data, palette, fig, name, palette_alpha, fmt=None, start=N
         legendgroup=name,
         line=line,
         mode='lines',
-    ), 1, 1)
+    ), 1, 1, secondary_y=secondary_y)
     line['dash'] = 'dot'
     # if start and stop:
     #     plot_fit(
@@ -248,7 +248,7 @@ def plot_average(plot_data, palette, fig, name, palette_alpha, fmt=None, start=N
         name=f'{name}',
         showlegend=False,
         marker=dict(color=next(palette_alpha))
-    ), 1, 1)
+    ), 1, 1, secondary_y=secondary_y)
     # if log is True:
     #     y = np.log10(plot_data.values[-1])
     # else:
@@ -261,7 +261,7 @@ def plot_average(plot_data, palette, fig, name, palette_alpha, fmt=None, start=N
 
 
 @st.cache(allow_output_mutation=True, show_spinner=False)
-def plot_selection(data_in, country, rule, start_positivi, start_ti, start_ricoveri, stop_positivi, stop_ti, stop_ricoveri, start_deceduti, stop_deceduti, log=True):
+def plot_selection(data_in, country, rule, start_positivi, start_ti, start_ricoveri, stop_positivi, stop_ti, stop_ricoveri, start_deceduti, stop_deceduti, log=True, secondary_y=True):
 
     PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
     PALETTE_ALPHA = itertools.cycle(get_matplotlib_cmap('tab10', bins=8, alpha=.3))
@@ -271,7 +271,7 @@ def plot_selection(data_in, country, rule, start_positivi, start_ti, start_ricov
     maxs = []
     mins = []
 
-    fig = make_subplots(1, 1, subplot_titles=[country])
+    fig = make_subplots(1, 1, subplot_titles=[country], specs=[[{"secondary_y": secondary_y}]])
     fmt = get_fmt(rule)
 
     plot_data = normalisation(data.nuovi_positivi, data.popolazione, rule)
@@ -287,6 +287,7 @@ def plot_selection(data_in, country, rule, start_positivi, start_ti, start_ricov
         palette_alpha=PALETTE_ALPHA,
         fmt=fmt,
         log=log,
+        secondary_y=secondary_y,
     )
 
     plot_data = normalisation(data.ricoverati_con_sintomi, data.popolazione, rule)
@@ -302,6 +303,7 @@ def plot_selection(data_in, country, rule, start_positivi, start_ti, start_ricov
         palette_alpha=PALETTE_ALPHA,
         fmt=fmt,
         log=log,
+        secondary_y=secondary_y,
     )
 
     plot_data = normalisation(data.terapia_intensiva, data.popolazione, rule)
@@ -317,6 +319,7 @@ def plot_selection(data_in, country, rule, start_positivi, start_ti, start_ricov
         palette_alpha=PALETTE_ALPHA,
         fmt=fmt,
         log=log,
+        secondary_y=secondary_y,
     )
 
     plot_data = normalisation(data.deceduti, data.popolazione, rule).diff()
@@ -332,6 +335,7 @@ def plot_selection(data_in, country, rule, start_positivi, start_ti, start_ricov
         palette_alpha=PALETTE_ALPHA,
         fmt=fmt,
         log=log,
+        secondary_y=secondary_y,
     )
     next(PALETTE_ALPHA)
     next(PALETTE)
@@ -348,6 +352,7 @@ def plot_selection(data_in, country, rule, start_positivi, start_ti, start_ricov
         palette_alpha=PALETTE_ALPHA,
         fmt=fmt,
         log=log,
+        secondary_y=secondary_y,
     )
 
     if log is True:
@@ -359,7 +364,7 @@ def plot_selection(data_in, country, rule, start_positivi, start_ti, start_ricov
         minimum = np.nanmin(mins)
         yscale = 'linear'
     fig.update_xaxes(row=1, col=1, showgrid=True, gridwidth=1, gridcolor='LightPink')
-    fig.update_yaxes(row=1, col=1, type=yscale, showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[minimum, maximum], showexponent='all', exponentformat='power')
+    fig.update_yaxes(row=1, col=1, type=yscale, showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[minimum, maximum], showexponent='all', exponentformat='power', secondary_y=secondary_y)
     fig.update_layout(
         plot_bgcolor="white",
         margin=dict(t=70, l=0, b=0, r=0),
@@ -575,7 +580,7 @@ def comparison(data, offset=7):
 
 @st.cache(show_spinner=False)
 def mobility_data(mobility_plot_data, variable, variables):
-    fig = make_subplots(1, subplot_titles=[variable])
+    fig = make_subplots(1, subplot_titles=[variable], specs=[[{"secondary_y": True}]])
     PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
     for v in variables:
         if v == variable:
@@ -585,7 +590,7 @@ def mobility_data(mobility_plot_data, variable, variables):
     ax = go.Scatter(x=mobility_plot_data.rolling(7).mean().index,
                     y=getattr(mobility_plot_data, variable).rolling(7).mean(), fill='tozeroy',
                     name='', marker=dict(color=next(PALETTE)))
-    fig.add_trace(ax)
+    fig.add_trace(ax, secondary_y=True)
     fig.update_layout(
         plot_bgcolor="white",
         margin=dict(t=50, l=10, b=10, r=10),
@@ -603,7 +608,7 @@ def mobility_data(mobility_plot_data, variable, variables):
         }
     )
     fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey')
-    fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey')
+    fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey', secondary_y=True)
 
     return fig
 
@@ -725,11 +730,11 @@ def categories_timeseries(vaccines, area, cumulate=False):
     legend = {
         'orientation': "v",
         'yanchor': "bottom",
-        'y': .50,  # top
+        'y': .58,  # top
         'xanchor': "right",
-        'x': .5,
+        'x': .4,
     }
-    return plot_fill([data_list[i] for i in order], [names[i] for i in order], population_list=populations, cumulate=cumulate, subplot_title='Somministrazioni vaccino per categoria', legend=legend)
+    return plot_fill([data_list[i] for i in order], [names[i] for i in order], cumulate=cumulate, subplot_title='Somministrazioni vaccino per categoria', legend=legend)
 
 
 def sum_doses(data):
@@ -749,15 +754,104 @@ def fornitori_timeseries(vaccines, area, cumulate=False):
     legend = {
         'orientation': "v",
         'yanchor': "bottom",
-        'y': .65,  # top
+        'y': .75,  # top
         'xanchor': "left",
-        'x': .1,
+        'x': .0,
     }
     return plot_fill(plot_data.values(), plot_data.keys(), subplot_title="Somministrazioni vaccino per fornitore", cumulate=cumulate, legend=legend)
 
 
+def age_timeseries(vaccines, area, fascia_anagrafica, demography, unita=100, cumulate=False):
+    PALETTE = itertools.cycle(plotly.colors.qualitative.Plotly)#itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
+    PALETTE_ALPHA = itertools.cycle(plotly.colors.qualitative.Plotly)#itertools.cycle(get_matplotlib_cmap('tab10', bins=8, alpha=1))
+    if area == 'Italia':
+        plot_data = vaccines[vaccines.fascia_anagrafica == fascia_anagrafica]
+    else:
+        region = vaccines[vaccines.area == area]
+        plot_data = region[region.fascia_anagrafica == fascia_anagrafica]
+    def cum(data):
+        if cumulate:
+            return data.cumsum()
+        else:
+            return data
+    fig = make_subplots(1, subplot_titles=[f'Percentuale popolazione che ha ricevuto la seconda dose<br>nella fascia {fascia_anagrafica}'], specs=[[{"secondary_y": True}]])
+    maxs_perc = []
+    maxs_tot = []
+    for fornitore in np.unique(sorted(plot_data.fornitore)):
+        fornitore_data = cum(plot_data[plot_data.fornitore == fornitore].seconda_dose.groupby('data_somministrazione').sum())
+        # bar_tot = go.Bar(
+        #     x=fornitore_data.index,
+        #     y=fornitore_data,
+        #     name=f'{fornitore}',
+        #     # showlegend=False,
+        #     legendgroup=f'{fornitore}',
+        #     marker_color=next(PALETTE_ALPHA)
+        # )
+        percentage = fornitore_data / demography[area].loc[fascia_anagrafica] * unita
+        bar_perc = go.Bar(
+            x=percentage.index,
+            y=percentage,
+            name=f'{fornitore}',
+            hoverinfo='skip',
+            legendgroup=f'{fornitore}',
+            marker_color=next(PALETTE)
+        )
+        fig.add_trace(bar_perc, secondary_y=True)
+        maxs_perc.append(percentage.max())
+        # fig.add_trace(bar_tot, secondary_y=True)
+    total = cum(plot_data.groupby('data_somministrazione').sum().rolling(7).mean().seconda_dose)
+    total_perc = total / demography[area].loc[fascia_anagrafica] * unita
+    ax_perc = go.Scatter(
+        x=total_perc.index,
+        y=total_perc,
+        name='Media su 7 giorni',
+        # mode='lines+markers',
+        hoverinfo='skip',
+        legendgroup='Numero dosi consegnate cumulate',
+        marker=dict(color=next(PALETTE))
+    )
+    # ax_tot = go.Scatter(
+    #     x=total.index,
+    #     y=total,
+    #     name='Cumulate',
+    #     mode='lines+markers',
+    #     showlegend=False,
+    #     legendgroup='Numero dosi consegnate cumulate',
+    #     marker=dict(color=next(PALETTE_ALPHA))
+    # )
+    fig.add_trace(ax_perc, secondary_y=True)
+    # fig.add_trace(ax_tot, secondary_y=True)
+    fig.update_layout(
+        legend={
+            'orientation': "v",
+            'yanchor': "bottom",
+            'y': .70,  # top
+            'xanchor': "right",
+            'x': .2,
+        }, barmode='stack', hovermode="x unified"
+    )
+    fig.update_layout(
+        plot_bgcolor="white",
+        margin=dict(t=50,  l=10, b=10, r=10),
+        yaxis_title='',
+        height=500,
+        autosize=True,
+    )
+    if unita == 100:
+        primary_title = 'Percentuale'
+    else:
+        primary_title = f'Dati per {unita:,} abitanti'
+    start = total.index[0]
+    max_perc = sum(maxs_perc) + sum(maxs_perc) * .1
+    fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[start, total.index[-1] + np.timedelta64(1, 'D')])
+    fig.update_yaxes(showgrid=True, title_text=primary_title, gridwidth=1, gridcolor='LightGrey', range=[0, max_perc], secondary_y=True)
+    # fig.update_yaxes(showgrid=False, title_text='Totale', gridwidth=1, gridcolor='LightGrey', secondary_y=True, range=[0, max_tot])
+    return fig
+
+
 def ages_timeseries(vaccines, area, cumulate=False):
     if area == 'Italia':
+        child = vaccines[vaccines.fascia_anagrafica == '16-19'].groupby('data_somministrazione').sum()
         twentys = vaccines[vaccines.fascia_anagrafica == '20-29'].groupby('data_somministrazione').sum()
         thirtys = vaccines[vaccines.fascia_anagrafica == '30-39'].groupby('data_somministrazione').sum()
         fortys = vaccines[vaccines.fascia_anagrafica == '40-49'].groupby('data_somministrazione').sum()
@@ -765,8 +859,10 @@ def ages_timeseries(vaccines, area, cumulate=False):
         sixtys = vaccines[vaccines.fascia_anagrafica == '60-69'].groupby('data_somministrazione').sum()
         seventys = vaccines[vaccines.fascia_anagrafica == '70-79'].groupby('data_somministrazione').sum()
         eightys = vaccines[vaccines.fascia_anagrafica == '80-89'].groupby('data_somministrazione').sum()
+        nineties = vaccines[vaccines.fascia_anagrafica == '90+'].groupby('data_somministrazione').sum()
     else:
         region = vaccines[vaccines.area == area]
+        child = region[region.fascia_anagrafica == '16-19'].groupby('data_somministrazione').sum()
         twentys = region[region.fascia_anagrafica == '20-29'].groupby('data_somministrazione').sum()
         thirtys = region[region.fascia_anagrafica == '30-39'].groupby('data_somministrazione').sum()
         fortys = region[region.fascia_anagrafica == '40-49'].groupby('data_somministrazione').sum()
@@ -774,21 +870,25 @@ def ages_timeseries(vaccines, area, cumulate=False):
         sixtys = region[region.fascia_anagrafica == '60-69'].groupby('data_somministrazione').sum()
         seventys = region[region.fascia_anagrafica == '70-79'].groupby('data_somministrazione').sum()
         eightys = region[region.fascia_anagrafica == '80-89'].groupby('data_somministrazione').sum()
+        nineties = region[region.fascia_anagrafica == '90+'].groupby('data_somministrazione').sum()
     data_list = [
+        sum_doses(child).rolling(7).mean(),
         sum_doses(twentys).rolling(7).mean(),
         sum_doses(thirtys).rolling(7).mean(),
         sum_doses(fortys).rolling(7).mean(),
         sum_doses(fiftys).rolling(7).mean(),
         sum_doses(sixtys).rolling(7).mean(),
         sum_doses(seventys).rolling(7).mean(),
-        sum_doses(eightys).rolling(7).mean()]
-    names = ['20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80-89']
+        sum_doses(eightys).rolling(7).mean(),
+        sum_doses(nineties).rolling(7).mean(),
+    ]
+    names = ['16-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80-89', '90+']
     legend = {
         'orientation': "v",
         'yanchor': "bottom",
-        'y': .45,  # top
+        'y': .35,  # top
         'xanchor': "left",
-        'x': .1,
+        'x': 0,
     }
     return plot_fill(data_list, names, subplot_title="Somministrazioni vaccino per fascia d'età", cumulate=cumulate, legend=legend)
 
@@ -1116,8 +1216,8 @@ def plot_deliveries(deliveries, population, unita=100, subplot_title='', start=N
     if not start:
         start = cumsum.index[0]
     fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[start, cumsum.index[-1] + np.timedelta64(1, 'D')])
-    fig.update_yaxes(showgrid=True, title_text=primary_title, gridwidth=1, gridcolor='LightGrey')#, range=[0, max(maxs_perc)])
-    fig.update_yaxes(showgrid=False, title_text='Totale', gridwidth=1, gridcolor='LightGrey', secondary_y=True)#, range=[0, max(maxs_tot)])
+    fig.update_yaxes(showgrid=True, title_text=primary_title, gridwidth=1, gridcolor='LightGrey', range=[0, max(maxs_perc)])
+    fig.update_yaxes(showgrid=False, title_text='Totale', gridwidth=1, gridcolor='LightGrey', secondary_y=True, range=[0, max(maxs_tot)])
     return fig
 
 
@@ -1199,14 +1299,14 @@ def cumulate_and_not(data_list, names, population_list, unita=100, subplot_title
 
 
 @st.cache(allow_output_mutation=True, show_spinner=False)
-def plot_variables(data_list, names, rule=None, popolazione=None, title='', yaxis_title='', xaxes_range=None, nrows=1):
+def plot_variables(data_list, names, rule=None, popolazione=None, title='', yaxis_title='', xaxes_range=None, secondary_y=True, nrows=1):
     PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
     PALETTE_ALPHA = itertools.cycle(get_matplotlib_cmap('tab10', bins=8, alpha=.3))
 
     maxs = []
     mins = []
 
-    fig = make_subplots(1, 1, subplot_titles=[title])
+    fig = make_subplots(1, 1, subplot_titles=[title], specs=[[{"secondary_y": True}]])
     for data, name in zip(data_list, names):
         if rule is not None:
             plot_data = normalisation(data, popolazione, rule)
@@ -1221,6 +1321,7 @@ def plot_variables(data_list, names, rule=None, popolazione=None, title='', yaxi
             name=name,
             palette=PALETTE,
             palette_alpha=PALETTE_ALPHA,
+            secondary_y=secondary_y,
         )
 
         maximum = np.nanmax(maxs)
@@ -1229,7 +1330,7 @@ def plot_variables(data_list, names, rule=None, popolazione=None, title='', yaxi
     if xaxes_range is None:
         xaxes_range = [plot_data.index[0], plot_data.index[-1] + np.timedelta64(1, 'D')]
     fig.update_xaxes(row=1, col=1, showgrid=True, gridwidth=1, gridcolor='LightPink', range=xaxes_range)
-    fig.update_yaxes(row=1, col=1, type=yscale, showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[minimum, maximum])#, showexponent='all', exponentformat='power')
+    fig.update_yaxes(row=1, col=1, type=yscale, showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[minimum, maximum], secondary_y=secondary_y)#, showexponent='all', exponentformat='power')
     fig.update_layout(
         plot_bgcolor="white",
         margin=dict(t=70, l=0, b=0, r=0),
