@@ -1,4 +1,4 @@
-
+import copy
 import datetime
 import itertools
 import numpy as np
@@ -64,6 +64,27 @@ def add_events(fig, events=ITALY_EVENTS, start=None, stop=None, offset=0, **kwar
 
 
 P0 = (np.datetime64("2020-02-12", "s"), np.timedelta64(48 * 60 * 60, "s"))
+
+
+def hex_to_rgb(value):
+    value = value.lstrip('#')
+    lv = len(value)
+    return list(int(value[i:i + lv // 3], 16) for i in range(0, lv, lv // 3))
+
+
+def get_default_palette(alpha=False):
+    hex_palette = copy.deepcopy(plotly.colors.qualitative.Plotly)
+    hex_palette.pop(3)
+    rgb_palette = []
+    for hex_color in hex_palette:
+        rgb_color = hex_to_rgb(hex_color)
+        if alpha:
+            rgb_color.append(.3)
+            rgb_palette.append('rgba({},{},{},{})'.format(*rgb_color))
+        else:
+            rgb_palette.append(hex_color)
+
+    return itertools.cycle(rgb_palette)
 
 
 def linear_fit(data, start=None, stop=None, p0=P0):
@@ -147,10 +168,9 @@ def get_matplotlib_cmap(cmap_name, bins, alpha=1):
 @st.cache(allow_output_mutation=True, show_spinner=False)
 def test_positivity_rate(data_in, country, rule):
     data = data_in[country]
-    PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
-    PALETTE_ALPHA = itertools.cycle(get_matplotlib_cmap('tab10', bins=8, alpha=.3))
-    next(PALETTE)
-    next(PALETTE)
+    PALETTE = get_default_palette() #itertools.cycle(plotly.colors.qualitative.Plotly) #get_matplotlib_cmap('tab10', bins=8))
+    PALETTE_ALPHA = get_default_palette(True)
+    next(PALETTE_ALPHA)
     next(PALETTE)
     fig = make_subplots(1, 1, subplot_titles=[rule], specs=[[{"secondary_y": True}]])
     # plot_data = region.nuovi_positivi.rolling(7).mean() / region.tamponi.diff().rolling(
@@ -263,8 +283,8 @@ def plot_average(plot_data, palette, fig, name, palette_alpha, secondary_y=True,
 @st.cache(allow_output_mutation=True, show_spinner=False)
 def plot_selection(data_in, country, rule, start_positivi, start_ti, start_ricoveri, stop_positivi, stop_ti, stop_ricoveri, start_deceduti, stop_deceduti, log=True, secondary_y=True):
 
-    PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
-    PALETTE_ALPHA = itertools.cycle(get_matplotlib_cmap('tab10', bins=8, alpha=.3))
+    PALETTE = get_default_palette()  # itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
+    PALETTE_ALPHA = get_default_palette(True)  # itertools.cycle(get_matplotlib_cmap('tab10', bins=8, alpha=.3))
 
     data = data_in[country]
 
@@ -290,15 +310,15 @@ def plot_selection(data_in, country, rule, start_positivi, start_ti, start_ricov
         secondary_y=secondary_y,
     )
 
-    plot_data = normalisation(data.ricoverati_con_sintomi, data.popolazione, rule)
+    plot_data = normalisation(data.deceduti, data.popolazione, rule).diff()
     maxs.append(plot_data.max())
     mins.append((plot_data.rolling(7).mean()[20:] + .001).min())
     plot_average(
         plot_data,
         fig=fig,
-        name='Ricoveri',
-        start=start_ricoveri,
-        stop=stop_ricoveri,
+        name='Deceduti',
+        start=start_deceduti,
+        stop=stop_deceduti,
         palette=PALETTE,
         palette_alpha=PALETTE_ALPHA,
         fmt=fmt,
@@ -322,21 +342,22 @@ def plot_selection(data_in, country, rule, start_positivi, start_ti, start_ricov
         secondary_y=secondary_y,
     )
 
-    plot_data = normalisation(data.deceduti, data.popolazione, rule).diff()
+    plot_data = normalisation(data.ricoverati_con_sintomi, data.popolazione, rule)
     maxs.append(plot_data.max())
     mins.append((plot_data.rolling(7).mean()[20:] + .001).min())
     plot_average(
         plot_data,
         fig=fig,
-        name='Deceduti',
-        start=start_deceduti,
-        stop=stop_deceduti,
+        name='Ricoveri',
+        start=start_ricoveri,
+        stop=stop_ricoveri,
         palette=PALETTE,
         palette_alpha=PALETTE_ALPHA,
         fmt=fmt,
         log=log,
         secondary_y=secondary_y,
     )
+
     next(PALETTE_ALPHA)
     next(PALETTE)
     plot_data = normalisation(data.ingressi_terapia_intensiva, data.popolazione, rule)
@@ -404,7 +425,7 @@ def vaccines_summary(vaccines, what):
     fig = make_subplots(4, 5, shared_xaxes='all', shared_yaxes='all', subplot_titles=titles,
                         vertical_spacing=.08)
     minus = 0
-    PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
+    PALETTE = itertools.cycle(plotly.colors.qualitative.Plotly) #get_matplotlib_cmap('tab10', bins=8))
     maxs = []
     italia = vaccines.administration[vaccines.administration.area == 'Italia']
     plot_data_italy, _ = vaccines_summary_plot_data(italia, what)
@@ -435,7 +456,7 @@ def vaccines_summary(vaccines, what):
         autosize=True,
         hovermode="x unified",
     )
-    PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
+    PALETTE = itertools.cycle(plotly.colors.qualitative.Plotly) #get_matplotlib_cmap('tab10', bins=8))
     for i in fig['layout']['annotations']:
         i['font'] = dict(size=12, color=next(PALETTE))
     return fig
@@ -476,7 +497,7 @@ def summary(data, what):
     fig = make_subplots(4, 5, shared_xaxes='all', shared_yaxes='all', subplot_titles=titles,
                         vertical_spacing=.08)
     minus = 0
-    PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
+    PALETTE = get_default_palette()  # itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
     maxs = []
     plot_data_italy, _ = summary_plot_data(data['Italia'], what)
     for i, name in enumerate(titles):
@@ -581,7 +602,7 @@ def comparison(data, offset=7):
 @st.cache(show_spinner=False)
 def mobility_data(mobility_plot_data, variable, variables):
     fig = make_subplots(1, subplot_titles=[variable], specs=[[{"secondary_y": True}]])
-    PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
+    PALETTE = itertools.cycle(plotly.colors.qualitative.Plotly) #get_matplotlib_cmap('tab10', bins=8))
     for v in variables:
         if v == variable:
             break
@@ -1143,8 +1164,8 @@ def plot_fill(data_list, names, population_list=None, unita=100000, cumulate=Tru
 
 @st.cache(allow_output_mutation=True, show_spinner=False)
 def plot_deliveries(deliveries, population, unita=100, subplot_title='', start=None, height=500):
-    PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
-    PALETTE_ALPHA = itertools.cycle(get_matplotlib_cmap('tab10', bins=8, alpha=1))
+    PALETTE_1 = get_default_palette()  # itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
+    PALETTE_2 = get_default_palette()  # itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
     fig = make_subplots(1, subplot_titles=[subplot_title], specs=[[{"secondary_y": True}]])
     maxs_perc = []
     maxs_tot = []
@@ -1158,7 +1179,7 @@ def plot_deliveries(deliveries, population, unita=100, subplot_title='', start=N
             name=f'{fornitore}',
             showlegend=False,
             legendgroup=f'{fornitore}',
-            marker_color=next(PALETTE_ALPHA)
+            marker_color=next(PALETTE_1)
         )
         percentage = fornitore_data / population * unita
         bar_perc = go.Bar(
@@ -1166,8 +1187,8 @@ def plot_deliveries(deliveries, population, unita=100, subplot_title='', start=N
             y=percentage,
             name=f'{fornitore}',
             hoverinfo='skip',
-            legendgroup=f'Dosi consegnate da {fornitore}',
-            marker_color=next(PALETTE)
+            legendgroup=f'{fornitore}',
+            marker_color=next(PALETTE_2)
         )
         fig.add_trace(bar_perc)
         fig.add_trace(bar_tot, secondary_y=True)
@@ -1178,7 +1199,7 @@ def plot_deliveries(deliveries, population, unita=100, subplot_title='', start=N
         mode='lines+markers',
         hoverinfo='skip',
         legendgroup='Numero dosi consegnate cumulate',
-        marker=dict(color=next(PALETTE))
+        marker=dict(color=next(PALETTE_1))
     )
     ax_tot = go.Scatter(
         x=cumsum.index,
@@ -1187,7 +1208,7 @@ def plot_deliveries(deliveries, population, unita=100, subplot_title='', start=N
         mode='lines+markers',
         showlegend=False,
         legendgroup='Numero dosi consegnate cumulate',
-        marker=dict(color=next(PALETTE_ALPHA))
+        marker=dict(color=next(PALETTE_2))
     )
     fig.add_trace(ax_perc)
     fig.add_trace(ax_tot, secondary_y=True)
