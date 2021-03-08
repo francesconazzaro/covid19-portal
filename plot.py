@@ -742,7 +742,7 @@ def categories_timeseries(vaccines, area, cumulate=False):
     names = []
     maxs = []
     for category in CATEGORIES:
-        plot_data = getattr(data_area, category['name']).rolling(7).mean()
+        plot_data = getattr(data_area, category['name'])
         data_list.append(plot_data)
         maxs.append(plot_data.sum())
         populations.append(population)
@@ -767,11 +767,11 @@ def fornitori_timeseries(vaccines, area, cumulate=False):
     if area == 'Italia':
         for fornitore in np.unique(vaccines.fornitore.values.astype(str)):
             if fornitore != 'nan':
-                plot_data[fornitore] = sum_doses(vaccines[vaccines.fornitore == fornitore].groupby('data_somministrazione').sum().rolling(7).mean())
+                plot_data[fornitore] = sum_doses(vaccines[vaccines.fornitore == fornitore].groupby('data_somministrazione').sum())
     else:
         region = vaccines[vaccines.area == area]
         for fornitore in np.unique(region.fornitore.values.astype(str)):
-            plot_data[fornitore] = sum_doses(region[region.fornitore == fornitore].groupby('data_somministrazione').sum().rolling(7).mean())
+            plot_data[fornitore] = sum_doses(region[region.fornitore == fornitore].groupby('data_somministrazione').sum())
     legend = {
         'orientation': "v",
         'yanchor': "bottom",
@@ -870,15 +870,15 @@ def ages_timeseries(vaccines, area, cumulate=False):
         eightys = region[region.fascia_anagrafica == '80-89'].groupby('data_somministrazione').sum()
         nineties = region[region.fascia_anagrafica == '90+'].groupby('data_somministrazione').sum()
     data_list = [
-        sum_doses(child).rolling(7).mean(),
-        sum_doses(twentys).rolling(7).mean(),
-        sum_doses(thirtys).rolling(7).mean(),
-        sum_doses(fortys).rolling(7).mean(),
-        sum_doses(fiftys).rolling(7).mean(),
-        sum_doses(sixtys).rolling(7).mean(),
-        sum_doses(seventys).rolling(7).mean(),
-        sum_doses(eightys).rolling(7).mean(),
-        sum_doses(nineties).rolling(7).mean(),
+        sum_doses(child),
+        sum_doses(twentys),
+        sum_doses(thirtys),
+        sum_doses(fortys),
+        sum_doses(fiftys),
+        sum_doses(sixtys),
+        sum_doses(seventys),
+        sum_doses(eightys),
+        sum_doses(nineties),
     ]
     names = ['16-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80-89', '90+']
     legend = {
@@ -1082,6 +1082,8 @@ def plot_fill(data_list, names, population_list=None, unita=100000, cumulate=Tru
     for i, (data, population, name) in enumerate(zip(data_list, population_list, names)):
         if cumulate:
             data = data.cumsum()
+        else:
+            data = data.rolling(7).mean()
         if population is not None:
             percentage_cumsum = data / population * unita
             ax_perc = go.Scatter(
