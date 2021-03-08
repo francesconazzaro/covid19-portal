@@ -752,8 +752,8 @@ def categories_timeseries(vaccines, area, cumulate=False):
         'orientation': "v",
         'yanchor': "bottom",
         'y': .58,  # top
-        'xanchor': "right",
-        'x': .4,
+        'xanchor': "left",
+        'x': .0,
     }
     return plot_fill([data_list[i] for i in order], [names[i] for i in order], cumulate=cumulate, subplot_title=f'{area}: Somministrazioni vaccino per categoria', legend=legend)
 
@@ -784,7 +784,7 @@ def fornitori_timeseries(vaccines, area, cumulate=False):
 
 def age_timeseries(vaccines, area, fascia_anagrafica, demography, dose, unita=100, cumulate=False):
     PALETTE = itertools.cycle(plotly.colors.qualitative.Plotly)#itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
-    title = f'{area}: Percentuale popolazione che ha ricevuto la {dose}<br>nella fascia {fascia_anagrafica}'
+    title = f'{area}: Percentuale popolazione che ha ricevuto<br>la {dose} nella fascia {fascia_anagrafica}'
     dose = dose.replace(' ', '_')
     if area == 'Italia':
         plot_data = vaccines[vaccines.fascia_anagrafica == fascia_anagrafica]
@@ -825,8 +825,8 @@ def age_timeseries(vaccines, area, fascia_anagrafica, demography, dose, unita=10
             'orientation': "v",
             'yanchor': "bottom",
             'y': .70,  # top
-            'xanchor': "right",
-            'x': .2,
+            'xanchor': "left",
+            'x': .0,
         }, barmode='stack', hovermode="x unified"
     )
     fig.update_layout(
@@ -954,10 +954,10 @@ def plot_category(vaccines, area):
     fig.update_layout(legend={
         'orientation': 'h',
         'yanchor': "bottom",
-        'y': -.65,  # top
+        'y': -.55,  # top
         'xanchor': "center",
         'x': .5,
-        }, height=550
+        }, height=500
 )
     return fig
 
@@ -1113,8 +1113,8 @@ def plot_fill(data_list, names, population_list=None, unita=100000, cumulate=Tru
             'orientation': "v",
             'yanchor': "bottom",
             'y': .85,  # top
-            'xanchor': "right",
-            'x': .5,
+            'xanchor': "left",
+            'x': .0,
         }
     fig.update_layout(
         legend=legend
@@ -1196,8 +1196,8 @@ def plot_deliveries(deliveries, population, unita=100, subplot_title='', start=N
             'orientation': "v",
             'yanchor': "bottom",
             'y': .70,  # top
-            'xanchor': "right",
-            'x': .5,
+            'xanchor': "left",
+            'x': .0,
         }, barmode='stack', hovermode="x unified"
     )
     fig.update_layout(
