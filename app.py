@@ -1,3 +1,4 @@
+import traceback
 
 import streamlit as st
 
@@ -11,8 +12,15 @@ plugins.google_analytics()
 
 
 st.set_page_config(layout='wide', initial_sidebar_state='collapsed')
-repo_reference = import_data.RepoReference()
-DATA, DATA_TI, DATA_RIC = import_data.covid19(repo_reference)
+try:
+    repo_reference = import_data.RepoReference()
+    DATA, DATA_TI, DATA_RIC = import_data.covid19(repo_reference)
+except:
+    st.error(
+        "L'applicazione è in fase di aggiornamento. Prova a [riaggiornare](/) la pagina tra qualche secondo.")
+    error = st.beta_expander("Dettagli dell'errore")
+    error.error(traceback.format_exc())
+    st.stop()
 
 fmt = "%d-%m-%Y"
 
@@ -213,12 +221,18 @@ LINE = """<style>
 
 st.title('COVID-19: Situazione in Italia')
 st.text("")
-vaccine_repo = import_data.RepoReference(
-    repo_path='covid19-opendata-vaccini',
-    repo_url='https://github.com/italia/covid19-opendata-vaccini.git'
-)
-vaccines = import_data.vaccines(vaccine_repo, DATA)
-demography = import_data.demography(vaccines)
+try:
+    vaccine_repo = import_data.RepoReference(
+        repo_path='covid19-opendata-vaccini',
+        repo_url='https://github.com/italia/covid19-opendata-vaccini.git'
+    )
+    vaccines = import_data.vaccines(vaccine_repo, DATA)
+    demography = import_data.demography(vaccines)
+except:
+    st.error("L'applicazione è in fase di aggiornamento. Prova a [riaggiornare](/) la pagina tra qualche secondo.")
+    error = st.beta_expander("Dettagli dell'errore")
+    error.error(traceback.format_exc())
+    st.stop()
 
 default_what_map = {'infection': 0, 'vaccines': 1, 'contagio': 0, 'vaccini': 1}
 
