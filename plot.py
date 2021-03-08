@@ -172,7 +172,7 @@ def test_positivity_rate(data_in, country, rule):
     PALETTE_ALPHA = get_default_palette(True)
     next(PALETTE_ALPHA)
     next(PALETTE)
-    fig = make_subplots(1, 1, subplot_titles=[rule], specs=[[{"secondary_y": True}]])
+    fig = make_subplots(1, 1, subplot_titles=[f'{country}: {rule}'], specs=[[{"secondary_y": True}]])
     # plot_data = region.nuovi_positivi.rolling(7).mean() / region.tamponi.diff().rolling(
     #     7).mean() * 100
     if PERCENTAGE_RULE[rule] == 'tamponi':
@@ -755,7 +755,7 @@ def categories_timeseries(vaccines, area, cumulate=False):
         'xanchor': "right",
         'x': .4,
     }
-    return plot_fill([data_list[i] for i in order], [names[i] for i in order], cumulate=cumulate, subplot_title='Somministrazioni vaccino per categoria', legend=legend)
+    return plot_fill([data_list[i] for i in order], [names[i] for i in order], cumulate=cumulate, subplot_title=f'{area}: Somministrazioni vaccino per categoria', legend=legend)
 
 
 def sum_doses(data):
@@ -779,12 +779,13 @@ def fornitori_timeseries(vaccines, area, cumulate=False):
         'xanchor': "left",
         'x': .0,
     }
-    return plot_fill(plot_data.values(), plot_data.keys(), subplot_title="Somministrazioni vaccino per fornitore", cumulate=cumulate, legend=legend)
+    return plot_fill(plot_data.values(), plot_data.keys(), subplot_title=f"{area}: Somministrazioni vaccino per fornitore", cumulate=cumulate, legend=legend)
 
 
-def age_timeseries(vaccines, area, fascia_anagrafica, demography, unita=100, cumulate=False):
+def age_timeseries(vaccines, area, fascia_anagrafica, demography, dose, unita=100, cumulate=False):
     PALETTE = itertools.cycle(plotly.colors.qualitative.Plotly)#itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
-    PALETTE_ALPHA = itertools.cycle(plotly.colors.qualitative.Plotly)#itertools.cycle(get_matplotlib_cmap('tab10', bins=8, alpha=1))
+    title = f'{area}: Percentuale popolazione che ha ricevuto la {dose}<br>nella fascia {fascia_anagrafica}'
+    dose = dose.replace(' ', '_')
     if area == 'Italia':
         plot_data = vaccines[vaccines.fascia_anagrafica == fascia_anagrafica]
     else:
@@ -795,10 +796,10 @@ def age_timeseries(vaccines, area, fascia_anagrafica, demography, unita=100, cum
             return data.cumsum()
         else:
             return data
-    fig = make_subplots(1, subplot_titles=[f'Percentuale popolazione che ha ricevuto la seconda dose<br>nella fascia {fascia_anagrafica}'], specs=[[{"secondary_y": True}]])
+    fig = make_subplots(1, subplot_titles=[title], specs=[[{"secondary_y": True}]])
     maxs_perc = []
     for fornitore in np.unique(sorted(plot_data.fornitore)):
-        fornitore_data = cum(plot_data[plot_data.fornitore == fornitore].seconda_dose.groupby('data_somministrazione').sum())
+        fornitore_data = cum(getattr(plot_data[plot_data.fornitore == fornitore], dose).groupby('data_somministrazione').sum())
         percentage = fornitore_data / demography[area].loc[fascia_anagrafica] * unita
         bar_perc = go.Bar(
             x=percentage.index,
@@ -809,7 +810,7 @@ def age_timeseries(vaccines, area, fascia_anagrafica, demography, unita=100, cum
         )
         fig.add_trace(bar_perc, secondary_y=True)
         maxs_perc.append(percentage.max())
-    total = cum(plot_data.groupby('data_somministrazione').sum().rolling(7).mean().seconda_dose)
+    total = cum(getattr(plot_data.groupby('data_somministrazione').sum().rolling(7).mean(), dose))
     total_perc = total / demography[area].loc[fascia_anagrafica] * unita
     ax_perc = go.Scatter(
         x=total_perc.index,
@@ -887,7 +888,7 @@ def ages_timeseries(vaccines, area, cumulate=False):
         'xanchor': "left",
         'x': 0,
     }
-    return plot_fill(data_list, names, subplot_title="Somministrazioni vaccino per fascia d'età", cumulate=cumulate, legend=legend)
+    return plot_fill(data_list, names, subplot_title=f"{area}: Somministrazioni vaccino per fascia d'età", cumulate=cumulate, legend=legend)
 
 
 @st.cache(allow_output_mutation=True, show_spinner=False)
