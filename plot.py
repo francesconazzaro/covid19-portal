@@ -1,17 +1,18 @@
+import builtins
 import copy
 import datetime
 import itertools
+
 import numpy as np
-import scipy.optimize
-import scipy.stats
-from matplotlib import cm
-import streamlit as st
-
-import import_data
-
 import plotly
 import plotly.graph_objects as go
+import scipy.optimize
+import scipy.stats
+import streamlit as st
+from matplotlib import cm
 from plotly.subplots import make_subplots
+
+import import_data
 
 UNITA = 100000
 
@@ -695,7 +696,7 @@ def plot_vaccines(vaccines, area=None, unita=UNITA, subplot_title='Dosi somminis
     return fig
 
 
-#@st.cache(allow_output_mutation=True, show_spinner=False)
+@st.cache(allow_output_mutation=True, show_spinner=False)
 def plot_deliveries(deliveries, area):
     fig = make_subplots(1, subplot_titles=[f"Dosi di vaccino consegnate per 100 mila abitanti"])
     plot_data = deliveries[deliveries.area == area]
@@ -734,6 +735,7 @@ def plot_deliveries(deliveries, area):
     return fig
 
 
+@st.cache(allow_output_mutation=True, show_spinner=False)
 def categories_timeseries(vaccines, area, cumulate=False):
     data_area = vaccines[vaccines.area == area]
     population = data_area.popolazione
@@ -762,6 +764,7 @@ def sum_doses(data):
     return data.prima_dose + data.seconda_dose
 
 
+@st.cache(allow_output_mutation=True, show_spinner=False)
 def fornitori_timeseries(vaccines, area, cumulate=False):
     plot_data = {}
     if area == 'Italia':
@@ -847,6 +850,7 @@ def age_timeseries(vaccines, area, fascia_anagrafica, demography, dose, unita=10
     return fig
 
 
+@st.cache(allow_output_mutation=True, show_spinner=False)
 def ages_timeseries(vaccines, area, cumulate=False):
     if area == 'Italia':
         child = vaccines[vaccines.fascia_anagrafica == '16-19'].groupby('data_somministrazione').sum()
@@ -1066,6 +1070,7 @@ def plot_vaccines_prediction(vaccines, area, npoints=7, p0=(np.datetime64("2021-
     }
     )
     return fig
+
 
 
 def plot_fill(data_list, names, population_list=None, unita=100000, cumulate=True, subplot_title='', start=None, height=500, legend=None):
