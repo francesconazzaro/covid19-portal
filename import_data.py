@@ -134,45 +134,16 @@ def process_data(data, covid_data, date_label, drop_ages=False, deliveries=False
 
 
 class Vaccines:
-    def __init__(self, vaccines=None, deliveries=None, covid_data=None, raw=None, adm=None, deli=None):
-        if raw is not None and adm is not None and deli is not None:
-            self.raw = raw
-            self.administration = adm
-            self.deliveries = deli
-            print('CACHE HIT')
-        else:
-            print('CACHE MISS')
-            self.raw = process_data(vaccines, covid_data, date_label='data_somministrazione')
-            self.administration = process_data(vaccines, covid_data, drop_ages=True, date_label='data_somministrazione')
-            self.deliveries = process_data(deliveries, covid_data, date_label='data_consegna', deliveries=True)
+    def __init__(self, vaccines, deliveries, covid_data):
+        self.raw = process_data(vaccines, covid_data, date_label='data_somministrazione')
+        self.administration = process_data(vaccines, covid_data, drop_ages=True, date_label='data_somministrazione')
+        self.deliveries = process_data(deliveries, covid_data, date_label='data_consegna', deliveries=True)
 
 
 def vaccines(repo_reference, covid_data):
-    raw_path = "/tmp/vaccines.raw"
-    administration_path = "/tmp/vaccines.administration"
-    deliveries_path = "/tmp/vaccines.deliveries"
-    vaccines_cache_id_path = '/tmp/vaccines_id.cache'
-    if os.path.exists(vaccines_cache_id_path):
-        date = parser.parse(open(vaccines_cache_id_path).read())
-    else:
-        date = parser.parse('2020')
-    now = datetime.datetime.now()
-    cache_exists = os.path.exists(raw_path) and os.path.exists(administration_path) and os.path.exists(deliveries_path)
-    if now - date < datetime.timedelta(hours=1):
-        print('CACHE')
-        raw = pd.read_pickle(raw_path)
-        administration = pd.read_pickle(administration_path)
-        deliveries = pd.read_pickle(deliveries_path)
-        return Vaccines(raw=raw, deli=deliveries, adm=administration)
-    else:
-        vaccine_data = pd.read_csv(os.path.join(BASE_PATH, 'covid19-opendata-vaccini/dati/somministrazioni-vaccini-latest.csv'), index_col='data_somministrazione', parse_dates=['data_somministrazione'])
-        deliveries = pd.read_csv(os.path.join(BASE_PATH, 'covid19-opendata-vaccini/dati/consegne-vaccini-latest.csv'), index_col='data_consegna', parse_dates=['data_consegna'])
-        vaccines_obj = Vaccines(vaccine_data, deliveries, covid_data)
-        vaccines_obj.raw.to_pickle(raw_path)
-        vaccines_obj.administration.to_pickle(administration_path)
-        vaccines_obj.deliveries.to_pickle(deliveries_path)
-        open(vaccines_cache_id_path, 'w').write(now.isoformat())
-        return vaccines_obj
+    vaccine_data = pd.read_csv(os.path.join(BASE_PATH, 'covid19-opendata-vaccini/dati/somministrazioni-vaccini-latest.csv'), index_col='data_somministrazione', parse_dates=['data_somministrazione'])
+    deliveries = pd.read_csv(os.path.join(BASE_PATH, 'covid19-opendata-vaccini/dati/consegne-vaccini-latest.csv'), index_col='data_consegna', parse_dates=['data_consegna'])
+    return Vaccines(vaccine_data, deliveries, covid_data)
 
 
 def get_list_of_regions():
