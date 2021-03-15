@@ -244,7 +244,7 @@ def sanitize(string):
 col1, col2, _ = st.beta_columns([2, 2, 9])
 query_params = st.experimental_get_query_params()
 
-what = col1.selectbox('Seleziona un dato', ['Contagio', 'Vaccini'],
+what = col1.radio('Seleziona un dato', ['Contagio', 'Vaccini'],
                       index=default_what_map[query_params.get('dato', ['contagio'])[0].lower()])
 
 default_area_index = -1
@@ -300,20 +300,11 @@ if what == 'Vaccini':
         names = ['Prima dose', 'Seconda dose']
         col1.plotly_chart(plot.plot_fill(data_list, names, population_list=population, subplot_title='Somministrazioni vaccino'), use_container_width=True)
 
-    col1, col3, col4 = st.beta_columns(3)
-    with col1:
-        col1.plotly_chart(plot.plot_ages(vaccines.raw, area), use_container_width=True)
-    # with col2:
-    #     col2.plotly_chart(plot.plot_second_dose_percentage(vaccines.administration, area), use_container_width=True)
-    with col3:
-        col3.plotly_chart(plot.plot_category(vaccines.administration, area), use_container_width=True)
-    with col4:
-        col4.plotly_chart(plot.plot_fornitore(vaccines.deliveries, area), use_container_width=True)
     st.subheader(f"Dettaglio andamenti {area}")
     col1, _, col2, col3, _ = st.beta_columns([1, 2, 1, 1, 1])
-    status = col1.selectbox('', ['Cumulato', 'Giornaliero'])
+    status = col1.selectbox('', ['Giornaliero', 'Cumulato'])
     fascia_anagrafica = col2.selectbox('Seleziona fascia anagrafica', ['16-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80-89', '90+'], index=7)
-    dose = col3.selectbox('Seleziona dose', ['seconda dose', 'prima dose'])
+    dose = col3.selectbox('Seleziona dose', ['prima dose', 'seconda dose'])
     if status == 'Cumulato':
         cumulate = True
     else:
@@ -326,6 +317,16 @@ if what == 'Vaccini':
     col2.plotly_chart(plot.fornitori_timeseries(vaccines.raw, area, cumulate=cumulate), use_container_width=True)
     col1.plotly_chart(plot.categories_timeseries(vaccines.administration, area, cumulate=cumulate), use_container_width=True)
     # col2.plotly_chart(plot.plot_fill(data_list, [''], population, cumulate=cumulate, unita=100, subplot_title=names[0]), use_container_width=True)
+
+    col1, col3, col4 = st.beta_columns(3)
+    with col1:
+        col1.plotly_chart(plot.plot_ages(vaccines.raw, area), use_container_width=True)
+    # with col2:
+    #     col2.plotly_chart(plot.plot_second_dose_percentage(vaccines.administration, area), use_container_width=True)
+    with col3:
+        col3.plotly_chart(plot.plot_category(vaccines.administration, area), use_container_width=True)
+    with col4:
+        col4.plotly_chart(plot.plot_fornitore(vaccines.deliveries, area), use_container_width=True)
 
     st.header('Confronto tra regioni')
     col1, _, col2 = st.beta_columns([4, 1, 10])
