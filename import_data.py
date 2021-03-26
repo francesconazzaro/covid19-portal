@@ -187,9 +187,10 @@ class Mobility:
 
 def get_mobility_country(country):
     mobility_data_path = os.path.join(BASE_PATH, 'mobility')
-    mobility_country_path = os.path.join(mobility_data_path, f'2020_{country}_Region_Mobility_Report.csv')
-    mobility_country = pd.read_csv(mobility_country_path, index_col='date')
-    return Mobility(mobility_country)
+    mobility_country = pd.DataFrame()
+    for mobility_country_path in glob.glob(os.path.join(mobility_data_path, f'202*_{country}_Region_Mobility_Report.csv')):
+        mobility_country = mobility_country.append(pd.read_csv(mobility_country_path, index_col='date'))
+    return Mobility(mobility_country.sort_index())
 
 
 class RepoReference:
