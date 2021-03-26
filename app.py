@@ -254,7 +254,7 @@ for i, region_id in enumerate(import_data.REGIONS_MAP.keys()):
         break
 
 area = col2.selectbox("Seleziona un'area", ['Italia'] + list(import_data.REGIONS_MAP.values()),
-                      index=default_area_index + 1)
+                      index=default_area_index +  1)
 
 if what == 'Vaccini':
     st.header(f"Dati sulle vaccinazioni aggiornati al {vaccines.administration[vaccines.administration.area == 'Italia'].index[-1].date()}")
