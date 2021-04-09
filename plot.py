@@ -52,6 +52,7 @@ CATEGORIES = [
     {'name': 'categoria_over80', 'label': 'Over 80'},
     {'name': 'categoria_forze_armate', 'label': 'Forze armate'},
     {'name': 'categoria_personale_scolastico', 'label': 'Personale scolastico'},
+    {'name': 'categoria_altro', 'label': 'Altro'},
 ]
 
 
