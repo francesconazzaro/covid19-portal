@@ -4,6 +4,7 @@ import requests
 import zipfile
 import glob
 import yaml
+import io
 import os
 import pandas as pd
 import numpy as np
@@ -210,13 +211,17 @@ class RepoReference:
         self.italy_path = os.path.join(base_path, 'COVID-19/dati-andamento-nazionale/dpc-covid19-ita-andamento-nazionale.csv')
 
 
-@st.cache(show_spinner = False)
-def covid19(repo_reference):
+@st.cache(show_spinner = False, ttl=60*60)
+def covid19():
     popolazione = population()
     terapie_intensive = intensive_care()
     posti_letto = beds()
-    data_aggregate = pd.read_csv(repo_reference.regions_path, index_col='data', parse_dates=['data'])
-    ita = pd.read_csv(repo_reference.italy_path, index_col='data', parse_dates=['data'])
+    url = "https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-regioni/dpc-covid19-ita-regioni.csv"
+    s=requests.get(url).content
+    data_aggregate = pd.read_csv(io.StringIO(s.decode('utf-8')), index_col='data', parse_dates=['data'])
+    url = "https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-andamento-nazionale/dpc-covid19-ita-andamento-nazionale.csv"
+    s=requests.get(url).content
+    ita = pd.read_csv(io.StringIO(s.decode('utf-8')), index_col='data', parse_dates=['data'])
 
     regioni = {}
     ita['popolazione'] = popolazione.sum()
