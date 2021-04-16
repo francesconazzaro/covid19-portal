@@ -117,7 +117,7 @@ def explore_regions(country):
                     unsafe_allow_html=True)
         st.markdown(f"<h1 style='text-align: center; color: red;'>{perc.iloc[-1]:.2f}</h1>", unsafe_allow_html=True)
     st.plotly_chart(plot.test_positivity_rate(DATA, country, rule=percentage_rule), use_container_width=True)
-    mobility_expander()
+    # mobility_expander()
     table_expander = st.beta_expander('Tabelle andamento')
     col1, _, col2 = table_expander.beta_columns([1, 3, 7])
     with col1:
