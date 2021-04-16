@@ -1,2 +1,2 @@
-runtime: python38
-entrypoint: streamlit run app.py
+runtime: custom
+env: flex
