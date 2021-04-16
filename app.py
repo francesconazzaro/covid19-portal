@@ -13,8 +13,7 @@ plugins.google_analytics()
 
 st.set_page_config(layout='wide', initial_sidebar_state='collapsed')
 try:
-    repo_reference = import_data.RepoReference()
-    DATA, DATA_TI, DATA_RIC = import_data.covid19(repo_reference)
+    DATA, DATA_TI, DATA_RIC = import_data.covid19()
 except:
     st.error(
         "L'applicazione è in fase di aggiornamento. Prova a [riaggiornare](/) la pagina tra qualche secondo.")
