@@ -899,10 +899,9 @@ def ages_timeseries(vaccines, area, cumulate=False):
 # @st.cache(allow_output_mutation=True, show_spinner=False)
 def plot_ages(vaccines, area):
     if area == 'Italia':
-        ages = import_data.pd.read_csv(
-            import_data.os.path.join(import_data.BASE_PATH, 'covid19-opendata-vaccini/dati/anagrafica-vaccini-summary-latest.csv'),
-            index_col='fascia_anagrafica',
-        )
+        url = "https://raw.githubusercontent.com/italia/covid19-opendata-vaccini/master/dati/anagrafica-vaccini-summary-latest.csv"
+        s=requests.get(url).content
+        ages = import_data.pd.read_csv(io.StringIO(s.decode('utf-8')), index_col='fascia_anagrafica')
     else:
         vaccines_area = vaccines[vaccines.area == area]
         ages = vaccines_area.groupby('fascia_anagrafica').sum()
