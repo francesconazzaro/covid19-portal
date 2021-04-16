@@ -6,6 +6,7 @@ import itertools
 import numpy as np
 import plotly
 import plotly.graph_objects as go
+import io
 # import scipy.optimize
 # import scipy.stats
 import streamlit as st
