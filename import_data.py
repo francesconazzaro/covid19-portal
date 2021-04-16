@@ -141,9 +141,13 @@ class Vaccines:
         self.deliveries = process_data(deliveries, covid_data, date_label='data_consegna', deliveries=True)
 
 
-def vaccines(repo_reference, covid_data):
-    vaccine_data = pd.read_csv(os.path.join(BASE_PATH, 'covid19-opendata-vaccini/dati/somministrazioni-vaccini-latest.csv'), index_col='data_somministrazione', parse_dates=['data_somministrazione'])
-    deliveries = pd.read_csv(os.path.join(BASE_PATH, 'covid19-opendata-vaccini/dati/consegne-vaccini-latest.csv'), index_col='data_consegna', parse_dates=['data_consegna'])
+def vaccines(covid_data):
+    url = "https://raw.githubusercontent.com/italia/covid19-opendata-vaccini/master/dati/somministrazioni-vaccini-latest.csv"
+    s=requests.get(url).content
+    vaccine_data = pd.read_csv(io.StringIO(s.decode('utf-8')), index_col='data_somministrazione', parse_dates=['data_somministrazione'])
+    url = "https://raw.githubusercontent.com/italia/covid19-opendata-vaccini/master/dati/consegne-vaccini-latest.csv"
+    s=requests.get(url).content
+    deliveries = pd.read_csv(io.StringIO(s.decode('utf-8')), index_col='data_consegna', parse_dates=['data_consegna'])
     return Vaccines(vaccine_data, deliveries, covid_data)
 
 
