@@ -14,22 +14,9 @@ from matplotlib import cm
 from plotly.subplots import make_subplots
 import requests
 
-import import_data
+import stats
 
 UNITA = 100000
-
-def exp2(t, t_0, T_d):
-    return 2 ** ((t - t_0) / T_d)
-
-
-def linear(t, t_0, T_d):
-    return (t - t_0) / T_d
-
-
-RULE_MAP = {
-    'Totali': 'total',
-    'Dati per 100.000 abitanti': 'percentage',
-}
 
 PERCENTAGE_RULE = {
     'Percentuale di tamponi positivi': 'tamponi',
@@ -67,69 +54,7 @@ def add_events(fig, events=ITALY_EVENTS, start=None, stop=None, offset=0, **kwar
                                  name=label))
 
 
-P0 = (np.datetime64("2020-02-12", "s"), np.timedelta64(48 * 60 * 60, "s"))
-
-
-def hex_to_rgb(value):
-    value = value.lstrip('#')
-    lv = len(value)
-    return list(int(value[i:i + lv // 3], 16) for i in range(0, lv, lv // 3))
-
-
-def get_default_palette(alpha=False):
-    hex_palette = copy.deepcopy(plotly.colors.qualitative.Plotly)
-    hex_palette.pop(3)
-    rgb_palette = []
-    for hex_color in hex_palette:
-        rgb_color = hex_to_rgb(hex_color)
-        if alpha:
-            rgb_color.append(.3)
-            rgb_palette.append('rgba({},{},{},{})'.format(*rgb_color))
-        else:
-            rgb_palette.append(hex_color)
-
-    return itertools.cycle(rgb_palette)
-
-
-# def linear_fit(data, start=None, stop=None, p0=P0):
-#     t_0_guess, T_d_guess = p0
-#     data_fit = data[start:stop]
-#     x_norm = linear(data_fit.index.values, t_0_guess, T_d_guess)
-#     y_fit = data_fit.values
-
-#     x_fit = x_norm[np.isfinite(y_fit)]
-
-#     m, y, r2, _, _ = scipy.stats.linregress(x_fit, y_fit)
-#     t_0_norm = -y / m
-#     T_d_norm = 1 / m
-
-#     T_d = T_d_norm * T_d_guess
-#     t_0 = t_0_guess + t_0_norm * T_d_guess
-#     return t_0, T_d, r2
-
-
-# def fit(data, start=None, stop=None, p0=P0):
-#     t_0_guess, T_d_guess = p0
-#     data_fit = data[start:stop]
-
-#     x_norm = linear(data_fit.index.values, t_0_guess, T_d_guess)
-#     log2_y = np.log2(data_fit.values)
-
-#     t_fit = data_fit.index.values[np.isfinite(log2_y)]
-#     x_fit = x_norm[np.isfinite(log2_y)]
-#     log2_y_fit = log2_y[np.isfinite(log2_y)]
-
-#     m, y, r2, _, _ = scipy.stats.linregress(x_fit, log2_y_fit)
-#     t_0_norm = -y / m
-#     T_d_norm = 1 / m
-
-#     T_d = T_d_norm * T_d_guess
-#     t_0 = t_0_guess + t_0_norm * T_d_guess
-#     return t_0, T_d, r2
-
-
-def plot_fit(data, fig, start=None, stop=None, label=None, shift=5, **kwargs):
-    t0, td, r2 = fit(data, start, stop)
+def plot_fit(data, fig, t_0, t_d, r2, start=None, stop=None, label=None, shift=5, **kwargs):
     if label is not None:
         label = 'Fit {label}<br>(T_d = {0:.2f})'.format(t_d / np.timedelta64(1, "D"), label=label)
     x = data[start:stop].index
@@ -218,24 +143,6 @@ def test_positivity_rate(data_in, country, rule):
     return fig
 
 
-@st.cache(show_spinner=False)
-def normalisation(data, population, rule):
-    if RULE_MAP[rule] == 'percentage':
-        new_data = data / population * UNITA
-        try:
-            new_data.name = data.name
-        except:
-            pass
-        return new_data
-    else:
-        new_data = data
-        try:
-            new_data.name = data.name
-        except:
-            pass
-        return new_data
-
-
 def get_fmt(rule):
     if stats.RULE_MAP[rule] == 'percentage':
         return '{:.2f}'
@@ -243,7 +150,7 @@ def get_fmt(rule):
         return '{:.0f}'
 
 
-def plot_average(plot_data, palette, fig, name, palette_alpha, secondary_y=True, fmt=None, start=None, stop=None, log=True):
+def plot_average(plot_data, palette, fig, name, palette_alpha, fmt, t_0, t_d, r2, start, stop, log=True):
     line = dict(color=next(palette))
     fig.add_trace(go.Line(
         x=plot_data.index, y=plot_data.rolling(7).mean().values,
@@ -253,17 +160,19 @@ def plot_average(plot_data, palette, fig, name, palette_alpha, secondary_y=True,
         mode='lines',
     ), 1, 1, secondary_y=secondary_y)
     line['dash'] = 'dot'
-    # if start and stop:
-    #     plot_fit(
-    #         plot_data.rolling(7).mean(),
-    #         fig,
-    #         label=name,
-    #         start=start,
-    #         stop=stop,
-    #         mode='lines',
-    #         line=line,
-    #         shift=5
-    #     )
+    plot_fit(
+        plot_data.rolling(7).mean(),
+        fig,
+        t_0=t_0,
+        t_d=t_d,
+        r2=r2,
+        start=start,
+        stop=stop,
+        label=name,
+        mode='lines',
+        line=line,
+        shift=5,
+    )
     fig.add_trace(go.Scatter(
         x=plot_data.index,
         y=plot_data.values,
@@ -284,13 +193,12 @@ def plot_average(plot_data, palette, fig, name, palette_alpha, secondary_y=True,
     # )
 
 
-@st.cache(allow_output_mutation=True, show_spinner=False)
-def plot_selection(data_in, country, rule, start_positivi, start_ti, start_ricoveri, stop_positivi, stop_ti, stop_ricoveri, start_deceduti, stop_deceduti, log=True, secondary_y=True):
+def plot_selection(data, country, rule, log=True):
 
     PALETTE = get_default_palette()  # itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
     PALETTE_ALPHA = get_default_palette(True)  # itertools.cycle(get_matplotlib_cmap('tab10', bins=8, alpha=.3))
 
-    data = data_in[country]
+    data_select = data.data[country]
 
     maxs = []
     mins = []
@@ -311,23 +219,23 @@ def plot_selection(data_in, country, rule, start_positivi, start_ti, start_ricov
         palette_alpha=PALETTE_ALPHA,
         fmt=fmt,
         log=log,
-        secondary_y=secondary_y,
+        **data.fit_data[column]
     )
 
-    plot_data = normalisation(data.deceduti, data.popolazione, rule).diff()
+    column = 'ricoverati_con_sintomi'
+    data.fit(country, column, rule)
+    plot_data = stats.normalisation(getattr(data_select, column), data_select.popolazione, rule)
     maxs.append(plot_data.max())
     mins.append((plot_data.rolling(7).mean()[20:] + .001).min())
     plot_average(
         plot_data,
         fig=fig,
-        name='Deceduti',
-        start=start_deceduti,
-        stop=stop_deceduti,
+        name='Ricoveri',
         palette=PALETTE,
         palette_alpha=PALETTE_ALPHA,
         fmt=fmt,
         log=log,
-        secondary_y=secondary_y,
+        **data.fit_data[column]
     )
 
     column = 'terapia_intensiva'
@@ -343,23 +251,23 @@ def plot_selection(data_in, country, rule, start_positivi, start_ti, start_ricov
         palette_alpha=PALETTE_ALPHA,
         fmt=fmt,
         log=log,
-        secondary_y=secondary_y,
+        **data.fit_data[column]
     )
 
-    plot_data = normalisation(data.ricoverati_con_sintomi, data.popolazione, rule)
+    column = 'deceduti'
+    data.fit(country, column, rule, diff=True)
+    plot_data = stats.normalisation(getattr(data_select, column), data_select.popolazione, rule).diff()
     maxs.append(plot_data.max())
     mins.append((plot_data.rolling(7).mean()[20:] + .001).min())
     plot_average(
         plot_data,
         fig=fig,
-        name='Ricoveri',
-        start=start_ricoveri,
-        stop=stop_ricoveri,
+        name='Deceduti',
         palette=PALETTE,
         palette_alpha=PALETTE_ALPHA,
         fmt=fmt,
         log=log,
-        secondary_y=secondary_y,
+        **data.fit_data[column]
     )
 
     next(PALETTE_ALPHA)
@@ -436,13 +344,23 @@ def vaccines_summary(vaccines, what):
     for i, name in enumerate(titles):
         col = (i - minus) % 5 + 1
         row = (i - minus) // 5 + 1
-        if name == 'Trentino Alto Adige':
-            bolzano = vaccines.administration[vaccines.administration.area == 'P.A. Bolzano']
-            trento = vaccines.administration[vaccines.administration.area == 'P.A. Trento']
-            region = bolzano + trento
-        else:
-            region = vaccines.administration[vaccines.administration.area == name]
-        plot_data, title = vaccines_summary_plot_data(region, what)
+        region = data[name]
+        if name in ['P.A. Bolzano', 'P.A. Trento']:
+            minus += 1
+            continue
+        if what == 'Terapie Intensive':
+            plot_data = region.terapia_intensiva.rolling(7).mean() / region.popolazione * stats.UNITA
+            title = "Terapie Intensive per 100.000 abitanti"
+            yscale = 'log'
+        elif what == 'Nuovi Positivi':
+            plot_data = region.nuovi_positivi.rolling(7).mean() / region.popolazione * stats.UNITA
+            title = "Nuovi positivi per 100.000 abitanti"
+            yscale = 'log'
+        elif what == 'Percentuale tamponi positivi':
+            plot_data = region.nuovi_positivi.rolling(7).mean() / region.tamponi.diff().rolling(
+                7).mean() * 100
+            title = "Percentuale tamponi positivi."
+            yscale = 'linear'
         maxs.append(plot_data.values[-90:].max())
         fig.add_trace(go.Scatter(x=plot_data.index[-90:], y=plot_data.values[-90:], showlegend=False,
                                  name=name, marker=dict(color=next(PALETTE)), fill='tozeroy'), row, col)

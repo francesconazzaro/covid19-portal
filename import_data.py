@@ -13,6 +13,8 @@ import datetime
 
 import stats
 
+import stats
+
 CWD = os.path.abspath(os.path.dirname(__file__))
 try:
     config = yaml.safe_load(open(os.path.join(CWD, 'config.yaml')))
@@ -217,8 +219,29 @@ def get_mobility_country(country):
 #         self.italy_path = os.path.join(base_path, 'COVID-19/dati-andamento-nazionale/dpc-covid19-ita-andamento-nazionale.csv')
 
 
-@st.cache(show_spinner = False, ttl=60*60)
-def covid19():
+class Data:
+    def __init__(self, data, terapie_intensive, posti_letto):
+        self.data = data
+        self.terapie_intensive = terapie_intensive
+        self.posti_letto = posti_letto
+        self.start_stop = {}
+        self.fit_data = {}
+
+    def fit(self, region, column, rule, diff=False):
+        data_region = self.data[region]
+        popolazione = data_region.popolazione
+        data = getattr(data_region, column)
+        if diff is True:
+            data = data.diff()
+        t_0, t_d, r2 = stats.fit(stats.normalisation(data.rolling(7).mean(), popolazione, rule), **self.fit_data[column])
+        self.fit_data[column].update(dict(t_0=t_0, t_d=t_d, r2=r2))
+
+    def set_start_stop(self, column, start, stop):
+        self.fit_data[column] = dict(start=start, stop=stop)
+
+
+@st.cache(allow_output_mutation=True)
+def covid19(repo_reference):
     popolazione = population()
     terapie_intensive = intensive_care()
     posti_letto = beds()
