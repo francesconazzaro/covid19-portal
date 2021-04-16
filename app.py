@@ -25,20 +25,20 @@ except:
 fmt = "%d-%m-%Y"
 
 
-def mobility_expander():
-    expander_mobility = st.beta_expander('Dati sulla mobilità')
-    col1, col2, col3, col4 = expander_mobility.beta_columns([1, 4, 4, 8])
-    with col1:
-        country = col1.selectbox('Country', ['IT'] + sorted(import_data.get_list_of_regions()))
-    mobility_country = import_data.get_mobility_country(country)
-    with col2:
-        sub_region_1 = col2.selectbox('sub_region_1', mobility_country.get_sub_region_1())
-    with col3:
-        sub_region_2 = col3.selectbox('sub_region_2', mobility_country.get_sub_region_2(sub_region_1))
-    with col4:
-        variable = col4.selectbox('Variabile', mobility_country.get_variables())
-    mobility_plot_data = mobility_country.select(sub_region_1, sub_region_2)
-    expander_mobility.plotly_chart(plot.mobility_data(mobility_plot_data, variable, variables=mobility_country.get_variables()), use_container_width=True)
+# def mobility_expander():
+#     expander_mobility = st.beta_expander('Dati sulla mobilità')
+#     col1, col2, col3, col4 = expander_mobility.beta_columns([1, 4, 4, 8])
+#     with col1:
+#         country = col1.selectbox('Country', ['IT'] + sorted(import_data.get_list_of_regions()))
+#     mobility_country = import_data.get_mobility_country(country)
+#     with col2:
+#         sub_region_1 = col2.selectbox('sub_region_1', mobility_country.get_sub_region_1())
+#     with col3:
+#         sub_region_2 = col3.selectbox('sub_region_2', mobility_country.get_sub_region_2(sub_region_1))
+#     with col4:
+#         variable = col4.selectbox('Variabile', mobility_country.get_variables())
+#     mobility_plot_data = mobility_country.select(sub_region_1, sub_region_2)
+#     expander_mobility.plotly_chart(plot.mobility_data(mobility_plot_data, variable, variables=mobility_country.get_variables()), use_container_width=True)
 
 
 def explore_regions(country):
@@ -118,7 +118,7 @@ def explore_regions(country):
                     unsafe_allow_html=True)
         st.markdown(f"<h1 style='text-align: center; color: red;'>{perc.iloc[-1]:.2f}</h1>", unsafe_allow_html=True)
     st.plotly_chart(plot.test_positivity_rate(DATA, country, rule=percentage_rule), use_container_width=True)
-    mobility_expander()
+    # mobility_expander()
     table_expander = st.beta_expander('Tabelle andamento')
     col1, _, col2 = table_expander.beta_columns([1, 3, 7])
     with col1:
