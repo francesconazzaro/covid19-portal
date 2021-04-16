@@ -11,6 +11,7 @@ import plotly.graph_objects as go
 import streamlit as st
 from matplotlib import cm
 from plotly.subplots import make_subplots
+import requests
 
 import import_data
 
