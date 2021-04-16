@@ -6,8 +6,8 @@ import itertools
 import numpy as np
 import plotly
 import plotly.graph_objects as go
-import scipy.optimize
-import scipy.stats
+# import scipy.optimize
+# import scipy.stats
 import streamlit as st
 from matplotlib import cm
 from plotly.subplots import make_subplots
@@ -89,41 +89,41 @@ def get_default_palette(alpha=False):
     return itertools.cycle(rgb_palette)
 
 
-def linear_fit(data, start=None, stop=None, p0=P0):
-    t_0_guess, T_d_guess = p0
-    data_fit = data[start:stop]
-    x_norm = linear(data_fit.index.values, t_0_guess, T_d_guess)
-    y_fit = data_fit.values
+# def linear_fit(data, start=None, stop=None, p0=P0):
+#     t_0_guess, T_d_guess = p0
+#     data_fit = data[start:stop]
+#     x_norm = linear(data_fit.index.values, t_0_guess, T_d_guess)
+#     y_fit = data_fit.values
 
-    x_fit = x_norm[np.isfinite(y_fit)]
+#     x_fit = x_norm[np.isfinite(y_fit)]
 
-    m, y, r2, _, _ = scipy.stats.linregress(x_fit, y_fit)
-    t_0_norm = -y / m
-    T_d_norm = 1 / m
+#     m, y, r2, _, _ = scipy.stats.linregress(x_fit, y_fit)
+#     t_0_norm = -y / m
+#     T_d_norm = 1 / m
 
-    T_d = T_d_norm * T_d_guess
-    t_0 = t_0_guess + t_0_norm * T_d_guess
-    return t_0, T_d, r2
+#     T_d = T_d_norm * T_d_guess
+#     t_0 = t_0_guess + t_0_norm * T_d_guess
+#     return t_0, T_d, r2
 
 
-def fit(data, start=None, stop=None, p0=P0):
-    t_0_guess, T_d_guess = p0
-    data_fit = data[start:stop]
+# def fit(data, start=None, stop=None, p0=P0):
+#     t_0_guess, T_d_guess = p0
+#     data_fit = data[start:stop]
 
-    x_norm = linear(data_fit.index.values, t_0_guess, T_d_guess)
-    log2_y = np.log2(data_fit.values)
+#     x_norm = linear(data_fit.index.values, t_0_guess, T_d_guess)
+#     log2_y = np.log2(data_fit.values)
 
-    t_fit = data_fit.index.values[np.isfinite(log2_y)]
-    x_fit = x_norm[np.isfinite(log2_y)]
-    log2_y_fit = log2_y[np.isfinite(log2_y)]
+#     t_fit = data_fit.index.values[np.isfinite(log2_y)]
+#     x_fit = x_norm[np.isfinite(log2_y)]
+#     log2_y_fit = log2_y[np.isfinite(log2_y)]
 
-    m, y, r2, _, _ = scipy.stats.linregress(x_fit, log2_y_fit)
-    t_0_norm = -y / m
-    T_d_norm = 1 / m
+#     m, y, r2, _, _ = scipy.stats.linregress(x_fit, log2_y_fit)
+#     t_0_norm = -y / m
+#     T_d_norm = 1 / m
 
-    T_d = T_d_norm * T_d_guess
-    t_0 = t_0_guess + t_0_norm * T_d_guess
-    return t_0, T_d, r2
+#     T_d = T_d_norm * T_d_guess
+#     t_0 = t_0_guess + t_0_norm * T_d_guess
+#     return t_0, T_d, r2
 
 
 def plot_fit(data, fig, start=None, stop=None, label=None, shift=5, **kwargs):

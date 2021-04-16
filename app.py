@@ -221,11 +221,7 @@ LINE = """<style>
 st.title('COVID-19: Situazione in Italia')
 st.text("")
 try:
-    vaccine_repo = import_data.RepoReference(
-        repo_path='covid19-opendata-vaccini',
-        repo_url='https://github.com/italia/covid19-opendata-vaccini.git'
-    )
-    vaccines = import_data.vaccines(vaccine_repo, DATA)
+    vaccines = import_data.vaccines(DATA)
     demography = import_data.demography(vaccines)
 except:
     st.error("L'applicazione è in fase di aggiornamento. Prova a [riaggiornare](/) la pagina tra qualche secondo.")
