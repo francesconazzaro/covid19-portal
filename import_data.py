@@ -1,5 +1,5 @@
 from dateutil import parser
-import git
+# import git
 import requests
 import zipfile
 import glob
@@ -198,21 +198,21 @@ def get_mobility_country(country):
     return Mobility(mobility_country.sort_index())
 
 
-class RepoReference:
-    def __init__(self, base_path=BASE_PATH, repo_path='COVID-19', repo_url="https://github.com/pcm-dpc/COVID-19.git"):
-        path = os.path.join(BASE_PATH, repo_path)
-        if not os.path.exists(path):
-            git.Git(BASE_PATH).clone(repo_url)
-        repo = git.Repo(path)
-        o = repo.remotes.origin
-        try:
-            o.pull()
-        except:
-            pass
-        self.path = path
-        self.hexsha = repo.head.commit.hexsha
-        self.regions_path = os.path.join(base_path, 'COVID-19/dati-regioni/dpc-covid19-ita-regioni.csv')
-        self.italy_path = os.path.join(base_path, 'COVID-19/dati-andamento-nazionale/dpc-covid19-ita-andamento-nazionale.csv')
+# class RepoReference:
+#     def __init__(self, base_path=BASE_PATH, repo_path='COVID-19', repo_url="https://github.com/pcm-dpc/COVID-19.git"):
+#         path = os.path.join(BASE_PATH, repo_path)
+#         if not os.path.exists(path):
+#             git.Git(BASE_PATH).clone(repo_url)
+#         repo = git.Repo(path)
+#         o = repo.remotes.origin
+#         try:
+#             o.pull()
+#         except:
+#             pass
+#         self.path = path
+#         self.hexsha = repo.head.commit.hexsha
+#         self.regions_path = os.path.join(base_path, 'COVID-19/dati-regioni/dpc-covid19-ita-regioni.csv')
+#         self.italy_path = os.path.join(base_path, 'COVID-19/dati-andamento-nazionale/dpc-covid19-ita-andamento-nazionale.csv')
 
 
 # @st.cache(show_spinner = False, ttl=60*60)
