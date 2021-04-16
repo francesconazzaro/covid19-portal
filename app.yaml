@@ -1,2 +1,2 @@
 runtime: python38
-entrypoint: sh setup.sh && streamlit run app.py
+entrypoint: streamlit run app.py
