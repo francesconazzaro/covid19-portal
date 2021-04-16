@@ -215,7 +215,7 @@ def get_mobility_country(country):
 #         self.italy_path = os.path.join(base_path, 'COVID-19/dati-andamento-nazionale/dpc-covid19-ita-andamento-nazionale.csv')
 
 
-# @st.cache(show_spinner = False, ttl=60*60)
+@st.cache(show_spinner = False, ttl=60*60)
 def covid19():
     popolazione = population()
     terapie_intensive = intensive_care()
