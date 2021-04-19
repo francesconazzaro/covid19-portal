@@ -9,9 +9,11 @@ import import_data
 import plugins
 
 plugins.google_analytics()
+import warnings
+warnings.filterwarnings("ignore")
 
 
-st.set_page_config(layout='wide', initial_sidebar_state='collapsed')
+st.set_page_config(page_title='COVID-19 Dashboard', page_icon=":chart_with_upwards_trend:", layout='wide', initial_sidebar_state='collapsed')
 try:
     DATA, DATA_TI, DATA_RIC = import_data.covid19()
 except:
@@ -239,7 +241,7 @@ def sanitize(string):
     return string.replace(' ', '-')
 
 
-col1, col2, _ = st.beta_columns([2, 2, 9])
+col1, col2, _, col3 = st.beta_columns([2, 2, 8, 1,])
 query_params = st.experimental_get_query_params()
 
 what = col1.radio('Seleziona un dato', ['Contagio', 'Vaccini'],
@@ -254,6 +256,7 @@ for i, region_id in enumerate(import_data.REGIONS_MAP.keys()):
 area = col2.selectbox("Seleziona un'area", ['Italia'] + list(import_data.REGIONS_MAP.values()),
                       index=default_area_index + 1)
 
+col3.write("**[Twitter](https://twitter.com/effenazzaro)<br>[Linkedin](https://www.linkedin.com/in/fnazzaro/)<br>[:beer:](https://www.buymeacoffee.com/francesconazzar)**", unsafe_allow_html=True)
 if what == 'Vaccini':
     st.header(f"Dati sulle vaccinazioni aggiornati al {vaccines.administration[vaccines.administration.area == 'Italia'].index[-1].date()}")
     pie1, title1, line, pie2, title2, title3 = st.beta_columns([2, 4, 1, 2, 4, 4])
@@ -335,7 +338,8 @@ if what == 'Vaccini':
         st.dataframe(data.to_frame().style.background_gradient(cmap='Reds').format("{:.2%}"), height=700)
     rule = col2.selectbox('Variabile', ['Percentuale popolazione vaccinata', 'Dosi somministrate', 'Dosi consegnate'])
     col2.plotly_chart(plot.vaccines_summary(vaccines, rule), use_container_width=True)
-    expander = st.beta_expander("This app is developed by Francesco Nazzaro (click to check raw data)")
+    st.write("**:beer: Buy me a [beer](https://www.buymeacoffee.com/francesconazzar)**")
+    expander = st.beta_expander("This app is developed by Francesco Nazzaro")
     expander.write("Contact me on [Twitter](https://twitter.com/effenazzaro)")
     expander.write("The source code is on [GitHub](https://github.com/francesconazzaro/covid19-portal)")
     expander.write("Raw data")
@@ -365,7 +369,8 @@ elif what == 'Contagio':
     # st.plotly_chart(plot.mortality(DATA))
 
 
-    expander = st.beta_expander("This app is developed by Francesco Nazzaro (click to check raw data)")
+    st.write("**:beer: Buy me a [beer](https://www.buymeacoffee.com/francesconazzar)**")
+    expander = st.beta_expander("This app is developed by Francesco Nazzaro.")
     expander.write("Contact me on [Twitter](https://twitter.com/effenazzaro)")
     expander.write("The source code is on [GitHub](https://github.com/francesconazzaro/covid19-portal)")
     expander.write("Raw data")
