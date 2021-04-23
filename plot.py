@@ -923,7 +923,7 @@ def plot_ages(vaccines, area):
         'y': -.35,  # top
         'xanchor': "center",
         'x': .5,
-    }, height=470,
+    }, height=500,
     )
     return fig
 
@@ -987,7 +987,7 @@ def plot_fornitore(vaccines, area):
         'y': -.3,  # top
         'xanchor': "center",
         'x': .5,
-    }, height=460
+    }, height=500
     )
     return fig
 
