@@ -961,12 +961,12 @@ def plot_category(vaccines, area):
     fig = make_subplots(1, subplot_titles=[f'Somministrazione per categorie'])
     fig.add_trace(pie)
     fig.update_layout(legend={
-        'orientation': 'h',
+        'orientation': 'v',
         'yanchor': "bottom",
         'y': -.55,  # top
         'xanchor': "center",
         'x': .5,
-        }, height=500
+        }, height=600
 )
     return fig
 
