@@ -1,2 +1,5 @@
 runtime: custom
 env: flex
+# runtime: python37
+# entrypoint:  pip install streamlit && streamlit run app.py --server.port=8080 --server.address=0.0.0.0 --logger.level=error
+# instance_class: F1

@@ -10,7 +10,7 @@ import io
 # import scipy.optimize
 # import scipy.stats
 import streamlit as st
-from matplotlib import cm
+# from matplotlib import cm
 from plotly.subplots import make_subplots
 import requests
 
@@ -54,12 +54,15 @@ CATEGORIES = [
     {'name': 'categoria_over80', 'label': 'Over 80'},
     {'name': 'categoria_forze_armate', 'label': 'Forze armate'},
     {'name': 'categoria_personale_scolastico', 'label': 'Personale scolastico'},
+    {'name': 'categoria_60_69', 'label': '60-69'},
+    {'name': 'categoria_70_79', 'label': '70-79'},
+    {'name': 'categoria_soggetti_fragili', 'label': 'Soggetti fragili'},
     {'name': 'categoria_altro', 'label': 'Altro'},
 ]
 
 
 def add_events(fig, events=ITALY_EVENTS, start=None, stop=None, offset=0, **kwargs):
-    PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
+    PALETTE = get_default_palette()
     for event in events[start:stop]:
         label = '{x} {label}'.format(offset=offset, **event)
         fig.add_trace(go.Scatter(x=[event['x'], event['x']], y=[0, 10 ** 10], mode='lines',
@@ -153,20 +156,20 @@ def prediction(x, t0, td, r2, label, ax, days_after=1, func=exp2, **plot_kwargs)
     return ax
 
 
-def get_matplotlib_cmap(cmap_name, bins, alpha=1):
-    if bins is None:
-        bins = 10
-    cmap = cm.get_cmap(cmap_name)
-    h = 1.0 / bins
-    contour_colour_list = []
+# def get_matplotlib_cmap(cmap_name, bins, alpha=1):
+#     if bins is None:
+#         bins = 10
+#     cmap = cm.get_cmap(cmap_name)
+#     h = 1.0 / bins
+#     contour_colour_list = []
 
-    for k in range(bins):
-        C = list(map(np.uint8, np.array(cmap(k * h)[:3]) * 255))
-        contour_colour_list.append('rgba' + str((C[0], C[1], C[2], alpha)))
+#     for k in range(bins):
+#         C = list(map(np.uint8, np.array(cmap(k * h)[:3]) * 255))
+#         contour_colour_list.append('rgba' + str((C[0], C[1], C[2], alpha)))
 
-    C = list(map(np.uint8, np.array(cmap(bins * h)[:3]) * 255))
-    contour_colour_list.append('rgba' + str((C[0], C[1], C[2], alpha)))
-    return contour_colour_list
+#     C = list(map(np.uint8, np.array(cmap(bins * h)[:3]) * 255))
+#     contour_colour_list.append('rgba' + str((C[0], C[1], C[2], alpha)))
+#     return contour_colour_list
 
 
 @st.cache(allow_output_mutation=True, show_spinner=False)
@@ -287,8 +290,8 @@ def plot_average(plot_data, palette, fig, name, palette_alpha, secondary_y=True,
 @st.cache(allow_output_mutation=True, show_spinner=False)
 def plot_selection(data_in, country, rule, start_positivi, start_ti, start_ricoveri, stop_positivi, stop_ti, stop_ricoveri, start_deceduti, stop_deceduti, log=True, secondary_y=True):
 
-    PALETTE = get_default_palette()  # itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
-    PALETTE_ALPHA = get_default_palette(True)  # itertools.cycle(get_matplotlib_cmap('tab10', bins=8, alpha=.3))
+    PALETTE = get_default_palette()  # get_default_palette()
+    PALETTE_ALPHA = get_default_palette(True)  # get_default_palette()
 
     data = data_in[country]
 
@@ -501,7 +504,7 @@ def summary(data, what):
     fig = make_subplots(4, 5, shared_xaxes='all', shared_yaxes='all', subplot_titles=titles,
                         vertical_spacing=.08)
     minus = 0
-    PALETTE = get_default_palette()  # itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
+    PALETTE = get_default_palette()  # get_default_palette()
     maxs = []
     plot_data_italy, _ = summary_plot_data(data['Italia'], what)
     for i, name in enumerate(titles):
@@ -529,7 +532,7 @@ def summary(data, what):
         autosize=True,
         hovermode="x unified",
     )
-    PALETTE = get_default_palette()  # itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
+    PALETTE = get_default_palette()  # get_default_palette()
     for i in fig['layout']['annotations']:
         i['font'] = dict(size=12, color=next(PALETTE))
     return fig
@@ -789,7 +792,7 @@ def fornitori_timeseries(vaccines, area, cumulate=False):
 
 
 def age_timeseries(vaccines, area, fascia_anagrafica, demography, dose, unita=100, cumulate=False):
-    PALETTE = itertools.cycle(plotly.colors.qualitative.Plotly)#itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
+    PALETTE = itertools.cycle(plotly.colors.qualitative.Plotly)#get_default_palette()
     title = f'{area}: Percentuale popolazione che ha ricevuto<br>la {dose} nella fascia {fascia_anagrafica}'
     dose = dose.replace(' ', '_')
     if area == 'Italia':
@@ -1076,8 +1079,8 @@ def plot_vaccines_prediction(vaccines, area, npoints=7, p0=(np.datetime64("2021-
 
 
 def plot_fill(data_list, names, population_list=None, unita=100000, cumulate=True, subplot_title='', start=None, height=500, legend=None):
-    PALETTE = itertools.cycle(plotly.colors.qualitative.Plotly)#itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
-    PALETTE_ALPHA = itertools.cycle(plotly.colors.qualitative.Plotly)#itertools.cycle(get_matplotlib_cmap('tab10', bins=8, alpha=1))
+    PALETTE = itertools.cycle(plotly.colors.qualitative.Plotly)#get_default_palette()
+    PALETTE_ALPHA = itertools.cycle(plotly.colors.qualitative.Plotly)#get_default_palette()
     fig = make_subplots(1, subplot_titles=[subplot_title], specs=[[{"secondary_y": True}]])
     maxs_perc = []
     maxs_tot = []
@@ -1150,8 +1153,8 @@ def plot_fill(data_list, names, population_list=None, unita=100000, cumulate=Tru
 
 @st.cache(allow_output_mutation=True, show_spinner=False)
 def plot_deliveries(deliveries, population, unita=100, subplot_title='', start=None, height=500):
-    PALETTE_1 = get_default_palette()  # itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
-    PALETTE_2 = get_default_palette()  # itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
+    PALETTE_1 = get_default_palette()  # get_default_palette()
+    PALETTE_2 = get_default_palette()  # get_default_palette()
     fig = make_subplots(1, subplot_titles=[subplot_title], specs=[[{"secondary_y": True}]])
     maxs_perc = []
     maxs_tot = []
@@ -1230,8 +1233,8 @@ def plot_deliveries(deliveries, population, unita=100, subplot_title='', start=N
 
 @st.cache(allow_output_mutation=True, show_spinner=False)
 def cumulate_and_not(data_list, names, population_list, unita=100, subplot_title='', start=None, height=500):
-    PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
-    PALETTE_ALPHA = itertools.cycle(get_matplotlib_cmap('tab10', bins=8, alpha=1))
+    PALETTE = get_default_palette()
+    PALETTE_ALPHA = get_default_palette(True)
     fig = make_subplots(1, subplot_titles=[subplot_title], specs=[[{"secondary_y": True}]])
     maxs_perc = []
     maxs_tot = []
@@ -1307,8 +1310,8 @@ def cumulate_and_not(data_list, names, population_list, unita=100, subplot_title
 
 @st.cache(allow_output_mutation=True, show_spinner=False)
 def plot_variables(data_list, names, rule=None, popolazione=None, title='', yaxis_title='', xaxes_range=None, secondary_y=True, nrows=1):
-    PALETTE = itertools.cycle(get_matplotlib_cmap('tab10', bins=8))
-    PALETTE_ALPHA = itertools.cycle(get_matplotlib_cmap('tab10', bins=8, alpha=.3))
+    PALETTE = get_default_palette()
+    PALETTE_ALPHA = get_default_palette(True)
 
     maxs = []
     mins = []
