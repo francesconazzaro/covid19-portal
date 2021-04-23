@@ -304,7 +304,7 @@ if what == 'Vaccini':
     st.subheader(f"Dettaglio andamenti {area}")
     col1, _, col2, col3, _ = st.beta_columns([1, 2, 1, 1, 1])
     status = col1.selectbox('', ['Giornaliero', 'Cumulato'])
-    fascia_anagrafica = col2.selectbox('Seleziona fascia anagrafica', ['16-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80-89', '90+'], index=7)
+    fascia_anagrafica = col2.selectbox('Seleziona fascia anagrafica', ['16-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80-89', '90+'], index=6)
     dose = col3.selectbox('Seleziona dose', ['prima dose', 'seconda dose'])
     if status == 'Cumulato':
         cumulate = True
