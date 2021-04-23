@@ -1081,6 +1081,7 @@ def plot_fill(data_list, names, population_list=None, unita=100000, cumulate=Tru
     fig = make_subplots(1, subplot_titles=[subplot_title], specs=[[{"secondary_y": True}]])
     maxs_perc = []
     maxs_tot = []
+    min_date = []
     if not population_list:
         population_list = [None,] * len(data_list)
         primary_grid = True
@@ -1118,6 +1119,7 @@ def plot_fill(data_list, names, population_list=None, unita=100000, cumulate=Tru
         )
         maxs_tot.append(data.max())
         fig.add_trace(ax_tot, secondary_y=True)
+        min_date.append(data.index[0])
     if not legend:
         legend = {
             'orientation': "v",
@@ -1142,7 +1144,7 @@ def plot_fill(data_list, names, population_list=None, unita=100000, cumulate=Tru
     else:
         primary_title = f'Dati per {unita:,} abitanti'
     if not start:
-        start = data.index[0]
+        start = min(min_date)
     fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[start, data.index[-1] + np.timedelta64(1, 'D')])
     fig.update_yaxes(showgrid=True, title_text=primary_title, gridwidth=1, gridcolor='LightGrey') #, range=[0, max(maxs_perc)])
     fig.update_yaxes(showgrid=primary_grid, title_text='Totale', gridwidth=1, gridcolor='LightGrey', secondary_y=True)#, range=[0, max(maxs_tot)])
