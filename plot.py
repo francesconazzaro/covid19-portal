@@ -212,7 +212,8 @@ def test_positivity_rate(data_in, country, rule):
     fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey')
     fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[0, plot_data[-500:].max() + 1], secondary_y=True)
     fig.update_layout(
-        plot_bgcolor="white",
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
         margin=dict(t=30, l=10, b=10, r=10),
         autosize=True,
         height=500,
@@ -394,7 +395,8 @@ def plot_selection(data_in, country, rule, start_positivi, start_ti, start_ricov
     fig.update_xaxes(row=1, col=1, showgrid=True, gridwidth=1, gridcolor='LightPink')
     fig.update_yaxes(row=1, col=1, type=yscale, showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[minimum, maximum], showexponent='all', exponentformat='power', secondary_y=secondary_y)
     fig.update_layout(
-        plot_bgcolor="white",
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
         margin=dict(t=70, l=0, b=0, r=0),
         yaxis_title=f'{rule}',
         # width=1300,
@@ -423,6 +425,11 @@ def vaccines_summary_plot_data(region, what):
     if what == 'Dosi consegnate':
         plot_data = region.prima_dose.cumsum() / region.popolazione * UNITA
         title = "Dosi consegnate per 100 mila abitanti"
+    if what == '70-79':
+        plot_data = region[region.fascia_anagrafica == '70-79']
+        plot_data = getattr(plot_data, 'prima_dose').groupby('data_somministrazione').sum().cumsum()
+        percentage = plot_data / demography[plot_data.area].loc['70-79'] * 100
+        title = "Percentuale popolazione vaccinata nella fascia 70-79"
     return plot_data, title
 
 @st.cache(allow_output_mutation=True, show_spinner=False)
@@ -456,7 +463,8 @@ def vaccines_summary(vaccines, what):
     fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[0, max(maxs)])
     fig.update_layout(
         title=title,
-        plot_bgcolor="white",
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
         margin=dict(t=50, l=10, b=10, r=10),
         # width=1300,
         height=600,
@@ -525,7 +533,8 @@ def summary(data, what):
     fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[0, max(maxs)])
     fig.update_layout(
         title=title,
-        plot_bgcolor="white",
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
         margin=dict(t=50, l=10, b=10, r=10),
         # width=1300,
         height=600,
@@ -558,7 +567,8 @@ def mortality(data, offset=-7):
     fig.update_xaxes(showgrid=True, gridwidth=1, tickangle=45, gridcolor='LightGrey')
     fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey')
     fig.update_layout(
-        plot_bgcolor="white",
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
         margin=dict(t=50, l=10, b=10, r=10),
         yaxis_title='Percentuale di deceduti su nuovi positivi di {} giorni prima'.format(abs(offset)),
         # width=1300,
@@ -588,7 +598,8 @@ def comparison(data, offset=7):
     fig.update_xaxes(showgrid=True, gridwidth=1, tickangle=45, range=[positivi_shift.index[-120], positivi_shift.index[-1]], gridcolor='LightGrey')
     fig.update_yaxes(showgrid=True, type='log', gridwidth=1, gridcolor='LightGrey')
     fig.update_layout(
-        plot_bgcolor="white",
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
         margin=dict(t=50, l=10, b=10, r=10),
         yaxis_title='',
         # width=1300,
@@ -620,7 +631,8 @@ def mobility_data(mobility_plot_data, variable, variables):
                     name='', marker=dict(color=next(PALETTE)))
     fig.add_trace(ax, secondary_y=True)
     fig.update_layout(
-        plot_bgcolor="white",
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
         margin=dict(t=50, l=10, b=10, r=10),
         yaxis_title='',
         height=500,
@@ -691,7 +703,8 @@ def plot_vaccines(vaccines, area=None, unita=UNITA, subplot_title='Dosi somminis
             'x': .5,
         })
     fig.update_layout(
-        plot_bgcolor="white",
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
         margin=dict(t=50,  l=10, b=10, r=10),
         yaxis_title='',
         height=height,
@@ -836,7 +849,8 @@ def age_timeseries(vaccines, area, fascia_anagrafica, demography, dose, unita=10
         }, barmode='stack', hovermode="x unified"
     )
     fig.update_layout(
-        plot_bgcolor="white",
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
         margin=dict(t=50,  l=10, b=10, r=10),
         yaxis_title='',
         height=500,
@@ -1132,7 +1146,8 @@ def plot_fill(data_list, names, population_list=None, unita=100000, cumulate=Tru
         legend=legend
     )
     fig.update_layout(
-        plot_bgcolor="white",
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
         margin=dict(t=50,  l=10, b=10, r=10),
         yaxis_title='',
         height=height,
@@ -1213,7 +1228,8 @@ def plot_fill(data_list, names, population_list=None, unita=100000, cumulate=Tru
 #         }, barmode='stack', hovermode="x unified"
 #     )
 #     fig.update_layout(
-#         plot_bgcolor="white",
+#         paper_bgcolor='rgba(0,0,0,0)',
+        # plot_bgcolor='rgba(0,0,0,0)',
 #         margin=dict(t=50,  l=10, b=10, r=10),
 #         yaxis_title='',
 #         height=height,
@@ -1290,7 +1306,8 @@ def cumulate_and_not(data_list, names, population_list, unita=100, subplot_title
         }
     )
     fig.update_layout(
-        plot_bgcolor="white",
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
         margin=dict(t=50,  l=10, b=10, r=10),
         yaxis_title='',
         height=height,
@@ -1342,7 +1359,8 @@ def plot_variables(data_list, names, rule=None, popolazione=None, title='', yaxi
     fig.update_xaxes(row=1, col=1, showgrid=True, gridwidth=1, gridcolor='LightPink', range=xaxes_range)
     fig.update_yaxes(row=1, col=1, type=yscale, showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[minimum, maximum], secondary_y=secondary_y)#, showexponent='all', exponentformat='power')
     fig.update_layout(
-        plot_bgcolor="white",
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
         margin=dict(t=70, l=0, b=0, r=0),
         yaxis_title=yaxis_title,
         height=500,
