@@ -25,7 +25,7 @@ def exp2(t, t_0, T_d):
 def linear(t, t_0, T_d):
     return (t - t_0) / T_d
 
-
+HOVERLABEL = dict(bgcolor="rgba(214,214,214,0.7)")
 RULE_MAP = {
     'Totali': 'total',
     'Dati per 100.000 abitanti': 'percentage',
@@ -218,6 +218,7 @@ def test_positivity_rate(data_in, country, rule):
         autosize=True,
         height=500,
         hovermode="x unified",
+        hoverlabel=HOVERLABEL,
     )
     return fig
 
@@ -403,6 +404,7 @@ def plot_selection(data_in, country, rule, start_positivi, start_ti, start_ricov
         height=500,
         autosize=True,
         hovermode="x unified",
+        hoverlabel=HOVERLABEL,
         legend={
             'orientation': "h",
             'yanchor': "bottom",
@@ -470,6 +472,7 @@ def vaccines_summary(vaccines, what):
         height=600,
         autosize=True,
         hovermode="x unified",
+        hoverlabel=HOVERLABEL,
     )
     PALETTE = itertools.cycle(plotly.colors.qualitative.Plotly) #get_matplotlib_cmap('tab10', bins=8))
     for i in fig['layout']['annotations']:
@@ -540,6 +543,7 @@ def summary(data, what):
         height=600,
         autosize=True,
         hovermode="x unified",
+        hoverlabel=HOVERLABEL,
     )
     PALETTE = get_default_palette()  # get_default_palette()
     for i in fig['layout']['annotations']:
@@ -637,6 +641,7 @@ def mobility_data(mobility_plot_data, variable, variables):
         yaxis_title='',
         height=500,
         hovermode="x unified",
+        hoverlabel=HOVERLABEL,
         autosize=True,
         legend={
             'orientation': "h",
@@ -846,7 +851,8 @@ def age_timeseries(vaccines, area, fascia_anagrafica, demography, dose, unita=10
             'y': .70,  # top
             'xanchor': "left",
             'x': .0,
-        }, barmode='stack', hovermode="x unified"
+        }, barmode='stack', hovermode="x unified",
+        hoverlabel=HOVERLABEL,
     )
     fig.update_layout(
         paper_bgcolor='rgba(0,0,0,0)',
@@ -934,7 +940,7 @@ def plot_ages(vaccines, area):
         'y': -.35,  # top
         'xanchor': "center",
         'x': .5,
-    }, height=500,
+    }, height=500, paper_bgcolor='rgba(0,0,0,0)',
     )
     return fig
 
@@ -956,7 +962,7 @@ def plot_second_dose_percentage(vaccines, area):
         'y': -.2,  # top
         'xanchor': "center",
         'x': .5,
-    }, height=440
+    }, height=440, paper_bgcolor='rgba(0,0,0,0)',
     )
     return fig
 
@@ -977,7 +983,7 @@ def plot_category(vaccines, area):
         'y': -.55,  # top
         'xanchor': "center",
         'x': .5,
-        }, height=600
+        }, height=600, paper_bgcolor='rgba(0,0,0,0)',
 )
     return fig
 
@@ -998,7 +1004,7 @@ def plot_fornitore(vaccines, area):
         'y': -.3,  # top
         'xanchor': "center",
         'x': .5,
-    }, height=500
+    }, height=500, paper_bgcolor='rgba(0,0,0,0)',
     )
     return fig
 
@@ -1153,6 +1159,7 @@ def plot_fill(data_list, names, population_list=None, unita=100000, cumulate=Tru
         height=height,
         autosize=True,
         hovermode="x unified",
+        hoverlabel=HOVERLABEL,
     )
     if unita == 100:
         primary_title = 'Percentuale'
@@ -1226,6 +1233,7 @@ def plot_fill(data_list, names, population_list=None, unita=100000, cumulate=Tru
 #             'xanchor': "left",
 #             'x': .0,
 #         }, barmode='stack', hovermode="x unified"
+        # hoverlabel=HOVERLABEL,
 #     )
 #     fig.update_layout(
 #         paper_bgcolor='rgba(0,0,0,0)',
