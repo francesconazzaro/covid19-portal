@@ -759,7 +759,7 @@ def categories_timeseries(vaccines, area, cumulate=False):
     legend = {
         'orientation': "v",
         'yanchor': "bottom",
-        'y': .58,  # top
+        'y': .3,  # top
         'xanchor': "left",
         'x': .0,
     }
