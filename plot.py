@@ -702,43 +702,40 @@ def plot_vaccines(vaccines, area=None, unita=UNITA, subplot_title='Dosi somminis
     return fig
 
 
+def fill_data(data):
+    time = datetime.date.today()
+    if data.index[-1] != time:
+        index = import_data.pd.date_range(data.index[-1] + np.timedelta64(1, 'D'), time)
+        return import_data.pd.concat([data, import_data.pd.Series(np.ones(len(index)) * data[-1], index)])
+    else:
+        return data
+
+
 @st.cache(allow_output_mutation=True, show_spinner=False)
-def plot_deliveries(deliveries, area):
-    fig = make_subplots(1, subplot_titles=[f"Dosi di vaccino consegnate per 100 mila abitanti"])
-    plot_data = deliveries[deliveries.area == area]
-    ax = go.Scatter(
-        x=plot_data.index,
-        y=plot_data.numero_dosi.cumsum() / plot_data.popolazione * UNITA,
-        # fill='tozeroy',
-        name='Numero dosi consegnate cumulate',
-        mode='lines+markers',
+def plot_deliveries(deliveries, population, subplot_title, unita):
+    times = []
+    fornitori = []
+    names = []
+    population_list = []
+    for fornitore in np.unique(deliveries.fornitore):
+        fornitore_data = deliveries[deliveries.fornitore == fornitore]
+        times.append(fornitore_data.index[-1])
+        names.append(fornitore)
+        fornitori.append(fornitore_data.numero_dosi)
+        population_list.append(population)
+    
+    legend={
+        'orientation': "v",
+        'yanchor': "top",
+        'y': 1,  # top
+        'xanchor': "left",
+        'x': 0,
+    }
+    return plot_fill(
+        [fill_data(fornitore.cumsum()).resample('1D').fillna('bfill') for fornitore in fornitori],
+        names, population_list=population_list, unita=unita, legend=legend, rolling=False,
+        cumulate=False, subplot_title="Dosi di vaccino consegnate per 100 mila abitanti"
     )
-    for fornitore in np.unique(plot_data.fornitore):
-        fornitore_data = plot_data[plot_data.fornitore == fornitore]
-        bar = go.Bar(
-            x=fornitore_data.index,
-            y=fornitore_data.numero_dosi / fornitore_data.popolazione * UNITA,
-            name=f'Numero dosi consegnate {fornitore}',
-        )
-        fig.add_trace(bar)
-    fig.add_trace(ax)
-    fig.update_layout(
-        plot_bgcolor="white",
-        margin=dict(t=50, l=10, b=10, r=10),
-        yaxis_title='',
-        height=500,
-        autosize=True,
-        legend={
-            'orientation': "v",
-            'yanchor': "top",
-            'y': .85,  # top
-            'xanchor': "center",
-            'x': .5,
-        }
-    )
-    fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey')
-    fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey')
-    return fig
 
 
 @st.cache(allow_output_mutation=True, show_spinner=False)
@@ -1078,7 +1075,7 @@ def plot_vaccines_prediction(vaccines, area, npoints=7, p0=(np.datetime64("2021-
 
 
 
-def plot_fill(data_list, names, population_list=None, unita=100000, cumulate=True, subplot_title='', start=None, height=500, legend=None):
+def plot_fill(data_list, names, population_list=None, unita=100000, cumulate=True, rolling=True, subplot_title='', start=None, height=500, legend=None):
     PALETTE = itertools.cycle(plotly.colors.qualitative.Plotly)#get_default_palette()
     PALETTE_ALPHA = itertools.cycle(plotly.colors.qualitative.Plotly)#get_default_palette()
     fig = make_subplots(1, subplot_titles=[subplot_title], specs=[[{"secondary_y": True}]])
@@ -1093,7 +1090,8 @@ def plot_fill(data_list, names, population_list=None, unita=100000, cumulate=Tru
         if cumulate:
             data = data.cumsum()
         else:
-            data = data.rolling(7).mean()
+            if rolling:
+                data = data.rolling(7).mean()
         if population is not None:
             percentage_cumsum = data / population * unita
             ax_perc = go.Scatter(
@@ -1151,84 +1149,84 @@ def plot_fill(data_list, names, population_list=None, unita=100000, cumulate=Tru
     return fig
 
 
-@st.cache(allow_output_mutation=True, show_spinner=False)
-def plot_deliveries(deliveries, population, unita=100, subplot_title='', start=None, height=500):
-    PALETTE_1 = get_default_palette()  # get_default_palette()
-    PALETTE_2 = get_default_palette()  # get_default_palette()
-    fig = make_subplots(1, subplot_titles=[subplot_title], specs=[[{"secondary_y": True}]])
-    maxs_perc = []
-    maxs_tot = []
-    cumsum = deliveries.numero_dosi.groupby('data_consegna').sum().cumsum()
-    percentage_cumsum = cumsum / population * unita
-    for fornitore in np.unique(sorted(deliveries.fornitore)):
-        fornitore_data = deliveries[deliveries.fornitore == fornitore].numero_dosi
-        bar_tot = go.Bar(
-            x=fornitore_data.index,
-            y=fornitore_data,
-            name=f'{fornitore}',
-            showlegend=False,
-            legendgroup=f'{fornitore}',
-            marker_color=next(PALETTE_1)
-        )
-        percentage = fornitore_data / population * unita
-        bar_perc = go.Bar(
-            x=percentage.index,
-            y=percentage,
-            name=f'{fornitore}',
-            hoverinfo='skip',
-            legendgroup=f'{fornitore}',
-            marker_color=next(PALETTE_2)
-        )
-        fig.add_trace(bar_perc)
-        fig.add_trace(bar_tot, secondary_y=True)
-    ax_perc = go.Scatter(
-        x=percentage_cumsum.index,
-        y=percentage_cumsum,
-        name='Cumulate',
-        mode='lines+markers',
-        hoverinfo='skip',
-        legendgroup='Numero dosi consegnate cumulate',
-        marker=dict(color=next(PALETTE_1))
-    )
-    ax_tot = go.Scatter(
-        x=cumsum.index,
-        y=cumsum,
-        name='Cumulate',
-        mode='lines+markers',
-        showlegend=False,
-        legendgroup='Numero dosi consegnate cumulate',
-        marker=dict(color=next(PALETTE_2))
-    )
-    fig.add_trace(ax_perc)
-    fig.add_trace(ax_tot, secondary_y=True)
-    maxs_perc.append(percentage_cumsum.max())
-    maxs_tot.append(cumsum.max())
-    fig.update_layout(
-        legend={
-            'orientation': "v",
-            'yanchor': "bottom",
-            'y': .70,  # top
-            'xanchor': "left",
-            'x': .0,
-        }, barmode='stack', hovermode="x unified"
-    )
-    fig.update_layout(
-        plot_bgcolor="white",
-        margin=dict(t=50,  l=10, b=10, r=10),
-        yaxis_title='',
-        height=height,
-        autosize=True,
-    )
-    if unita == 100:
-        primary_title = 'Percentuale'
-    else:
-        primary_title = f'Dati per {unita:,} abitanti'
-    if not start:
-        start = cumsum.index[0]
-    fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[start, cumsum.index[-1] + np.timedelta64(1, 'D')])
-    fig.update_yaxes(showgrid=True, title_text=primary_title, gridwidth=1, gridcolor='LightGrey', range=[0, max(maxs_perc)])
-    fig.update_yaxes(showgrid=False, title_text='Totale', gridwidth=1, gridcolor='LightGrey', secondary_y=True, range=[0, max(maxs_tot)])
-    return fig
+# @st.cache(allow_output_mutation=True, show_spinner=False)
+# def plot_deliveries(deliveries, population, unita=100, subplot_title='', start=None, height=500):
+#     PALETTE_1 = get_default_palette()  # get_default_palette()
+#     PALETTE_2 = get_default_palette()  # get_default_palette()
+#     fig = make_subplots(1, subplot_titles=[subplot_title], specs=[[{"secondary_y": True}]])
+#     maxs_perc = []
+#     maxs_tot = []
+#     cumsum = deliveries.numero_dosi.groupby('data_consegna').sum().cumsum()
+#     percentage_cumsum = cumsum / population * unita
+#     for fornitore in np.unique(sorted(deliveries.fornitore)):
+#         fornitore_data = deliveries[deliveries.fornitore == fornitore].numero_dosi
+#         bar_tot = go.Bar(
+#             x=fornitore_data.index,
+#             y=fornitore_data,
+#             name=f'{fornitore}',
+#             showlegend=False,
+#             legendgroup=f'{fornitore}',
+#             marker_color=next(PALETTE_1)
+#         )
+#         percentage = fornitore_data / population * unita
+#         bar_perc = go.Bar(
+#             x=percentage.index,
+#             y=percentage,
+#             name=f'{fornitore}',
+#             hoverinfo='skip',
+#             legendgroup=f'{fornitore}',
+#             marker_color=next(PALETTE_2)
+#         )
+#         fig.add_trace(bar_perc)
+#         fig.add_trace(bar_tot, secondary_y=True)
+#     ax_perc = go.Scatter(
+#         x=percentage_cumsum.index,
+#         y=percentage_cumsum,
+#         name='Cumulate',
+#         mode='lines+markers',
+#         hoverinfo='skip',
+#         legendgroup='Numero dosi consegnate cumulate',
+#         marker=dict(color=next(PALETTE_1))
+#     )
+#     ax_tot = go.Scatter(
+#         x=cumsum.index,
+#         y=cumsum,
+#         name='Cumulate',
+#         mode='lines+markers',
+#         showlegend=False,
+#         legendgroup='Numero dosi consegnate cumulate',
+#         marker=dict(color=next(PALETTE_2))
+#     )
+#     fig.add_trace(ax_perc)
+#     fig.add_trace(ax_tot, secondary_y=True)
+#     maxs_perc.append(percentage_cumsum.max())
+#     maxs_tot.append(cumsum.max())
+#     fig.update_layout(
+#         legend={
+#             'orientation': "v",
+#             'yanchor': "bottom",
+#             'y': .70,  # top
+#             'xanchor': "left",
+#             'x': .0,
+#         }, barmode='stack', hovermode="x unified"
+#     )
+#     fig.update_layout(
+#         plot_bgcolor="white",
+#         margin=dict(t=50,  l=10, b=10, r=10),
+#         yaxis_title='',
+#         height=height,
+#         autosize=True,
+#     )
+#     if unita == 100:
+#         primary_title = 'Percentuale'
+#     else:
+#         primary_title = f'Dati per {unita:,} abitanti'
+#     if not start:
+#         start = cumsum.index[0]
+#     fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[start, cumsum.index[-1] + np.timedelta64(1, 'D')])
+#     fig.update_yaxes(showgrid=True, title_text=primary_title, gridwidth=1, gridcolor='LightGrey', range=[0, max(maxs_perc)])
+#     fig.update_yaxes(showgrid=False, title_text='Totale', gridwidth=1, gridcolor='LightGrey', secondary_y=True, range=[0, max(maxs_tot)])
+#     return fig
 
 
 @st.cache(allow_output_mutation=True, show_spinner=False)
