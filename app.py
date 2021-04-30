@@ -282,7 +282,15 @@ if what == 'Vaccini':
         st.plotly_chart(plot.plot_vaccine_popolation(vaccines.administration, area), use_container_width=True)
 
 
+    col1, _ = st.beta_columns([1, 5])
+    status = col1.selectbox('', ['Giornaliero', 'Cumulato'])
     col1, col2 = st.beta_columns(2)
+    if status == 'Cumulato':
+        cumulate = True
+        function = 'scatter'
+    else:
+        cumulate = False
+        function = 'bar'
     with col2:
         vacc_area = vaccines.deliveries[vaccines.deliveries.area == area]
         fornitori = plot.np.unique(vacc_area.fornitore)
@@ -293,23 +301,26 @@ if what == 'Vaccini':
             vacc_area,
             population=population,
             subplot_title='Dosi di vaccino consegnate',
-            unita=100000
+            unita=100000,
+            cumulate=cumulate,
         ), use_container_width=True)
     with col1:
         data_list = [vaccines.administration.prima_dose[vaccines.administration.area == area], vaccines.administration.seconda_dose[vaccines.administration.area == area]]
         population = [vaccines.administration.popolazione[vaccines.administration.area == area]] * 2
         names = ['Prima dose', 'Seconda dose']
-        col1.plotly_chart(plot.plot_fill(data_list, names, population_list=population, subplot_title='Somministrazioni vaccino'), use_container_width=True)
+        col1.plotly_chart(plot.plot_fill(
+            data_list, 
+            names, 
+            population_list=population, 
+            subplot_title='Somministrazioni vaccino',
+            cumulate=cumulate,
+            function=function,
+        ), use_container_width=True)
 
-    st.subheader(f"Dettaglio andamenti {area}")
-    col1, _, col2, col3, _ = st.beta_columns([1, 2, 1, 1, 1])
-    status = col1.selectbox('', ['Giornaliero', 'Cumulato'])
+    col1, col2, col3, _ = st.beta_columns([3, 1, 1, 1])
+    col1.subheader(f"Dettaglio andamenti {area}")
     fascia_anagrafica = col2.selectbox('Seleziona fascia anagrafica', ['16-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80-89', '90+'], index=6)
     dose = col3.selectbox('Seleziona dose', ['prima dose', 'seconda dose'])
-    if status == 'Cumulato':
-        cumulate = True
-    else:
-        cumulate = False
     col1, col2 = st.beta_columns(2)
     col1.plotly_chart(plot.ages_timeseries(vaccines.raw, area, cumulate=cumulate), use_container_width=True)
     col2.plotly_chart(plot.age_timeseries(vaccines.raw, area, fascia_anagrafica, demography, dose=dose, cumulate=cumulate), use_container_width=True)

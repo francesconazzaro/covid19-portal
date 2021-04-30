@@ -730,7 +730,7 @@ def fill_data(data):
 
 
 @st.cache(allow_output_mutation=True, show_spinner=False)
-def plot_deliveries(deliveries, population, subplot_title, unita):
+def plot_deliveries(deliveries, population, subplot_title, unita, cumulate=True):
     times = []
     fornitori = []
     names = []
@@ -749,11 +749,19 @@ def plot_deliveries(deliveries, population, subplot_title, unita):
         'xanchor': "left",
         'x': 0,
     }
-    return plot_fill(
-        [fill_data(fornitore.cumsum()).resample('1D').fillna('bfill') for fornitore in fornitori],
-        names, population_list=population_list, unita=unita, legend=legend, rolling=False,
-        cumulate=False, subplot_title="Dosi di vaccino consegnate per 100 mila abitanti"
-    )
+    if cumulate is True:
+        retvalue = plot_fill(
+            [fill_data(fornitore.cumsum()).resample('1D').fillna('bfill') for fornitore in fornitori],
+            names, population_list=population_list, unita=unita, legend=legend, rolling=False,
+            cumulate=False, subplot_title="Dosi di vaccino consegnate per 100 mila abitanti"
+        )
+    else:
+        retvalue = plot_fill(
+            fornitori, names, population_list=population_list, unita=unita, legend=legend, 
+            rolling=False, cumulate=False, function='bar',
+            subplot_title="Dosi di vaccino consegnate per 100 mila abitanti"
+        )
+    return retvalue
 
 
 @st.cache(allow_output_mutation=True, show_spinner=False)
@@ -1095,13 +1103,24 @@ def plot_vaccines_prediction(vaccines, area, npoints=7, p0=(np.datetime64("2021-
 
 
 
-def plot_fill(data_list, names, population_list=None, unita=100000, cumulate=True, rolling=True, subplot_title='', start=None, height=500, legend=None):
+def plot_fill(data_list, names, population_list=None, unita=100000, 
+    cumulate=True, rolling=True, subplot_title='', start=None, height=500, legend=None,
+    function="scatter"
+):
     PALETTE = itertools.cycle(plotly.colors.qualitative.Plotly)#get_default_palette()
     PALETTE_ALPHA = itertools.cycle(plotly.colors.qualitative.Plotly)#get_default_palette()
     fig = make_subplots(1, subplot_titles=[subplot_title], specs=[[{"secondary_y": True}]])
     maxs_perc = []
     maxs_tot = []
     min_date = []
+    if function == "scatter":
+        tot_kwargs = {"stackgroup": 'Two'}
+        perc_kwargs = {"stackgroup": 'One'}
+        function = go.Scatter
+    elif function == 'bar': 
+        tot_kwargs = {}
+        perc_kwargs = {}
+        function = go.Bar
     if not population_list:
         population_list = [None,] * len(data_list)
         primary_grid = True
@@ -1115,27 +1134,28 @@ def plot_fill(data_list, names, population_list=None, unita=100000, cumulate=Tru
                 data = data.rolling(7).mean()
         if population is not None:
             percentage_cumsum = data / population * unita
-            ax_perc = go.Scatter(
+            ax_perc = function(
                 x=percentage_cumsum.index,
                 y=percentage_cumsum,
                 # mode='lines+markers',
                 showlegend=False,
-                stackgroup='One',
                 hoverinfo='skip',
                 legendgroup=name,
-                marker=dict(color=next(PALETTE))
+                marker=dict(color=next(PALETTE)),
+                **perc_kwargs
             )
             maxs_perc.append(percentage_cumsum.max())
             fig.add_trace(ax_perc)
-        ax_tot = go.Scatter(
+        ax_tot = function(
             x=data.index,
             y=data,
             name=f'{name}',
             # mode='lines+markers',
             showlegend=True if name else False,
-            stackgroup='Two',
+            # stackgroup='Two',
             legendgroup=name,
-            marker=dict(color=next(PALETTE_ALPHA))
+            marker=dict(color=next(PALETTE_ALPHA)),
+            **tot_kwargs
         )
         maxs_tot.append(data.max())
         fig.add_trace(ax_tot, secondary_y=True)
@@ -1160,6 +1180,7 @@ def plot_fill(data_list, names, population_list=None, unita=100000, cumulate=Tru
         autosize=True,
         hovermode="x unified",
         hoverlabel=HOVERLABEL,
+        barmode='stack',
     )
     if unita == 100:
         primary_title = 'Percentuale'
