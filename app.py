@@ -314,6 +314,7 @@ if what == 'Vaccini':
             population_list=population, 
             subplot_title='Somministrazioni vaccino',
             cumulate=cumulate,
+            rolling=False,
             function=function,
         ), use_container_width=True)
 
