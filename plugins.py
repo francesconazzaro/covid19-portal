@@ -27,7 +27,7 @@ def google_analytics():
         script_tag_1 = soup.new_tag("script", id='custom-js', src=SRC, attrs={'async': None})
         # script_tag_1.string = GA_TAG_1
         soup.head.append(script_tag_1)
-        script_tag_2 = soup.new_tag("script", id='custom-js-2')
-        script_tag_2.string = GA_TAG_2
-        soup.head.append(script_tag_2)
+        # script_tag_2 = soup.new_tag("script", id='custom-js-2')
+        # script_tag_2.string = GA_TAG_2
+        # soup.head.append(script_tag_2)
         index_path.write_text(str(soup))

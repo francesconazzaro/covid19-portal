@@ -8,22 +8,20 @@ import plot
 import import_data
 import plugins
 
-plugins.google_analytics()
-import warnings
-warnings.filterwarnings("ignore")
+# from memory_profiler import profile
 
+LINE = """<style>
+.vl {
+border-left: 2px solid black;
+height: 200px;
+position: absolute;
+left: 50%;
+margin-left: -3px;
+top: 0;
+}
+</style>
 
-st.set_page_config(page_title='COVID-19 Dashboard', page_icon=":chart_with_upwards_trend:", layout='wide', initial_sidebar_state='collapsed')
-try:
-    DATA, DATA_TI, DATA_RIC = import_data.covid19()
-except:
-    st.error(
-        "L'applicazione è in fase di aggiornamento. Prova a [riaggiornare](/) la pagina tra qualche secondo.")
-    error = st.beta_expander("Dettagli dell'errore")
-    error.error(traceback.format_exc())
-    st.stop()
-
-fmt = "%d-%m-%Y"
+<div class="vl"></div>"""
 
 
 def mobility_expander():
@@ -42,7 +40,8 @@ def mobility_expander():
     expander_mobility.plotly_chart(plot.mobility_data(mobility_plot_data, variable, variables=mobility_country.get_variables()), use_container_width=True)
 
 
-def explore_regions(country):
+# @profile
+def explore_regions(country, DATA):
     st.header('Dati sul contagio aggiornati al {}'.format(DATA['Italia'].index[-1].date()))
     col1, line, col3, col4, col5, col5bis, col6 = st.beta_columns([10, 1, 8, 8, 8, 8, 8])
     line.markdown(LINE, unsafe_allow_html=True)
@@ -209,55 +208,38 @@ def explore_regions(country):
     #     title=f'Percentuale tamponi positivi: {country}',
     #     xaxes_range=[ingressi_not_nan.index[0], ingressi_not_nan.index[-1]],
     # ), use_container_width=True)
+    st.header('Confronto tra regioni')
+    col1, col2, col3 = st.beta_columns([2, 2, 3])
+    import_data.pd.options.display.float_format = '{:.2f}'.format
+    with col1:
+        st.subheader('Percentuale di posti letto in area medica occupati regione per regione')
+        st.write('')
+        ric = DATA_RIC.data.to_frame()
+        st.dataframe(ric.style.background_gradient(cmap='Reds').format("{:.2%}"), height=700)
+    with col2:
+        st.subheader('Percentuale di Terapie Intensive occupate regione per regione')
+        st.write('')
+        ti = DATA_TI.data.to_frame()
+        st.dataframe(ti.style.background_gradient(cmap='Reds').format("{:.2%}"), height=700)
+    with col3:
+        rule = st.selectbox('Variabile', ['Nuovi Positivi', 'Terapie Intensive', 'Ingressi Terapie Intensive', 'Percentuale tamponi positivi', 'Deceduti'])
+        st.plotly_chart(plot.summary(DATA, rule), use_container_width=True)
+    st.write("*Dati sul totale delle terapie intensive e dei posti letto in area medica aggiornati al 2020-10-28.")
+    st.write("**Dati per P.A. Bolzano e P.A. Trento non disponibili.")
 
-LINE = """<style>
-.vl {
-  border-left: 2px solid black;
-  height: 200px;
-  position: absolute;
-  left: 50%;
-  margin-left: -3px;
-  top: 0;
-}
-</style>
-
-<div class="vl"></div>"""
-
-st.title('COVID-19: Situazione in Italia')
-st.text("")
-try:
-    vaccines = import_data.vaccines(DATA)
-    demography = import_data.demography(vaccines)
-except:
-    st.error("L'applicazione è in fase di aggiornamento. Prova a [riaggiornare](/) la pagina tra qualche secondo.")
-    error = st.beta_expander("Dettagli dell'errore")
-    error.error(traceback.format_exc())
-    st.stop()
-
-default_what_map = {'infection': 0, 'vaccines': 1, 'contagio': 0, 'vaccini': 1}
+    # st.plotly_chart(plot.mortality(DATA))
 
 
-def sanitize(string):
-    return string.replace(' ', '-')
+    st.write("**:beer: Buy me a [beer](https://www.buymeacoffee.com/francesconazzar)**")
+    expander = st.beta_expander("This app is developed by Francesco Nazzaro.")
+    expander.write("Contact me on [Twitter](https://twitter.com/effenazzaro)")
+    expander.write("The source code is on [GitHub](https://github.com/francesconazzaro/covid19-portal)")
+    # expander.write("Raw data")
+    # expander.dataframe(DATA['Italia'])
+    # expander.plotly_chart(plot.comparison(DATA['Italia']), use_container_width=True)
 
-
-col1, col2, _, col3 = st.beta_columns([2, 2, 8, 1,])
-query_params = st.experimental_get_query_params()
-
-what = col1.radio('Seleziona un dato', ['Contagio', 'Vaccini'],
-                      index=default_what_map[query_params.get('dato', ['contagio'])[0].lower()])
-
-default_area_index = -1
-for i, region_id in enumerate(import_data.REGIONS_MAP.keys()):
-    if region_id.lower() == query_params.get('area', ['IT'])[0].lower():
-        default_area_index = i
-        break
-
-area = col2.selectbox("Seleziona un'area", ['Italia'] + list(import_data.REGIONS_MAP.values()),
-                      index=default_area_index + 1)
-
-col3.write("**[Twitter](https://twitter.com/effenazzaro)<br>[Linkedin](https://www.linkedin.com/in/fnazzaro/)<br>[:beer:](https://www.buymeacoffee.com/francesconazzar)**", unsafe_allow_html=True)
-if what == 'Vaccini':
+# @profile
+def explore_vaccines(DATA, vaccines, demography, area):
     st.header(f"Dati sulle vaccinazioni aggiornati al {vaccines.administration[vaccines.administration.area == 'Italia'].index[-1].date()}")
     pie1, title1, line, pie2, title2, title3 = st.beta_columns([2, 4, 1, 2, 4, 4])
     line.markdown(LINE, unsafe_allow_html=True)
@@ -354,37 +336,69 @@ if what == 'Vaccini':
     expander = st.beta_expander("This app is developed by Francesco Nazzaro")
     expander.write("Contact me on [Twitter](https://twitter.com/effenazzaro)")
     expander.write("The source code is on [GitHub](https://github.com/francesconazzaro/covid19-portal)")
-    expander.write("Raw data")
-    expander.dataframe(vaccines.raw)
+    # expander.write("Raw data")
+    # expander.dataframe(vaccines.raw)
 
+
+plugins.google_analytics()
+import warnings
+warnings.filterwarnings("ignore")
+st.set_page_config(page_title='COVID-19 Dashboard', page_icon=":chart_with_upwards_trend:", layout='wide', initial_sidebar_state='collapsed')
+fmt = "%d-%m-%Y"
+
+# @profile
+def import_all_data():
+
+    try:
+        DATA, DATA_TI, DATA_RIC = import_data.covid19()
+    except:
+        st.error(
+            "L'applicazione è in fase di aggiornamento. Prova a [riaggiornare](/) la pagina tra qualche secondo.")
+        error = st.beta_expander("Dettagli dell'errore")
+        error.error(traceback.format_exc())
+        st.stop()
+    try:
+        vaccines = import_data.vaccines(DATA)
+        demography = import_data.demography(vaccines)
+    except:
+        st.error("L'applicazione è in fase di aggiornamento. Prova a [riaggiornare](/) la pagina tra qualche secondo.")
+        error = st.beta_expander("Dettagli dell'errore")
+        error.error(traceback.format_exc())
+        st.stop()
+    return DATA, DATA_TI, DATA_RIC, vaccines, demography
+
+DATA, DATA_TI, DATA_RIC, vaccines, demography = import_all_data()
+
+st.title('COVID-19: Situazione in Italia')
+st.text("")
+
+default_what_map = {'infection': 0, 'vaccines': 1, 'contagio': 0, 'vaccini': 1}
+
+
+def sanitize(string):
+    return string.replace(' ', '-')
+
+
+col1, col2, _, col3 = st.beta_columns([2, 2, 8, 1,])
+query_params = st.experimental_get_query_params()
+
+what = col1.radio('Seleziona un dato', ['Contagio', 'Vaccini'],
+                    index=default_what_map[query_params.get('dato', ['contagio'])[0].lower()])
+
+default_area_index = -1
+for i, region_id in enumerate(import_data.REGIONS_MAP.keys()):
+    if region_id.lower() == query_params.get('area', ['IT'])[0].lower():
+        default_area_index = i
+        break
+
+area = col2.selectbox("Seleziona un'area", ['Italia'] + list(import_data.REGIONS_MAP.values()),
+                    index=default_area_index + 1)
+
+col3.write("**[Twitter](https://twitter.com/effenazzaro)<br>[Linkedin](https://www.linkedin.com/in/fnazzaro/)<br>[:beer:](https://www.buymeacoffee.com/francesconazzar)**", unsafe_allow_html=True)
+
+
+if what == 'Vaccini':
+    explore_vaccines(DATA=DATA, vaccines=vaccines, demography=demography, area=area)
 elif what == 'Contagio':
-    explore_regions(area)
-    st.header('Confronto tra regioni')
-    col1, col2, col3 = st.beta_columns([2, 2, 3])
-    import_data.pd.options.display.float_format = '{:.2f}'.format
-    with col1:
-        st.subheader('Percentuale di posti letto in area medica occupati regione per regione')
-        st.write('')
-        ric = DATA_RIC.data.to_frame()
-        st.dataframe(ric.style.background_gradient(cmap='Reds').format("{:.2%}"), height=700)
-    with col2:
-        st.subheader('Percentuale di Terapie Intensive occupate regione per regione')
-        st.write('')
-        ti = DATA_TI.data.to_frame()
-        st.dataframe(ti.style.background_gradient(cmap='Reds').format("{:.2%}"), height=700)
-    with col3:
-        rule = st.selectbox('Variabile', ['Nuovi Positivi', 'Terapie Intensive', 'Ingressi Terapie Intensive', 'Percentuale tamponi positivi', 'Deceduti'])
-        st.plotly_chart(plot.summary(DATA, rule), use_container_width=True)
-    st.write("*Dati sul totale delle terapie intensive e dei posti letto in area medica aggiornati al 2020-10-28.")
-    st.write("**Dati per P.A. Bolzano e P.A. Trento non disponibili.")
+    explore_regions(area, DATA=DATA)
 
-    # st.plotly_chart(plot.mortality(DATA))
-
-
-    st.write("**:beer: Buy me a [beer](https://www.buymeacoffee.com/francesconazzar)**")
-    expander = st.beta_expander("This app is developed by Francesco Nazzaro.")
-    expander.write("Contact me on [Twitter](https://twitter.com/effenazzaro)")
-    expander.write("The source code is on [GitHub](https://github.com/francesconazzaro/covid19-portal)")
-    expander.write("Raw data")
-    expander.dataframe(DATA['Italia'])
-    expander.plotly_chart(plot.comparison(DATA['Italia']), use_container_width=True)

@@ -6,6 +6,8 @@ import glob
 import yaml
 import io
 import os
+import time
+import pickle
 import pandas as pd
 import numpy as np
 import streamlit as st
@@ -141,6 +143,7 @@ class Vaccines:
         self.deliveries = process_data(deliveries, covid_data, date_label='data_consegna', deliveries=True)
 
 
+@st.cache(show_spinner=False, ttl=60*60)
 def vaccines(covid_data):
     url = "https://raw.githubusercontent.com/italia/covid19-opendata-vaccini/master/dati/somministrazioni-vaccini-latest.csv"
     s=requests.get(url).content
@@ -215,7 +218,29 @@ def get_mobility_country(country):
 #         self.italy_path = os.path.join(base_path, 'COVID-19/dati-andamento-nazionale/dpc-covid19-ita-andamento-nazionale.csv')
 
 
-@st.cache(show_spinner = False, ttl=60*60)
+# def cache(func, cache_time=60*60):
+#     def wrapper(*args, **kwargs):
+#         now = time.time()
+#         cache_file = f'./{func.__name__}.pk'
+#         if os.path.exists(cache_file):
+#             with open(cache_file, 'rb') as f:
+#                 cached_time, data = pickle.load(f)
+#         else:
+#             data = func(*args, **kwargs)
+#             with open(cache_file, 'wb') as f:
+#                 pickle.dump((now, data), f)
+#             return data
+#         if now - cached_time < cache_time:
+#             return data
+#         else:
+#             data = func(*args, **kwargs)
+#             with open(cache_file, 'wb') as f:
+#                 pickle.dump((now, data), f)
+#             return data
+#     return wrapper
+
+
+@st.cache(show_spinner=False, ttl=60*60)
 def covid19():
     popolazione = population()
     terapie_intensive = intensive_care()
