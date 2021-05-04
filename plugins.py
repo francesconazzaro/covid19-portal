@@ -21,6 +21,7 @@ SRC = "https://www.googletagmanager.com/gtag/js?id=G-KY9BZNJJT3"
 def google_analytics():
     # Insert the script in the head tag of the static template inside your virtual environement
     index_path = pathlib.Path(st.__file__).parent / "static" / "index.html"
+    print(f"---- INDEX PATH: {index_path}")
     soup = bs4.BeautifulSoup(index_path.read_text(), features="lxml")
     if not soup.find(id='custom-js'):
         script_tag_1 = soup.new_tag("script", id='custom-js', src=SRC, attrs={'async': None})
