@@ -15,7 +15,7 @@ try:
 except FileNotFoundError:
     GA_TAG_2 = ''
 
-SRC = "https://www.googletagmanager.com/gtag/js?id=G-KY9BZNJJT3"
+SRC = "https://www.googletagmanager.com/gtag/js?id=G-RHSE91HRMZ"
 # print(GA_TAG_2)
 
 
