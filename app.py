@@ -298,11 +298,12 @@ def explore_vaccines(DATA, vaccines, demography, area):
             cumulate=cumulate,
             rolling=False,
             function=function,
+            average=not cumulate,
         ), use_container_width=True)
 
     col1, col2, col3, _ = st.beta_columns([3, 1, 1, 1])
     col1.subheader(f"Dettaglio andamenti {area}")
-    fascia_anagrafica = col2.selectbox('Seleziona fascia anagrafica', ['16-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80-89', '90+'], index=6)
+    fascia_anagrafica = col2.selectbox('Seleziona fascia anagrafica', ['16-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80-89', '90+'], index=5)
     dose = col3.selectbox('Seleziona dose', ['prima dose', 'seconda dose'])
     col1, col2 = st.beta_columns(2)
     col1.plotly_chart(plot.ages_timeseries(vaccines.raw, area, cumulate=cumulate), use_container_width=True)

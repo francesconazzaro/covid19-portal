@@ -1105,7 +1105,7 @@ def plot_vaccines_prediction(vaccines, area, npoints=7, p0=(np.datetime64("2021-
 
 def plot_fill(data_list, names, population_list=None, unita=100000, 
     cumulate=True, rolling=True, subplot_title='', start=None, height=500, legend=None,
-    function="scatter"
+    function="scatter", average=False,
 ):
     PALETTE = itertools.cycle(plotly.colors.qualitative.Plotly)#get_default_palette()
     PALETTE_ALPHA = itertools.cycle(plotly.colors.qualitative.Plotly)#get_default_palette()
@@ -1160,6 +1160,25 @@ def plot_fill(data_list, names, population_list=None, unita=100000,
         maxs_tot.append(data.max())
         fig.add_trace(ax_tot, secondary_y=True)
         min_date.append(data.index[0])
+    if average:
+        plot_data = sum(data_list).rolling(7).mean()
+        plot_data_perc = plot_data / population * unita
+        fig.add_trace(go.Scatter(
+            x=plot_data.index,
+            y=plot_data,
+            name="Media su 7 giorni",
+            legendgroup='media',
+            marker_color=(next(PALETTE)),
+        ), secondary_y=True)
+        fig.add_trace(go.Scatter(
+            x=plot_data_perc.index,
+            y=plot_data_perc,
+            hoverinfo='skip',
+            showlegend=False,
+            name="Media su 7 giorni",
+            legendgroup='media',
+            marker_color=next(PALETTE_ALPHA),
+        ))
     if not legend:
         legend = {
             'orientation': "v",
