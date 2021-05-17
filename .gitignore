@@ -3,6 +3,8 @@ Region_Mobility_Report_CSVs.zip
 Untitled.ipynb
 .ipynb_checkpoints/Untitled-checkpoint.ipynb
 .vscode/settings.json
+*Region_Mobility*
+mobility_data.zip
 __pycache__/import_data.cpython-37.pyc
 __pycache__/import_data.cpython-38.pyc
 __pycache__/plot.cpython-37.pyc

@@ -18,7 +18,7 @@ try:
     config = yaml.safe_load(open(os.path.join(CWD, 'config.yaml')))
 except FileNotFoundError:
     config = {}
-BASE_PATH = config.get('base_path', '/app')
+BASE_PATH = config.get('base_path', '.')
 
 
 REGIONS_MAP = {
