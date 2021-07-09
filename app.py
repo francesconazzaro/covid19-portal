@@ -2,8 +2,6 @@ import traceback
 
 import streamlit as st
 
-import datetime
-
 import plot
 import import_data
 import plugins
@@ -303,24 +301,23 @@ def explore_vaccines(DATA, vaccines, demography, area):
 
     col1, col2, col3, _ = st.beta_columns([3, 1, 1, 1])
     col1.subheader(f"Dettaglio andamenti {area}")
-    fascia_anagrafica = col2.selectbox('Seleziona fascia anagrafica', ['16-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80-89', '90+'], index=5)
+    fascia_anagrafica = col2.selectbox('Seleziona fascia anagrafica', ['20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80-89', '90+'], index=1)
     dose = col3.selectbox('Seleziona dose', ['prima dose', 'seconda dose'])
     col1, col2 = st.beta_columns(2)
     col1.plotly_chart(plot.ages_timeseries(vaccines.raw, area, cumulate=cumulate), use_container_width=True)
     col2.plotly_chart(plot.age_timeseries(vaccines.raw, area, fascia_anagrafica, demography, dose=dose, cumulate=cumulate), use_container_width=True)
 
-    col1, col2 = st.beta_columns(2)
-    col2.plotly_chart(plot.fornitori_timeseries(vaccines.raw, area, cumulate=cumulate), use_container_width=True)
-    col1.plotly_chart(plot.categories_timeseries(vaccines.administration, area, cumulate=cumulate), use_container_width=True)
+    st.plotly_chart(plot.fornitori_timeseries(vaccines.raw, area, cumulate=cumulate), use_container_width=True)
+    # col1.plotly_chart(plot.categories_timeseries(vaccines.administration, area, cumulate=cumulate), use_container_width=True)
     # col2.plotly_chart(plot.plot_fill(data_list, [''], population, cumulate=cumulate, unita=100, subplot_title=names[0]), use_container_width=True)
 
-    col1, col3, col4 = st.beta_columns(3)
+    col1, col4 = st.beta_columns(2)
     with col1:
         col1.plotly_chart(plot.plot_ages(vaccines.raw, area), use_container_width=True)
     # with col2:
     #     col2.plotly_chart(plot.plot_second_dose_percentage(vaccines.administration, area), use_container_width=True)
-    with col3:
-        col3.plotly_chart(plot.plot_category(vaccines.administration, area), use_container_width=True)
+    # with col3:
+    #     col3.plotly_chart(plot.plot_category(vaccines.administration, area), use_container_width=True)
     with col4:
         col4.plotly_chart(plot.plot_fornitore(vaccines.deliveries, area), use_container_width=True)
 

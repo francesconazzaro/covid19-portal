@@ -884,7 +884,7 @@ def age_timeseries(vaccines, area, fascia_anagrafica, demography, dose, unita=10
 @st.cache(allow_output_mutation=True, show_spinner=False)
 def ages_timeseries(vaccines, area, cumulate=False):
     if area == 'Italia':
-        child = vaccines[vaccines.fascia_anagrafica == '16-19'].groupby('data_somministrazione').sum()
+        # child = vaccines[vaccines.fascia_anagrafica == '16-19'].groupby('data_somministrazione').sum()
         twentys = vaccines[vaccines.fascia_anagrafica == '20-29'].groupby('data_somministrazione').sum()
         thirtys = vaccines[vaccines.fascia_anagrafica == '30-39'].groupby('data_somministrazione').sum()
         fortys = vaccines[vaccines.fascia_anagrafica == '40-49'].groupby('data_somministrazione').sum()
@@ -895,7 +895,7 @@ def ages_timeseries(vaccines, area, cumulate=False):
         nineties = vaccines[vaccines.fascia_anagrafica == '90+'].groupby('data_somministrazione').sum()
     else:
         region = vaccines[vaccines.area == area]
-        child = region[region.fascia_anagrafica == '16-19'].groupby('data_somministrazione').sum()
+        # child = region[region.fascia_anagrafica == '16-19'].groupby('data_somministrazione').sum()
         twentys = region[region.fascia_anagrafica == '20-29'].groupby('data_somministrazione').sum()
         thirtys = region[region.fascia_anagrafica == '30-39'].groupby('data_somministrazione').sum()
         fortys = region[region.fascia_anagrafica == '40-49'].groupby('data_somministrazione').sum()
@@ -905,7 +905,7 @@ def ages_timeseries(vaccines, area, cumulate=False):
         eightys = region[region.fascia_anagrafica == '80-89'].groupby('data_somministrazione').sum()
         nineties = region[region.fascia_anagrafica == '90+'].groupby('data_somministrazione').sum()
     data_list = [
-        sum_doses(child),
+        # sum_doses(child),
         sum_doses(twentys),
         sum_doses(thirtys),
         sum_doses(fortys),
@@ -915,7 +915,7 @@ def ages_timeseries(vaccines, area, cumulate=False):
         sum_doses(eightys),
         sum_doses(nineties),
     ]
-    names = ['16-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80-89', '90+']
+    names = ['20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80-89', '90+']
     legend = {
         'orientation': "v",
         'yanchor': "bottom",
