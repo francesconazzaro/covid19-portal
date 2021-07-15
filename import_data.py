@@ -45,6 +45,8 @@ REGIONS_MAP = {
     'VEN': 'Veneto',
 }
 
+FASCE_ETA = ['12-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80-89', '90+']
+
 
 ISTAT_REGION_MAP = {
     "Valle d'Aosta": "Valle d'Aosta / Vallée d'Aoste",
@@ -62,7 +64,7 @@ def demography(vaccines):
     dem_in = pd.read_csv(os.path.join(CWD, 'resources/demografia.csv'))
     dem_in = dem_in[dem_in.STATCIV2 == 99]
     dem_in = dem_in[dem_in.SEXISTAT1 == 9]
-    dem_out = pd.DataFrame(index=['20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80-89', '90+'])
+    dem_out = pd.DataFrame(index=FASCE_ETA)
     for area in np.unique(vaccines.raw.area):
         region = dem_in[dem_in.Territorio == ISTAT_REGION_MAP.get(area, area)]
         for eta in range(20, 90, 10):
@@ -76,12 +78,12 @@ def demography(vaccines):
             except KeyError:
                 dem_out[area] = 0
                 dem_out[area].loc[fascia_id] = value
-        # value = 0
-        # for i in range(16, 20):
-        #     eta_id = f'Y{i}'
-        #     value += region[region.ETA1 == eta_id].Value.values[0]
-        # fascia_id = '16-19'
-        # dem_out[area].loc[fascia_id] = value
+        value = 0
+        for i in range(12, 20):
+            eta_id = f'Y{i}'
+            value += region[region.ETA1 == eta_id].Value.values[0]
+        fascia_id = '12-19'
+        dem_out[area].loc[fascia_id] = value
 
         value = 0
         for i in range(90, 100):
@@ -91,6 +93,7 @@ def demography(vaccines):
         value += region[region.ETA1 == eta_id].Value.values[0]
         fascia_id = '90+'
         dem_out[area].loc[fascia_id] = value
+    dem_out.to_pickle(os.path.join(CWD, 'resources/demography'))
     return dem_out
 
 

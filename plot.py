@@ -884,28 +884,28 @@ def age_timeseries(vaccines, area, fascia_anagrafica, demography, dose, unita=10
 @st.cache(allow_output_mutation=True, show_spinner=False)
 def ages_timeseries(vaccines, area, cumulate=False):
     if area == 'Italia':
-        # child = vaccines[vaccines.fascia_anagrafica == '16-19'].groupby('data_somministrazione').sum()
-        twentys = vaccines[vaccines.fascia_anagrafica == '20-29'].groupby('data_somministrazione').sum()
-        thirtys = vaccines[vaccines.fascia_anagrafica == '30-39'].groupby('data_somministrazione').sum()
-        fortys = vaccines[vaccines.fascia_anagrafica == '40-49'].groupby('data_somministrazione').sum()
-        fiftys = vaccines[vaccines.fascia_anagrafica == '50-59'].groupby('data_somministrazione').sum()
-        sixtys = vaccines[vaccines.fascia_anagrafica == '60-69'].groupby('data_somministrazione').sum()
-        seventys = vaccines[vaccines.fascia_anagrafica == '70-79'].groupby('data_somministrazione').sum()
-        eightys = vaccines[vaccines.fascia_anagrafica == '80-89'].groupby('data_somministrazione').sum()
-        nineties = vaccines[vaccines.fascia_anagrafica == '90+'].groupby('data_somministrazione').sum()
+        child = vaccines[vaccines.fascia_anagrafica == import_data.FASCE_ETA[0]].groupby('data_somministrazione').sum()
+        twentys = vaccines[vaccines.fascia_anagrafica == import_data.FASCE_ETA[1]].groupby('data_somministrazione').sum()
+        thirtys = vaccines[vaccines.fascia_anagrafica == import_data.FASCE_ETA[2]].groupby('data_somministrazione').sum()
+        fortys = vaccines[vaccines.fascia_anagrafica == import_data.FASCE_ETA[3]].groupby('data_somministrazione').sum()
+        fiftys = vaccines[vaccines.fascia_anagrafica == import_data.FASCE_ETA[4]].groupby('data_somministrazione').sum()
+        sixtys = vaccines[vaccines.fascia_anagrafica == import_data.FASCE_ETA[5]].groupby('data_somministrazione').sum()
+        seventys = vaccines[vaccines.fascia_anagrafica == import_data.FASCE_ETA[6]].groupby('data_somministrazione').sum()
+        eightys = vaccines[vaccines.fascia_anagrafica == import_data.FASCE_ETA[7]].groupby('data_somministrazione').sum()
+        nineties = vaccines[vaccines.fascia_anagrafica == import_data.FASCE_ETA[8]].groupby('data_somministrazione').sum()
     else:
         region = vaccines[vaccines.area == area]
-        # child = region[region.fascia_anagrafica == '16-19'].groupby('data_somministrazione').sum()
-        twentys = region[region.fascia_anagrafica == '20-29'].groupby('data_somministrazione').sum()
-        thirtys = region[region.fascia_anagrafica == '30-39'].groupby('data_somministrazione').sum()
-        fortys = region[region.fascia_anagrafica == '40-49'].groupby('data_somministrazione').sum()
-        fiftys = region[region.fascia_anagrafica == '50-59'].groupby('data_somministrazione').sum()
-        sixtys = region[region.fascia_anagrafica == '60-69'].groupby('data_somministrazione').sum()
-        seventys = region[region.fascia_anagrafica == '70-79'].groupby('data_somministrazione').sum()
-        eightys = region[region.fascia_anagrafica == '80-89'].groupby('data_somministrazione').sum()
-        nineties = region[region.fascia_anagrafica == '90+'].groupby('data_somministrazione').sum()
+        child = region[region.fascia_anagrafica == import_data.FASCE_ETA[0]].groupby('data_somministrazione').sum()
+        twentys = region[region.fascia_anagrafica == import_data.FASCE_ETA[1]].groupby('data_somministrazione').sum()
+        thirtys = region[region.fascia_anagrafica == import_data.FASCE_ETA[2]].groupby('data_somministrazione').sum()
+        fortys = region[region.fascia_anagrafica == import_data.FASCE_ETA[3]].groupby('data_somministrazione').sum()
+        fiftys = region[region.fascia_anagrafica == import_data.FASCE_ETA[4]].groupby('data_somministrazione').sum()
+        sixtys = region[region.fascia_anagrafica == import_data.FASCE_ETA[5]].groupby('data_somministrazione').sum()
+        seventys = region[region.fascia_anagrafica == import_data.FASCE_ETA[6]].groupby('data_somministrazione').sum()
+        eightys = region[region.fascia_anagrafica == import_data.FASCE_ETA[7]].groupby('data_somministrazione').sum()
+        nineties = region[region.fascia_anagrafica == import_data.FASCE_ETA[8]].groupby('data_somministrazione').sum()
     data_list = [
-        # sum_doses(child),
+        sum_doses(child),
         sum_doses(twentys),
         sum_doses(thirtys),
         sum_doses(fortys),
@@ -915,7 +915,7 @@ def ages_timeseries(vaccines, area, cumulate=False):
         sum_doses(eightys),
         sum_doses(nineties),
     ]
-    names = ['20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80-89', '90+']
+    names = import_data.FASCE_ETA
     legend = {
         'orientation': "v",
         'yanchor': "bottom",
