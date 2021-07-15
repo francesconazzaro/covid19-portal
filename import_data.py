@@ -93,7 +93,7 @@ def demography(vaccines):
         value += region[region.ETA1 == eta_id].Value.values[0]
         fascia_id = '90+'
         dem_out[area].loc[fascia_id] = value
-    dem_out.to_pickle(os.path.join(CWD, 'resources/demography'))
+    # dem_out.to_pickle(os.path.join(CWD, 'resources/demography'))
     return dem_out
 
 
