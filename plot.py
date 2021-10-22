@@ -1422,3 +1422,78 @@ def plot_variables(data_list, names, rule=None, popolazione=None, title='', yaxi
         }
     )
     return fig
+
+
+@st.cache(allow_output_mutation=True, show_spinner=False)
+def compare_new_and_ti(data_in, country, factor, delay, rule):
+
+    PALETTE = get_default_palette()  # get_default_palette()
+    PALETTE_ALPHA = get_default_palette(True)  # get_default_palette()
+
+    data = data_in[country]
+
+    maxs = []
+    mins = []
+    log = True
+    secondary_y = False
+
+    fig = make_subplots(1, 1, subplot_titles=[country], specs=[[{"secondary_y": secondary_y}]])
+    plot_data = normalisation(data.nuovi_positivi, data.popolazione, rule)
+    maxs.append(plot_data.max())
+    mins.append((plot_data.rolling(7).mean()[20:] + .001).min())
+    plot_average(
+        plot_data,
+        fig=fig,
+        name='Nuovi Positivi',
+        palette=PALETTE,
+        palette_alpha=PALETTE_ALPHA,
+        log=log,
+        secondary_y=False,
+    )
+    next(PALETTE_ALPHA)
+    next(PALETTE)
+
+    plot_data = normalisation(data.ingressi_terapia_intensiva, data.popolazione, rule) * factor
+    maxs.append(plot_data.max())
+    mins.append((plot_data.rolling(7).mean()[20:] + .001).min())
+    plot_average(
+        plot_data,
+        fig=fig,
+        name='Terapie Intensive',
+        palette=PALETTE,
+        palette_alpha=PALETTE_ALPHA,
+        log=log,
+        secondary_y=False,
+    )
+
+
+    if log is True:
+        maximum = np.nanmax(np.log10(maxs)) + .5
+        minimum = np.nanmin(np.log10(mins))
+        yscale = 'log'
+    else:
+        maximum = np.nanmax(maxs)
+        minimum = np.nanmin(mins)
+        yscale = 'linear'
+    fig.update_xaxes(row=1, col=1, showgrid=True, gridwidth=1, gridcolor='LightPink')
+    fig.update_yaxes(row=1, col=1, type=yscale, showgrid=True, gridwidth=1, gridcolor='LightGrey', range=[minimum, maximum], showexponent='all', exponentformat='power', secondary_y=secondary_y)
+    fig.update_layout(
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        margin=dict(t=70, l=0, b=0, r=0),
+        yaxis_title=f'{rule}',
+        # width=1300,
+        height=500,
+        autosize=True,
+        hovermode="x unified",
+        hoverlabel=HOVERLABEL,
+        legend={
+            'orientation': "h",
+            'yanchor': "bottom",
+            # 'y': -.15, # bottom
+            'y': .9, # top
+            'xanchor': "center",
+            'x': .5,
+        }
+    )
+    return fig

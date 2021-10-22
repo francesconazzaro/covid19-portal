@@ -23,8 +23,8 @@ top: 0;
 
 
 def mobility_expander():
-    expander_mobility = st.beta_expander('Dati sulla mobilità')
-    col1, col2, col3, col4 = expander_mobility.beta_columns([1, 4, 4, 8])
+    expander_mobility = st.expander('Dati sulla mobilità')
+    col1, col2, col3, col4 = expander_mobility.columns([1, 4, 4, 8])
     with col1:
         country = col1.selectbox('Country', ['IT'] + sorted(import_data.get_list_of_regions()))
     mobility_country = import_data.get_mobility_country(country)
@@ -41,7 +41,7 @@ def mobility_expander():
 # @profile
 def explore_regions(country, DATA):
     st.header('Dati sul contagio aggiornati al {}'.format(DATA['Italia'].index[-1].date()))
-    col1, line, col3, col4, col5, col5bis, col6 = st.beta_columns([10, 1, 8, 8, 8, 8, 8])
+    col1, line, col3, col4, col5, col5bis, col6 = st.columns([10, 1, 8, 8, 8, 8, 8])
     line.markdown(LINE, unsafe_allow_html=True)
     with col1:
         rule = st.radio('', list(plot.RULE_MAP.keys()))
@@ -78,9 +78,9 @@ def explore_regions(country, DATA):
         ricoverati_con_sintomi = plot.normalisation(DATA[country].iloc[-1].ricoverati_con_sintomi, DATA[country].iloc[-1].popolazione, rule)
         text = f'{ricoverati_con_sintomi:.2f}' if plot.RULE_MAP[rule] == 'percentage' else f'{int(ricoverati_con_sintomi):,}'
         st.markdown(f"<h1 style='text-align: center; color: red;'>{text}</h1>", unsafe_allow_html=True)
-    # col1, col2, col3, col4, col5, col6 = st.beta_columns(6)
-    # fit_expander = st.beta_expander('Personalizza Fit')
-    # col1, col2, col3, col4 = fit_expander.beta_columns(4)
+    # col1, col2, col3, col4, col5, col6 = st.columns(6)
+    # fit_expander = st.expander('Personalizza Fit')
+    # col1, col2, col3, col4 = fit_expander.columns(4)
     # with col1:
     #     start_positivi = col1.date_input('Data inizio fit Positivi', datetime.date(2020, 10, 15), min_value=datetime.date(2020, 3, 1), max_value=datetime.date.today())
     #     stop_positivi = col1.date_input('Data fine fit Positivi', DATA[country].index[-1], min_value=datetime.date(2020, 3, 2), max_value=datetime.date.today())
@@ -97,7 +97,7 @@ def explore_regions(country, DATA):
 
 
     st.plotly_chart(plot.plot_selection(DATA, country, rule, start_positivi, start_ti, start_ricoveri, stop_positivi, stop_ti, stop_ricoveri, start_deceduti, stop_deceduti, log=log), use_container_width=True)
-    col1, col2, col3 = st.beta_columns([1, 2, 2])
+    col1, col2, col3 = st.columns([1, 2, 2])
     with col1:
         percentage_rule = col1.radio('', list(plot.PERCENTAGE_RULE.keys()))
     if plot.PERCENTAGE_RULE[percentage_rule] == 'tamponi':
@@ -120,13 +120,13 @@ def explore_regions(country, DATA):
         mobility_expander()
     except:
         pass
-    table_expander = st.beta_expander('Tabelle andamento')
-    col1, _, col2 = table_expander.beta_columns([1, 3, 7])
+    table_expander = st.expander('Tabelle andamento')
+    col1, _, col2 = table_expander.columns([1, 3, 7])
     with col1:
         days_before = col1.selectbox("Lunghezza tabelle", [5, 10, 25])
     with col2:
         col2.subheader(f'Andamento degli ultimi {days_before} giorni: {country} ({rule})')
-    col1, col2, col3, col3bis, col4, col5 = table_expander.beta_columns(6, )#[2, 2, 2, 2, 3, 3])
+    col1, col2, col3, col3bis, col4, col5 = table_expander.columns(6, )#[2, 2, 2, 2, 3, 3])
     data_country = DATA[country].copy()
     data_country.index = data_country.index.strftime(fmt)
     with col1:
@@ -163,8 +163,8 @@ def explore_regions(country, DATA):
             tpr = data_country.nuovi_positivi[-days_before:] / data_country.casi_testati.diff()[-days_before:] * 100
             tpr.name = 'CPR (%)'
         col5.dataframe(tpr.to_frame().style.background_gradient(cmap='Reds'))
-    test_expander = st.beta_expander('Dettaglio sui Test')
-    col1, col2 = test_expander.beta_columns(2)
+    test_expander = st.expander('Dettaglio sui Test')
+    col1, col2 = test_expander.columns(2)
     plot_variables = [
         DATA[country].tamponi_test_molecolare.diff(),
         DATA[country].tamponi_test_antigenico_rapido.diff(),
@@ -185,8 +185,8 @@ def explore_regions(country, DATA):
         ['Test molecolare', 'Test antigenico'],
         title=f'Percentuale tamponi positivi: {country}',
     ), use_container_width=True)
-    # ti_expander = st.beta_expander('Dettaglio sulle Terapie Intensive')
-    # col1, col2 = ti_expander.beta_columns(2)
+    # ti_expander = st.expander('Dettaglio sulle Terapie Intensive')
+    # col1, col2 = ti_expander.columns(2)
     # plot_variables = [
     #     DATA[country].ingressi_terapia_intensiva,
     #     DATA[country].ingressi_terapia_intensiva - DATA[country].terapia_intensiva.diff(),
@@ -207,7 +207,7 @@ def explore_regions(country, DATA):
     #     xaxes_range=[ingressi_not_nan.index[0], ingressi_not_nan.index[-1]],
     # ), use_container_width=True)
     st.header('Confronto tra regioni')
-    col1, col2, col3 = st.beta_columns([2, 2, 3])
+    col1, col2, col3 = st.columns([2, 2, 3])
     import_data.pd.options.display.float_format = '{:.2f}'.format
     with col1:
         st.subheader('Percentuale di posti letto in area medica occupati regione per regione')
@@ -229,9 +229,13 @@ def explore_regions(country, DATA):
 
 
     st.write("**:beer: Buy me a [beer](https://www.buymeacoffee.com/francesconazzar)**")
-    expander = st.beta_expander("This app is developed by Francesco Nazzaro.")
+    expander = st.expander("This app is developed by Francesco Nazzaro.")
     expander.write("Contact me on [Twitter](https://twitter.com/effenazzaro)")
     expander.write("The source code is on [GitHub](https://github.com/francesconazzaro/covid19-portal)")
+    col1, col2, _ = expander.columns([1, 1, 3])
+    factor = col1.number_input(label="Fattore nuovi casi / TI", step=1., format="%.2f", value=130.)
+    delay = col2.number_input(label="Delay nuovi casi / TI", step=1, value=0)
+    expander.plotly_chart(plot.compare_new_and_ti(DATA, country, factor, delay, rule='Totali'), use_container_width=True)
     # expander.write("Raw data")
     # expander.dataframe(DATA['Italia'])
     # expander.plotly_chart(plot.comparison(DATA['Italia']), use_container_width=True)
@@ -239,7 +243,7 @@ def explore_regions(country, DATA):
 # @profile
 def explore_vaccines(DATA, vaccines, demography, area):
     st.header(f"Dati sulle vaccinazioni aggiornati al {vaccines.administration[vaccines.administration.area == 'Italia'].index[-1].date()}")
-    pie1, title1, line, pie2, title2, title3 = st.beta_columns([2, 4, 1, 2, 4, 4])
+    pie1, title1, line, pie2, title2, title3 = st.columns([2, 4, 1, 2, 4, 4])
     line.markdown(LINE, unsafe_allow_html=True)
     with title3:
         st.markdown("<h3 style='text-align: center;'>Dosi somministrate fino ad ora</h2>",
@@ -262,9 +266,9 @@ def explore_vaccines(DATA, vaccines, demography, area):
         st.plotly_chart(plot.plot_vaccine_popolation(vaccines.administration, area), use_container_width=True)
 
 
-    col1, _ = st.beta_columns([1, 5])
+    col1, _ = st.columns([1, 5])
     status = col1.selectbox('', ['Giornaliero', 'Cumulato'])
-    col1, col2 = st.beta_columns(2)
+    col1, col2 = st.columns(2)
     if status == 'Cumulato':
         cumulate = True
         function = 'scatter'
@@ -299,11 +303,11 @@ def explore_vaccines(DATA, vaccines, demography, area):
             average=not cumulate,
         ), use_container_width=True)
 
-    col1, col2, col3, _ = st.beta_columns([3, 1, 1, 1])
+    col1, col2, col3, _ = st.columns([3, 1, 1, 1])
     col1.subheader(f"Dettaglio andamenti {area}")
     fascia_anagrafica = col2.selectbox('Seleziona fascia anagrafica', import_data.FASCE_ETA, index=1)
     dose = col3.selectbox('Seleziona dose', ['prima dose', 'seconda dose'])
-    col1, col2 = st.beta_columns(2)
+    col1, col2 = st.columns(2)
     col1.plotly_chart(plot.ages_timeseries(vaccines.raw, area, cumulate=cumulate), use_container_width=True)
     col2.plotly_chart(plot.age_timeseries(vaccines.raw, area, fascia_anagrafica, demography, dose=dose, cumulate=cumulate), use_container_width=True)
 
@@ -311,7 +315,7 @@ def explore_vaccines(DATA, vaccines, demography, area):
     # col1.plotly_chart(plot.categories_timeseries(vaccines.administration, area, cumulate=cumulate), use_container_width=True)
     # col2.plotly_chart(plot.plot_fill(data_list, [''], population, cumulate=cumulate, unita=100, subplot_title=names[0]), use_container_width=True)
 
-    col1, col4 = st.beta_columns(2)
+    col1, col4 = st.columns(2)
     with col1:
         col1.plotly_chart(plot.plot_ages(vaccines.raw, area), use_container_width=True)
     # with col2:
@@ -322,7 +326,7 @@ def explore_vaccines(DATA, vaccines, demography, area):
         col4.plotly_chart(plot.plot_fornitore(vaccines.deliveries, area), use_container_width=True)
 
     st.header('Confronto tra regioni')
-    col1, _, col2 = st.beta_columns([4, 1, 10])
+    col1, _, col2 = st.columns([4, 1, 10])
     with col1:
         st.subheader('Percentuale popolazione vaccinata')
         st.write('')
@@ -331,7 +335,7 @@ def explore_vaccines(DATA, vaccines, demography, area):
     rule = col2.selectbox('Variabile', ['Percentuale popolazione vaccinata', 'Dosi somministrate', 'Dosi consegnate'])
     col2.plotly_chart(plot.vaccines_summary(vaccines, rule), use_container_width=True)
     st.write("**:beer: Buy me a [beer](https://www.buymeacoffee.com/francesconazzar)**")
-    expander = st.beta_expander("This app is developed by Francesco Nazzaro")
+    expander = st.expander("This app is developed by Francesco Nazzaro")
     expander.write("Contact me on [Twitter](https://twitter.com/effenazzaro)")
     expander.write("The source code is on [GitHub](https://github.com/francesconazzaro/covid19-portal)")
     # expander.write("Raw data")
@@ -352,7 +356,7 @@ def import_all_data():
     except:
         st.error(
             "L'applicazione è in fase di aggiornamento. Prova a [riaggiornare](/) la pagina tra qualche secondo.")
-        error = st.beta_expander("Dettagli dell'errore")
+        error = st.expander("Dettagli dell'errore")
         error.error(traceback.format_exc())
         st.stop()
     try:
@@ -360,7 +364,7 @@ def import_all_data():
         demography = import_data.demography(vaccines)
     except:
         st.error("L'applicazione è in fase di aggiornamento. Prova a [riaggiornare](/) la pagina tra qualche secondo.")
-        error = st.beta_expander("Dettagli dell'errore")
+        error = st.expander("Dettagli dell'errore")
         error.error(traceback.format_exc())
         st.stop()
     return DATA, DATA_TI, DATA_RIC, vaccines, demography
@@ -377,7 +381,7 @@ def sanitize(string):
     return string.replace(' ', '-')
 
 
-col1, col2, _, col3 = st.beta_columns([2, 2, 8, 1,])
+col1, col2, _, col3 = st.columns([2, 2, 8, 1,])
 query_params = st.experimental_get_query_params()
 
 what = col1.radio('Seleziona un dato', ['Contagio', 'Vaccini'],
