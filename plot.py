@@ -1453,7 +1453,7 @@ def compare_new_and_ti(data_in, country, factor, delay, rule):
     next(PALETTE_ALPHA)
     next(PALETTE)
 
-    plot_data = normalisation(data.ingressi_terapia_intensiva, data.popolazione, rule) * factor
+    plot_data = translate(normalisation(data.ingressi_terapia_intensiva, data.popolazione, rule) * factor, days_delay=delay)
     maxs.append(plot_data.max())
     mins.append((plot_data.rolling(7).mean()[20:] + .001).min())
     plot_average(
