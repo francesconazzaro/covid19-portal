@@ -790,7 +790,7 @@ def categories_timeseries(vaccines, area, cumulate=False):
 
 
 def sum_doses(data):
-    return data.prima_dose + data.seconda_dose
+    return data.prima_dose + data.seconda_dose + data.dose_booster + data.dose_aggiuntiva
 
 
 @st.cache(allow_output_mutation=True, show_spinner=False)
@@ -817,7 +817,7 @@ def fornitori_timeseries(vaccines, area, cumulate=False):
 def age_timeseries(vaccines, area, fascia_anagrafica, demography, dose, unita=100, cumulate=False):
     PALETTE = itertools.cycle(plotly.colors.qualitative.Plotly)#get_default_palette()
     title = f'{area}: Percentuale popolazione che ha ricevuto<br>la {dose} nella fascia {fascia_anagrafica}'
-    dose = dose.replace(' ', '_')
+    dose = dose.lower().replace(' ', '_')
     if area == 'Italia':
         plot_data = vaccines[vaccines.fascia_anagrafica == fascia_anagrafica]
     else:
@@ -1018,11 +1018,11 @@ def plot_fornitore(vaccines, area):
 
 
 @st.cache(allow_output_mutation=True, show_spinner=False)
-def plot_vaccine_popolation(vaccines, area):
+def plot_vaccine_popolation(vaccines, demography, area):
     vaccines_area = vaccines[vaccines.area == area]
     vaccines_pop = vaccines_area.seconda_dose.cumsum().iloc[-1]
     pie = go.Pie(
-        values=[vaccines_pop, vaccines_area.popolazione.iloc[-1] - vaccines_pop],
+        values=[vaccines_pop, demography[area].sum() - vaccines_pop],
         labels=['Popolazione vaccinata',  'Popolazione non vaccinata'],
         textinfo='percent',
     )
@@ -1127,6 +1127,11 @@ def plot_fill(data_list, names, population_list=None, unita=100000,
     else:
         primary_grid = False
     for i, (data, population, name) in enumerate(zip(data_list, population_list, names)):
+        color = next(PALETTE)
+        color_alpha = next(PALETTE_ALPHA)
+        if i == 3:  # skip misleading color
+            color = next(PALETTE)
+            color_alpha = next(PALETTE_ALPHA)
         if cumulate:
             data = data.cumsum()
         else:
@@ -1141,7 +1146,7 @@ def plot_fill(data_list, names, population_list=None, unita=100000,
                 showlegend=False,
                 hoverinfo='skip',
                 legendgroup=name,
-                marker=dict(color=next(PALETTE)),
+                marker=dict(color=color),
                 **perc_kwargs
             )
             maxs_perc.append(percentage_cumsum.max())
@@ -1154,7 +1159,7 @@ def plot_fill(data_list, names, population_list=None, unita=100000,
             showlegend=True if name else False,
             # stackgroup='Two',
             legendgroup=name,
-            marker=dict(color=next(PALETTE_ALPHA)),
+            marker=dict(color=color_alpha),
             **tot_kwargs
         )
         maxs_tot.append(data.max())

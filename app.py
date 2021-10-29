@@ -258,12 +258,12 @@ def explore_vaccines(DATA, vaccines, demography, area):
     with pie2:
         st.plotly_chart(plot.plot_percentage(vaccines.administration, vaccines.deliveries, area), use_container_width=True)
     with title1:
-        st.markdown("<h3 style='text-align: center;'>Popolazione vaccinata (seconda dose)</h2>",
+        st.markdown("<h3 style='text-align: center;'>Popolazione vaccinata con seconda dose su totale vaccinabile</h2>",
                     unsafe_allow_html=True)
         tot_somm = vaccines.administration[vaccines.administration.area == area].cumsum().iloc[-1].seconda_dose
         st.markdown(f"<h1 style='text-align: center; color: red;'>{tot_somm:,}</h1>", unsafe_allow_html=True)
     with pie1:
-        st.plotly_chart(plot.plot_vaccine_popolation(vaccines.administration, area), use_container_width=True)
+        st.plotly_chart(plot.plot_vaccine_popolation(vaccines.administration, demography, area), use_container_width=True)
 
 
     col1, _ = st.columns([1, 5])
@@ -289,9 +289,21 @@ def explore_vaccines(DATA, vaccines, demography, area):
             cumulate=cumulate,
         ), use_container_width=True)
     with col1:
-        data_list = [vaccines.administration.prima_dose[vaccines.administration.area == area], vaccines.administration.seconda_dose[vaccines.administration.area == area]]
-        population = [vaccines.administration.popolazione[vaccines.administration.area == area]] * 2
-        names = ['Prima dose', 'Seconda dose']
+        data_list = [
+            vaccines.administration.prima_dose[vaccines.administration.area == area], 
+            vaccines.administration.seconda_dose[vaccines.administration.area == area],
+            vaccines.administration.dose_aggiuntiva[vaccines.administration.area == area],
+            vaccines.administration.dose_booster[vaccines.administration.area == area],
+        ]
+        population = [vaccines.administration.popolazione[vaccines.administration.area == area]] * 4
+        names = ['Prima dose', 'Seconda dose', 'Dose aggiuntiva', 'Dose booster']
+        legend = {
+        'orientation': "v",
+        'yanchor': "bottom",
+        'y': .65,  # top
+        'xanchor': "left",
+        'x': 0,
+    }
         col1.plotly_chart(plot.plot_fill(
             data_list, 
             names, 
@@ -301,12 +313,13 @@ def explore_vaccines(DATA, vaccines, demography, area):
             rolling=False,
             function=function,
             average=not cumulate,
+            legend=legend,
         ), use_container_width=True)
 
     col1, col2, col3, _ = st.columns([3, 1, 1, 1])
     col1.subheader(f"Dettaglio andamenti {area}")
     fascia_anagrafica = col2.selectbox('Seleziona fascia anagrafica', import_data.FASCE_ETA, index=1)
-    dose = col3.selectbox('Seleziona dose', ['prima dose', 'seconda dose'])
+    dose = col3.selectbox('Seleziona dose', ['Prima dose', 'Seconda dose', 'Dose aggiuntiva', 'Dose booster'])
     col1, col2 = st.columns(2)
     col1.plotly_chart(plot.ages_timeseries(vaccines.raw, area, cumulate=cumulate), use_container_width=True)
     col2.plotly_chart(plot.age_timeseries(vaccines.raw, area, fascia_anagrafica, demography, dose=dose, cumulate=cumulate), use_container_width=True)
@@ -330,7 +343,7 @@ def explore_vaccines(DATA, vaccines, demography, area):
     with col1:
         st.subheader('Percentuale popolazione vaccinata')
         st.write('')
-        data = vaccines.administration.groupby('area').sum().seconda_dose / vaccines.administration.groupby('area').mean().popolazione
+        data = vaccines.administration.groupby('area').sum().seconda_dose / demography.sum(axis=0)
         st.dataframe(data.to_frame().style.background_gradient(cmap='Reds').format("{:.2%}"), height=700)
     rule = col2.selectbox('Variabile', ['Percentuale popolazione vaccinata', 'Dosi somministrate', 'Dosi consegnate'])
     col2.plotly_chart(plot.vaccines_summary(vaccines, rule), use_container_width=True)
