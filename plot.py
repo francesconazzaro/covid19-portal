@@ -1430,7 +1430,7 @@ def plot_variables(data_list, names, rule=None, popolazione=None, title='', yaxi
 
 
 @st.cache(allow_output_mutation=True, show_spinner=False)
-def compare_new_and_ti(data_in, country, factor, delay, rule):
+def compare_new_ti_deaths(data_in, country, factor_ti, delay_ti, factor_deaths, delay_deaths, rule):
 
     PALETTE = get_default_palette()  # get_default_palette()
     PALETTE_ALPHA = get_default_palette(True)  # get_default_palette()
@@ -1458,13 +1458,28 @@ def compare_new_and_ti(data_in, country, factor, delay, rule):
     next(PALETTE_ALPHA)
     next(PALETTE)
 
-    plot_data = translate(normalisation(data.ingressi_terapia_intensiva, data.popolazione, rule) * factor, days_delay=delay)
+    plot_data = translate(normalisation(data.ingressi_terapia_intensiva, data.popolazione, rule) * factor_ti, days_delay=delay_ti)
     maxs.append(plot_data.max())
     mins.append((plot_data.rolling(7).mean()[20:] + .001).min())
     plot_average(
         plot_data,
         fig=fig,
         name='Terapie Intensive',
+        palette=PALETTE,
+        palette_alpha=PALETTE_ALPHA,
+        log=log,
+        secondary_y=False,
+    )
+    next(PALETTE_ALPHA)
+    next(PALETTE)
+
+    plot_data = translate(normalisation(data.deceduti.diff().rolling(7).mean(), data.popolazione, rule) * factor_deaths, days_delay=delay_deaths)
+    maxs.append(plot_data.max())
+    mins.append((plot_data.rolling(7).mean()[20:] + .001).min())
+    plot_average(
+        plot_data,
+        fig=fig,
+        name='Deceduti',
         palette=PALETTE,
         palette_alpha=PALETTE_ALPHA,
         log=log,
