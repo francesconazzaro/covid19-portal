@@ -31,6 +31,13 @@ RULE_MAP = {
     'Dati per 100.000 abitanti': 'percentage',
 }
 
+VARIABLES_MAP = {
+    'Nuovi Positivi': 'nuovi_positivi',
+    'Terapie Intensive': 'terapia_intensiva',
+    'Ingressi Terapie Intensive': 'ingressi_terapia_intensiva',
+    'Deceduti': 'deceduti',
+}
+
 PERCENTAGE_RULE = {
     'Percentuale di tamponi positivi': 'tamponi',
     'Percentuale di casi positivi': 'casi',
@@ -1516,4 +1523,77 @@ def compare_new_ti_deaths(data_in, country, factor_ti, delay_ti, factor_deaths, 
             'x': .5,
         }
     )
+    return fig
+
+
+@st.cache(allow_output_mutation=True, show_spinner=False)
+def compare_waves(data_in, country, variable, start_first, start_second):
+    palette = get_default_palette()  # get_default_palette()
+    palette_alpha = get_default_palette(True)  # get_default_palette()
+    data = data_in[country]
+    var = data.get(VARIABLES_MAP[variable])
+    print(start_first)
+    first = var.loc[start_first:][:90]
+    second = var.loc[start_second:][:90]
+    if variable == 'Deceduti':
+        first = first.diff()
+        second = second.diff()
+    fig = make_subplots(1, 1)
+    line = dict(color=next(palette))
+    fig.add_trace(go.Line(
+        x=[date.days for date in first.index - import_data.pd.to_datetime(start_first)], 
+        y=first.rolling(7).mean(),
+        legendgroup='prima',
+        name=f'Prima ondata',
+        line=line,
+        mode='lines',
+    ), 1, 1)
+    fig.add_trace(go.Scatter(
+        x=[date.days for date in first.index - import_data.pd.to_datetime(start_first)],
+        y=first.values,
+        mode='markers',
+        legendgroup='prima',
+        showlegend=False,
+        marker=dict(color=next(palette_alpha))
+    ), 1, 1)
+    line = dict(color=next(palette))
+    fig.add_trace(go.Line(
+        x=[date.days for date in second.index - import_data.pd.to_datetime(start_second)], 
+        y=second.rolling(7).mean(),
+        legendgroup='seconda',
+        name=f'Seconda ondata',
+        line=line,
+        mode='lines',
+    ), 1, 1)
+    fig.add_trace(go.Scatter(
+        x=[date.days for date in second.index - import_data.pd.to_datetime(start_second)],
+        y=second.values,
+        mode='markers',
+        legendgroup='seconda',
+        showlegend=False,
+        marker=dict(color=next(palette_alpha))
+    ), 1, 1)
+    fig.update_xaxes(row=1, col=1, showgrid=True, gridwidth=1, gridcolor='LightPink')
+    fig.update_yaxes(row=1, col=1, showgrid=True, gridwidth=1, gridcolor='LightGrey')
+    fig.update_layout(
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        margin=dict(t=70, l=0, b=0, r=0),
+        yaxis_title=f'{variable}',
+        xaxis_title="Giorni dall'inizio dell'ondata",
+        # width=1300,
+        height=500,
+        autosize=True,
+        hovermode="x unified",
+        hoverlabel=HOVERLABEL,
+        legend={
+            'orientation': "h",
+            'yanchor': "bottom",
+            # 'y': -.15, # bottom
+            'y': .9, # top
+            'xanchor': "center",
+            'x': .5,
+        }
+    )
+
     return fig

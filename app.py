@@ -1,7 +1,7 @@
 import traceback
 
 import streamlit as st
-
+import datetime
 import plot
 import import_data
 import plugins
@@ -232,15 +232,20 @@ def explore_regions(country, DATA):
     expander = st.expander("This app is developed by Francesco Nazzaro.")
     expander.write("Contact me on [Twitter](https://twitter.com/effenazzaro)")
     expander.write("The source code is on [GitHub](https://github.com/francesconazzaro/covid19-portal)")
+    expander.subheader("Confronto tra Nuovi casi, TI e Deceduti")
     col1, col2, col3, col4, _ = expander.columns([1, 1, 1, 1, 1])
     factor_ti = col1.number_input(label="Fattore nuovi casi / TI", step=1., format="%.2f", value=80.)
     delay_ti = col2.number_input(label="Delay nuovi casi / TI", step=1, value=0)
     factor_deaths = col3.number_input(label="Fattore nuovi casi / Deceduti", step=1., format="%.2f", value=50.)
     delay_deaths = col4.number_input(label="Delay nuovi casi / Deceduti", step=1, value=-21)
     expander.plotly_chart(plot.compare_new_ti_deaths(DATA, country, factor_ti, delay_ti, factor_deaths, delay_deaths, rule='Totali'), use_container_width=True)
-    # expander.write("Raw data")
-    # expander.dataframe(DATA['Italia'])
-    # expander.plotly_chart(plot.comparison(DATA['Italia']), use_container_width=True)
+    expander.subheader("Confronto tra due ondate")
+    col1, col2, col3 = expander.columns([1, 1, 1])
+    variable = col1.selectbox('Variabile', ['Nuovi Positivi', 'Terapie Intensive', 'Ingressi Terapie Intensive', 'Deceduti'], key='variable_for_comparison')
+    start_first = col2.date_input('Inizio prima ondata', value=datetime.date(2020, 9, 30), min_value=datetime.date(2020, 3, 1), max_value=datetime.date.today())
+    start_second = col3.date_input('Inizio seconda ondata', value=datetime.date(2021, 10, 17), min_value=datetime.date(2020, 3, 1), max_value=datetime.date.today())
+    expander.plotly_chart(plot.compare_waves(DATA, country, variable, start_first, start_second), use_container_width=True)
+
 
 # @profile
 def explore_vaccines(DATA, vaccines, demography, area):
