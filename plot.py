@@ -797,7 +797,7 @@ def categories_timeseries(vaccines, area, cumulate=False):
 
 
 def sum_doses(data):
-    return data.prima_dose + data.seconda_dose + data.dose_booster + data.dose_aggiuntiva
+    return data.prima_dose + data.seconda_dose + data.dose_addizionale_booster
 
 
 @st.cache(allow_output_mutation=True, show_spinner=False)

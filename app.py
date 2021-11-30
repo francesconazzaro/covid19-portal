@@ -299,11 +299,10 @@ def explore_vaccines(DATA, vaccines, demography, area):
         data_list = [
             vaccines.administration.prima_dose[vaccines.administration.area == area], 
             vaccines.administration.seconda_dose[vaccines.administration.area == area],
-            vaccines.administration.dose_aggiuntiva[vaccines.administration.area == area],
-            vaccines.administration.dose_booster[vaccines.administration.area == area],
+            vaccines.administration.dose_addizionale_booster[vaccines.administration.area == area],
         ]
         population = [vaccines.administration.popolazione[vaccines.administration.area == area]] * 4
-        names = ['Prima dose', 'Seconda dose', 'Dose aggiuntiva', 'Dose booster']
+        names = ['Prima dose', 'Seconda dose', 'Dose booster']
         legend = {
         'orientation': "v",
         'yanchor': "bottom",
