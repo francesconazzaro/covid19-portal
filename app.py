@@ -325,7 +325,7 @@ def explore_vaccines(DATA, vaccines, demography, area):
     col1, col2, col3, _ = st.columns([3, 1, 1, 1])
     col1.subheader(f"Dettaglio andamenti {area}")
     fascia_anagrafica = col2.selectbox('Seleziona fascia anagrafica', import_data.FASCE_ETA, index=1)
-    dose = col3.selectbox('Seleziona dose', ['Prima dose', 'Seconda dose', 'Dose aggiuntiva', 'Dose booster'])
+    dose = col3.selectbox('Seleziona dose', ['Prima dose', 'Seconda dose', 'Dose addizionale booster'])
     col1, col2 = st.columns(2)
     col1.plotly_chart(plot.ages_timeseries(vaccines.raw, area, cumulate=cumulate), use_container_width=True)
     col2.plotly_chart(plot.age_timeseries(vaccines.raw, area, fascia_anagrafica, demography, dose=dose, cumulate=cumulate), use_container_width=True)
