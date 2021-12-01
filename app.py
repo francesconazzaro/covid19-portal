@@ -242,8 +242,8 @@ def explore_regions(country, DATA):
     expander.subheader("Confronto tra due ondate")
     col1, col2, col3 = expander.columns([1, 1, 1])
     variable = col1.selectbox('Variabile', ['Nuovi Positivi', 'Terapie Intensive', 'Ingressi Terapie Intensive', 'Deceduti'], key='variable_for_comparison')
-    start_first = col2.date_input('Inizio prima ondata', value=datetime.date(2020, 9, 30), min_value=datetime.date(2020, 3, 1), max_value=datetime.date.today())
-    start_second = col3.date_input('Inizio seconda ondata', value=datetime.date(2021, 10, 17), min_value=datetime.date(2020, 3, 1), max_value=datetime.date.today())
+    start_first = col2.date_input('Inizio prima ondata', value=datetime.date(2020, 9, 7), min_value=datetime.date(2020, 3, 1), max_value=datetime.date.today())
+    start_second = col3.date_input('Inizio seconda ondata', value=datetime.date(2021, 10, 7), min_value=datetime.date(2020, 3, 1), max_value=datetime.date.today())
     expander.plotly_chart(plot.compare_waves(DATA, country, variable, start_first, start_second), use_container_width=True)
 
 

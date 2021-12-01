@@ -1574,7 +1574,7 @@ def compare_waves(data_in, country, variable, start_first, start_second):
         marker=dict(color=next(palette_alpha))
     ), 1, 1)
     fig.update_xaxes(row=1, col=1, showgrid=True, gridwidth=1, gridcolor='LightPink')
-    fig.update_yaxes(row=1, col=1, showgrid=True, gridwidth=1, gridcolor='LightGrey')
+    fig.update_yaxes(row=1, col=1, type='log', showgrid=True, gridwidth=1, gridcolor='LightGrey')
     fig.update_layout(
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
